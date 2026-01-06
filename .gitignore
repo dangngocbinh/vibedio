@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.local
+dist/
+out/
+build/
+.DS_Store
+*.log
+.remotion/
+public/temp/
