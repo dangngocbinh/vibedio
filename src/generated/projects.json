@@ -1,0 +1,32 @@
+[
+  {
+    "id": "su-that-ve-meo",
+    "name": "su-that-ve-meo",
+    "path": "projects/su-that-ve-meo",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-24T16:33:39.558Z",
+    "timestamp": 1769272419558
+  },
+  {
+    "id": "vietnam",
+    "name": "vietnam",
+    "path": "projects/vietnam",
+    "hasScript": false,
+    "hasOtio": true,
+    "otioFile": "vietnam_vibes.otio",
+    "modifiedAt": "2026-01-24T16:16:19.254Z",
+    "timestamp": 1769271379254
+  },
+  {
+    "id": "sample",
+    "name": "sample",
+    "path": "projects/sample",
+    "hasScript": false,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-24T16:05:49.942Z",
+    "timestamp": 1769270749942
+  }
+]

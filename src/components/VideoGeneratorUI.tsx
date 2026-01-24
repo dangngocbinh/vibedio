@@ -23,50 +23,43 @@ export const VideoGeneratorUI: React.FC<VideoGeneratorUIProps> = ({ onGenerate }
 
   const handleGenerate = async () => {
     if (!text.trim()) {
-      setMessage('Vui lòng nhập nội dung!');
+      setMessage('❌ Vui lòng nhập nội dung!');
+      setStatus('error');
       return;
     }
 
-    setStatus('generating');
-    setMessage('Đang generate video... Vui lòng đợi!');
-
+    // Copy text to clipboard for easy CLI usage
     try {
-      // Call the generation function
-      if (onGenerate) {
-        await onGenerate(text);
-        setStatus('success');
-        setMessage('✅ Generate thành công! Kiểm tra console để xem kết quả.');
-      } else {
-        setMessage('⚠️ Chức năng generate chưa được kết nối. Vui lòng copy text và chạy CLI.');
-        setStatus('idle');
-      }
-    } catch (error: any) {
+      await navigator.clipboard.writeText(text);
+      setStatus('idle');
+      setMessage(`✅ Đã copy text vào clipboard!\n\n📋 Bước tiếp theo:\n\n1. Mở Terminal\n2. Chạy lệnh:\n   node test-generate.js "${text.substring(0, 50)}..."\n\nHoặc paste text đã copy vào CLI:\n   node test-generate.js "PASTE_HERE"\n\n⚠️ Lưu ý: Không thể generate trực tiếp trong browser vì lý do bảo mật API keys.\nDùng CLI để generate an toàn!`);
+    } catch (err) {
       setStatus('error');
-      setMessage(`❌ Lỗi: ${error.message}`);
+      setMessage(`⚠️ Không thể generate trong browser!\n\n📋 Copy text này và chạy CLI:\n\n${text}\n\n💻 Lệnh Terminal:\nnode test-generate.js "YOUR_TEXT_HERE"\n\n🔒 Lý do: OpenAI API không cho phép chạy trong browser để bảo vệ API keys của bạn.`);
     }
   };
 
   return (
-    <AbsoluteFill style={{ backgroundColor: '#1a1a1a' }}>
+    <AbsoluteFill style={{ backgroundColor: '#1a1a1a', overflow: 'auto' }}>
       <div
         style={{
-          maxWidth: '800px',
+          maxWidth: '1200px',
           margin: '0 auto',
-          padding: '40px 20px',
+          padding: '60px 40px',
           color: '#fff',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
-        <h1 style={{ fontSize: '32px', marginBottom: '10px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '48px', marginBottom: '16px', textAlign: 'center' }}>
           🎬 Auto Video Generator
         </h1>
-        <p style={{ textAlign: 'center', color: '#888', marginBottom: '40px' }}>
+        <p style={{ textAlign: 'center', color: '#888', marginBottom: '50px', fontSize: '18px' }}>
           Nhập nội dung voice-over để tạo video tự động
         </p>
 
         {/* Input Area */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+        <div style={{ marginBottom: '30px' }}>
+          <label style={{ display: 'block', marginBottom: '12px', fontWeight: 'bold', fontSize: '18px' }}>
             📝 Nội dung video (30-120 từ cho video 1 phút):
           </label>
           <textarea
@@ -75,17 +68,18 @@ export const VideoGeneratorUI: React.FC<VideoGeneratorUIProps> = ({ onGenerate }
             placeholder="Nhập nội dung voice-over của bạn ở đây..."
             style={{
               width: '100%',
-              minHeight: '150px',
-              padding: '12px',
-              fontSize: '16px',
+              minHeight: '200px',
+              padding: '16px',
+              fontSize: '18px',
               backgroundColor: '#2a2a2a',
               color: '#fff',
-              border: '1px solid #444',
-              borderRadius: '8px',
+              border: '2px solid #444',
+              borderRadius: '12px',
               resize: 'vertical',
+              lineHeight: '1.6',
             }}
           />
-          <div style={{ marginTop: '8px', fontSize: '14px', color: '#666' }}>
+          <div style={{ marginTop: '12px', fontSize: '16px', color: '#888' }}>
             {text.split(' ').filter(w => w.length > 0).length} từ (~{Math.ceil(text.split(' ').filter(w => w.length > 0).length * 0.4)}s)
           </div>
         </div>
@@ -119,31 +113,33 @@ export const VideoGeneratorUI: React.FC<VideoGeneratorUIProps> = ({ onGenerate }
         {/* Generate Button */}
         <button
           onClick={handleGenerate}
-          disabled={status === 'generating'}
           style={{
             width: '100%',
             padding: '16px',
             fontSize: '18px',
             fontWeight: 'bold',
-            backgroundColor: status === 'generating' ? '#555' : '#0066ff',
+            backgroundColor: '#0066ff',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
-            cursor: status === 'generating' ? 'not-allowed' : 'pointer',
+            cursor: 'pointer',
             marginBottom: '20px',
           }}
         >
-          {status === 'generating' ? '⏳ Đang xử lý...' : '🚀 Generate Video'}
+          📋 Copy Text & Hướng Dẫn CLI
         </button>
 
         {/* Status Message */}
         {message && (
           <div
             style={{
-              padding: '16px',
-              backgroundColor: status === 'error' ? '#ff4444' : status === 'success' ? '#00aa00' : '#333',
-              borderRadius: '8px',
-              marginBottom: '20px',
+              padding: '20px',
+              backgroundColor: status === 'error' ? '#ff4444' : status === 'success' ? '#00aa00' : '#ffaa00',
+              borderRadius: '12px',
+              marginBottom: '30px',
+              fontSize: '16px',
+              lineHeight: '1.6',
+              whiteSpace: 'pre-line',
             }}
           >
             {message}

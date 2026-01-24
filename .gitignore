@@ -8,3 +8,4 @@ build/
 *.log
 .remotion/
 public/temp/
+projects/

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "5-sai-lam-hoc-tieng-anh",
+    "name": "5-sai-lam-hoc-tieng-anh",
+    "path": "projects/5-sai-lam-hoc-tieng-anh",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-24T15:22:49.331Z",
+    "timestamp": 1769268169331
+  },
+  {
+    "id": "5-sai-lam-khi-hoc-tieng-anh",
+    "name": "5-sai-lam-khi-hoc-tieng-anh",
+    "path": "projects/5-sai-lam-khi-hoc-tieng-anh",
+    "hasScript": true,
+    "hasOtio": false,
+    "otioFile": null,
+    "modifiedAt": "2026-01-24T14:36:47.675Z",
+    "timestamp": 1769265407675
+  }
+]

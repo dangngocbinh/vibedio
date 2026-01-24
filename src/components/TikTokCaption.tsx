@@ -5,12 +5,29 @@ import { CaptionWord, CaptionStyle } from '../types';
 interface TikTokCaptionProps {
   words: CaptionWord[];
   style: CaptionStyle;
+  startOffset?: number;
 }
 
-export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style }) => {
+export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style, startOffset = 0 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const currentTime = frame / fps;
+  const currentTime = (frame / fps) + startOffset;
+
+  // Compute effective style with defaults
+  // Use explicit casts or checks since 'style' prop might be a flat object from OTIO (e.g. { font: '...' } instead of { fontFamily: '...' })
+  // or it might be missing properties.
+  const rawStyle = style as any || {};
+
+  const computedStyle: CaptionStyle = {
+    fontFamily: rawStyle.fontFamily || rawStyle.font || 'Montserrat, sans-serif',
+    fontSize: rawStyle.fontSize || 70, // Default to large size
+    color: rawStyle.color || '#FFFFFF',
+    backgroundColor: rawStyle.backgroundColor || 'transparent', // Transparent by default for TikTok style text-only look, or 'rgba(0,0,0,0.5)' for box
+    position: rawStyle.position || 'center',
+    highlightColor: rawStyle.highlightColor || '#F4D03F', // Gold/Yellow highlight
+    strokeColor: rawStyle.strokeColor || '#000000',
+    strokeWidth: rawStyle.strokeWidth || 6,
+  };
 
   // Find currently active words (show 3-5 words at a time)
   const wordsPerLine = 4;
@@ -18,7 +35,14 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style }) =>
     (word) => currentTime >= word.start && currentTime <= word.end
   );
 
-  if (activeWordIndex === -1) return null;
+  // Allow showing words even if no single word is strictly "active" (e.g. between words gap)
+  // Logic: find word that just ended or is about to start to keep context? 
+  // For now, keep original visibility logic but maybe extend range?
+  if (activeWordIndex === -1 && words.length > 0) {
+    // Check if we are within range of the entire caption block?
+    // For now return null to keep it simple, but we improved visibility via style.
+    return null;
+  }
 
   // Get context words around the active word
   const startIndex = Math.max(0, activeWordIndex - Math.floor(wordsPerLine / 2));
@@ -26,10 +50,10 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style }) =>
   const displayWords = words.slice(startIndex, endIndex);
 
   const getPositionStyle = (): React.CSSProperties => {
-    switch (style.position) {
+    switch (computedStyle.position) {
       case 'top':
         return {
-          top: '15%',
+          top: '20%',
           justifyContent: 'flex-start',
         };
       case 'center':
@@ -40,12 +64,12 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style }) =>
         };
       case 'bottom':
         return {
-          bottom: '15%',
+          bottom: '25%', // Lift up a bit
           justifyContent: 'flex-end',
         };
       default:
         return {
-          bottom: '15%',
+          bottom: '25%',
           justifyContent: 'flex-end',
         };
     }
@@ -82,55 +106,56 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style }) =>
 
           const scale = isActive
             ? interpolate(
-                currentTime,
-                [
-                  word.start,
-                  word.start + scaleInDuration,
-                  Math.max(word.start + scaleInDuration + 0.01, word.end - scaleOutDuration),
-                  word.end,
-                ],
-                [1, 1.15, 1.15, 1],
-                { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-              )
+              currentTime,
+              [
+                word.start,
+                word.start + scaleInDuration,
+                Math.max(word.start + scaleInDuration + 0.01, word.end - scaleOutDuration),
+                word.end,
+              ],
+              [1, 1.15, 1.15, 1],
+              { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+            )
             : 1;
 
           // Smooth opacity transition for active state
           const opacityDuration = Math.min(0.05, wordDuration * 0.2);
           const opacity = isActive
             ? interpolate(
-                currentTime,
-                [word.start, word.start + opacityDuration],
-                [0.8, 1],
-                { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-              )
+              currentTime,
+              [word.start, word.start + opacityDuration],
+              [0.8, 1],
+              { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+            )
             : 0.8;
 
           return (
             <div
               key={`${word.word}-${wordIndex}`}
               style={{
-                fontFamily: style.fontFamily,
-                fontSize: style.fontSize,
-                fontWeight: 'bold',
-                color: isActive ? style.highlightColor : style.color,
-                backgroundColor: style.backgroundColor,
-                padding: '8px 16px',
+                fontFamily: computedStyle.fontFamily,
+                fontSize: computedStyle.fontSize,
+                fontWeight: '900', // Extra bold
+                color: isActive ? computedStyle.highlightColor : computedStyle.color,
+                backgroundColor: 'transparent',
+                padding: '4px 8px',
                 borderRadius: '8px',
                 transform: `scale(${scale})`,
                 opacity,
                 textTransform: 'uppercase',
-                letterSpacing: '1px',
-                textShadow: style.strokeColor
+                textAlign: 'center',
+                lineHeight: 1.2,
+                WebkitTextStroke: isActive ? '0px' : `${computedStyle.strokeWidth! / 2}px ${computedStyle.strokeColor}`,
+                textShadow: computedStyle.strokeColor
                   ? `
-                    -${style.strokeWidth}px -${style.strokeWidth}px 0 ${style.strokeColor},
-                    ${style.strokeWidth}px -${style.strokeWidth}px 0 ${style.strokeColor},
-                    -${style.strokeWidth}px ${style.strokeWidth}px 0 ${style.strokeColor},
-                    ${style.strokeWidth}px ${style.strokeWidth}px 0 ${style.strokeColor}
+                    -${computedStyle.strokeWidth}px -${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
+                    ${computedStyle.strokeWidth}px -${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
+                    -${computedStyle.strokeWidth}px ${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
+                    ${computedStyle.strokeWidth}px ${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
+                    3px 3px 5px rgba(0,0,0,0.5)
                   `
                   : 'none',
-                boxShadow: isActive
-                  ? '0 4px 20px rgba(0, 0, 0, 0.5)'
-                  : '0 2px 10px rgba(0, 0, 0, 0.3)',
+                filter: isActive ? `drop-shadow(0 0 10px ${computedStyle.highlightColor})` : 'none',
               }}
             >
               {word.word}

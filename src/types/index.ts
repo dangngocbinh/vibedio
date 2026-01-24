@@ -5,6 +5,7 @@ export interface VideoConfig {
   animationStyle: 'cinematic' | 'dynamic' | 'minimal';
   captionStyle: CaptionStyle;
   transitionType: 'fade' | 'slide' | 'zoom' | 'auto';
+  watermark?: WatermarkConfig;
 }
 
 export interface CaptionStyle {
@@ -46,6 +47,28 @@ export interface ImageSearchResult {
   source: 'unsplash' | 'pexels' | 'pixabay';
   photographer: string;
   relevanceScore: number;
+}
+
+// New: Support both image and video media
+export interface MediaAsset {
+  type: 'image' | 'video';
+  url: string;
+  thumbnailUrl?: string;
+  source?: string;
+  photographer?: string;
+  relevanceScore?: number;
+  // Video-specific properties
+  duration?: number; // Video duration in seconds
+  startOffset?: number; // Start time to trim from (seconds)
+  endOffset?: number; // End time to trim to (seconds)
+}
+
+export interface WatermarkConfig {
+  logoUrl: string; // HTTP URL to logo image
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+  size: number; // Size in pixels (width)
+  opacity: number; // 0-1
+  padding: number; // Padding from edges in pixels
 }
 
 export interface CaptionWord {

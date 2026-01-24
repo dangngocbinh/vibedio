@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Auto video generator with voice-over, images, and captions",
   "scripts": {
+    "prestart": "node scripts/generate-project-list.js",
     "start": "remotion studio",
     "build": "remotion render AutoVideo output.mp4",
     "build:landscape": "remotion render AutoVideoLandscape output-landscape.mp4",
@@ -11,21 +12,42 @@
     "upgrade": "remotion upgrade"
   },
   "dependencies": {
-    "@remotion/bundler": "4.0.402",
-    "@remotion/cli": "4.0.402",
-    "@remotion/renderer": "4.0.402",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.17.14",
+    "@remotion/bundler": "4.0.409",
+    "@remotion/cli": "4.0.409",
+    "@remotion/gif": "4.0.409",
+    "@remotion/lottie": "4.0.409",
+    "@remotion/media-utils": "4.0.409",
+    "@remotion/motion-blur": "4.0.409",
+    "@remotion/noise": "4.0.409",
+    "@remotion/paths": "4.0.409",
+    "@remotion/preload": "4.0.409",
+    "@remotion/renderer": "4.0.409",
+    "@remotion/shapes": "4.0.409",
+    "@remotion/three": "4.0.409",
+    "@remotion/transitions": "4.0.409",
     "axios": "^1.6.2",
+    "d3": "^7.9.0",
     "dotenv": "^16.6.1",
+    "framer-motion": "^12.24.10",
+    "lodash": "^4.17.21",
     "openai": "^4.20.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "remotion": "4.0.402",
+    "remotion": "4.0.409",
+    "three": "^0.182.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/lodash": "^4.17.21",
     "@types/node": "^20.10.5",
     "@types/react": "^18.2.45",
+    "@types/three": "^0.182.0",
+    "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
