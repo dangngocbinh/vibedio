@@ -61,8 +61,11 @@ interface Item {
 
 export interface OtioPlayerProps {
     timeline?: Item; // Nhận toàn bộ object json timeline (fallback)
-    projectId?: string;
+    projectId?: string; // [Vue: props definition]
 }
+
+// [Vue: props definition] -> In React, props are defined as an interface and passed as the first argument to the component function.
+// In Vue, you would define `props: { timeline: Object, projectId: String }` in options API or `defineProps<{...}>()` in script setup.
 
 // Hàm tính tổng thời lượng timeline (max duration của các track)
 export const calculateTotalDuration = (timeline: Item, fps: number): number => {
@@ -111,7 +114,11 @@ const OtioClip: React.FC<{
     startFrame?: number;
 }> = ({ clip, fps, clipIndex, trackKind, startFrame = 0 }) => {
     const [hasError, setHasError] = React.useState(false);
+    // [Vue: React.useState] -> Equivalent to `const hasError = ref(false)` in Vue 3 Composition API.
+    // `setHasError` is the setter function. In Vue you would just assign `hasError.value = true`.
+
     const frame = useCurrentFrame();
+    // [Vue: Custom Hook] -> Similar to a composable function `useCurrentFrame()` in Vue.
 
     // Handle Gap (Silence)
     if (clip.OTIO_SCHEMA?.startsWith('Gap')) {
@@ -427,6 +434,10 @@ export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimelin
     const [activeTimeline, setActiveTimeline] = useState<Item | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
+
+
+    // [Vue: useEffect] -> Similar to `onMounted` combined with `watch`.
+    // It runs when the component mounts and whenever the dependencies in the array [projectId, defaultTimeline] change.
     useEffect(() => {
         const load = async () => {
             try {

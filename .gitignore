@@ -9,3 +9,4 @@ build/
 .remotion/
 public/temp/
 projects/
+.claude/skills/video-script-generator/utils/__pycache__/

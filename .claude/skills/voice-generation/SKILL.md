@@ -25,7 +25,8 @@ The script accepts the following arguments:
 
 ```bash
 node skill-voice-gen/scripts/generate-voice.js \
-  --text "Your text here" \
+  --text "Your text here" \ # should use for short text
+  --script "path/to/script.json" \ # should use for long text: path to script.json
   --provider "elevenlabs" \    # options: elevenlabs, vbee, openai, google
   --emotion "happy" \          # optional: happy, sad, angry, neutral, excited
   --voiceId "specific_id" \    # optional: override automatic selection
@@ -35,7 +36,8 @@ node skill-voice-gen/scripts/generate-voice.js \
 **IMPORTANT**: When generating voice for a script, always use `--outputDir` to match the script folder:
 ```bash
 node .claude/skills/voice-generation/scripts/generate-voice.js \
-  --text "..." \
+  --text "Your text here" \ # should use for short text
+  --script "path/to/script.json" \ # should use for long text: path to script.json
   --provider "openai" \
   --voiceId "onyx" \
   --outputDir "public/projects/ten-kich-ban"  # Same folder as script.json

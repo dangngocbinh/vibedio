@@ -69,27 +69,49 @@ function slugify(text) {
  */
 async function main() {
     try {
-        const text = ARGS.text;
+        const textArg = ARGS.text;
         const emotion = ARGS.emotion || 'neutral';
-        const title = ARGS.title || null; // New arg for title
-
-        // Auto-select filename
-        // If outputDir is specified (custom folder), use "voice" as filename
-        // Otherwise, use timestamp-based filename
-        const baseFilename = ARGS.outputDir ? 'voice' : generateBaseFilename(text, title);
-
-        let provider = ARGS.provider ? ARGS.provider.toLowerCase() : selectProvider(text, emotion);
-        if (provider === 'google') provider = 'gemini';
+        const title = ARGS.title || null;
 
         const voiceId = ARGS.voiceId;
+        let scriptPath = ARGS.script;
 
-        if (!text) {
-            console.error('Error: --text argument is required');
+        let finalText = textArg;
+
+        // If script path is provided, read from it
+        if (scriptPath) {
+            const absoluteScriptPath = path.isAbsolute(scriptPath)
+                ? scriptPath
+                : path.join(process.cwd(), scriptPath);
+
+            if (await fs.pathExists(absoluteScriptPath)) {
+                if (absoluteScriptPath.endsWith('.json')) {
+                    const json = await fs.readJson(absoluteScriptPath);
+                    finalText = json.script?.fullText || json.text || json.fullText;
+                } else {
+                    finalText = await fs.readFile(absoluteScriptPath, 'utf8');
+                }
+                console.log(`Loaded text from: ${absoluteScriptPath}`);
+            } else {
+                console.error(`Error: Script file not found: ${absoluteScriptPath}`);
+                process.exit(1);
+            }
+        }
+
+        if (!finalText) {
+            console.error('Error: --text argument or --script file is required');
             process.exit(1);
         }
 
+        // Handle provider selection before baseFilename
+        let provider = ARGS.provider ? ARGS.provider.toLowerCase() : selectProvider(finalText, emotion);
+        if (provider === 'google') provider = 'gemini';
+
+        // Auto-select filename
+        const baseFilename = ARGS.outputDir ? 'voice' : generateBaseFilename(finalText, title);
+
         console.log(`Generating voice...`);
-        console.log(`Text: "${text.substring(0, 50)}..."`);
+        console.log(`Text: "${finalText.substring(0, 50)}..."`);
         console.log(`Filename: ${baseFilename}`);
         console.log(`Provider: ${provider}`);
         console.log(`Emotion: ${emotion}`);
@@ -98,16 +120,16 @@ async function main() {
 
         switch (provider) {
             case 'elevenlabs':
-                result = await generateElevenLabs(text, voiceId, emotion, baseFilename);
+                result = await generateElevenLabs(finalText, voiceId, emotion, baseFilename);
                 break;
             case 'vbee':
-                result = await generateVbee(text, voiceId, baseFilename);
+                result = await generateVbee(finalText, voiceId, baseFilename);
                 break;
             case 'openai':
-                result = await generateOpenAI(text, voiceId, baseFilename);
+                result = await generateOpenAI(finalText, voiceId, baseFilename);
                 break;
             case 'gemini':
-                result = await generateGemini(text, voiceId, emotion, baseFilename);
+                result = await generateGemini(finalText, voiceId, emotion, baseFilename);
                 break;
             default:
                 throw new Error(`Unknown provider: ${provider}`);

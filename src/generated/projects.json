@@ -1,5 +1,15 @@
 [
   {
+    "id": "10-su-that-thu-vi-ve-giong-noi",
+    "name": "10-su-that-thu-vi-ve-giong-noi",
+    "path": "projects/10-su-that-thu-vi-ve-giong-noi",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-24T17:22:49.540Z",
+    "timestamp": 1769275369540
+  },
+  {
     "id": "su-that-ve-meo",
     "name": "su-that-ve-meo",
     "path": "projects/su-that-ve-meo",
