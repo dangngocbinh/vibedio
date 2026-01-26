@@ -49,7 +49,7 @@ If `voiceId` is not provided, the Agent (you) or the Script should attempt to se
 **Recommended Mapping (Extendable in implementation):**
 - **Vietnamese**: Default to **Vbee** or **ElevenLabs** (multilingual model).
 - **English + Emotion**: Default to **ElevenLabs**.
-- **General/Cost-effective**: Default to **OpenAI** or **Google**.
+- **General/Cost-effective**: Default **Google**. or  **OpenAI**
 
 ## 🚀 Recommended Voices by Use Case (Personas)
 

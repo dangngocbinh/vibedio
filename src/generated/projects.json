@@ -1,13 +1,23 @@
 [
   {
-    "id": "10-su-that-thu-vi-ve-giong-noi",
-    "name": "10-su-that-thu-vi-ve-giong-noi",
-    "path": "projects/10-su-that-thu-vi-ve-giong-noi",
+    "id": "vibe-video-capcut",
+    "name": "vibe-video-capcut",
+    "path": "projects/vibe-video-capcut",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
-    "modifiedAt": "2026-01-24T17:22:49.540Z",
-    "timestamp": 1769275369540
+    "modifiedAt": "2026-01-26T06:49:07.794Z",
+    "timestamp": 1769410147794
+  },
+  {
+    "id": "vibe-video-capcut-replacement",
+    "name": "vibe-video-capcut-replacement",
+    "path": "projects/vibe-video-capcut-replacement",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project-final.otio",
+    "modifiedAt": "2026-01-26T06:22:09.380Z",
+    "timestamp": 1769408529380
   },
   {
     "id": "su-that-ve-meo",
@@ -16,8 +26,28 @@
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
-    "modifiedAt": "2026-01-24T16:33:39.558Z",
-    "timestamp": 1769272419558
+    "modifiedAt": "2026-01-26T04:51:18.435Z",
+    "timestamp": 1769403078435
+  },
+  {
+    "id": "choi-gi-cuoi-tuan",
+    "name": "choi-gi-cuoi-tuan",
+    "path": "projects/choi-gi-cuoi-tuan",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-25T05:05:13.450Z",
+    "timestamp": 1769317513450
+  },
+  {
+    "id": "10-su-that-thu-vi-ve-giong-noi",
+    "name": "10-su-that-thu-vi-ve-giong-noi",
+    "path": "projects/10-su-that-thu-vi-ve-giong-noi",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-24T17:22:49.540Z",
+    "timestamp": 1769275369540
   },
   {
     "id": "vietnam",

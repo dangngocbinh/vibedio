@@ -12,6 +12,7 @@ import { FloatingEffect } from '../components/VietnamVibes/FloatingEffect';
 import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader';
 import { TikTokCaption } from '../components/TikTokCaption';
+import { ImageWithEffect } from '../components/ImageWithEffect';
 
 // Helpers cho Transition
 const FadePresentation: React.FC<any> = ({ children, presentationProgress }) => {
@@ -68,24 +69,42 @@ export interface OtioPlayerProps {
 // In Vue, you would define `props: { timeline: Object, projectId: String }` in options API or `defineProps<{...}>()` in script setup.
 
 // Hàm tính tổng thời lượng timeline (max duration của các track)
+// [Vue comparison] - Đây là utility function thuần, giống như một composable helper trong Vue
+// Nhưng không dùng reactivity vì chỉ tính toán thuần túy
 export const calculateTotalDuration = (timeline: Item, fps: number): number => {
     const tracks = timeline.tracks?.children || [];
     let maxDuration = 0;
 
     tracks.forEach((track: Item) => {
-        const clips = track.children || [];
-        // Tính tổng duration của track này (giả sử clips nối tiếp)
-        const trackSeconds = clips.reduce((acc: number, clip: Item) => {
-            const dur = clip.source_range?.duration;
-            return acc + (dur ? dur.value / dur.rate : 0);
-        }, 0);
+        const items = track.children || [];
+        let trackDuration = 0;
 
-        // Convert sang frames
-        const trackFrames = Math.round(trackSeconds * fps);
-        if (trackFrames > maxDuration) maxDuration = trackFrames;
+        // Iterate through items (clips and transitions)
+        // Transitions overlap with clips, so we need to handle them specially
+        items.forEach((item: Item) => {
+            if (item.OTIO_SCHEMA?.startsWith('Transition')) {
+                // Transitions overlap with adjacent clips, so we subtract their duration
+                const transitionDur = item.in_offset && item.out_offset
+                    ? (item.in_offset.value / item.in_offset.rate) + (item.out_offset.value / item.out_offset.rate)
+                    : 0;
+                trackDuration -= transitionDur;
+            } else if (item.source_range?.duration) {
+                // Regular clip - add its duration
+                const dur = item.source_range.duration;
+                const seconds = dur.value / dur.rate;
+                trackDuration += seconds;
+            }
+        });
+
+        // Convert to frames
+        const trackFrames = Math.round(trackDuration * fps);
+        if (trackFrames > maxDuration) {
+            maxDuration = trackFrames;
+        }
     });
 
-    return maxDuration || 30 * fps;
+    // Fallback to 30 seconds if no valid duration found
+    return maxDuration > 0 ? maxDuration : 30 * fps;
 };
 
 // Hàm helper để convert RationalTime sang frame number của Remotion
@@ -95,14 +114,29 @@ const toFrames = (time: RationalTime, compositionFps: number) => {
 };
 
 // Helper function sanitize URLs
-const sanitizeUrl = (url?: string) => {
-    if (url && url.startsWith('file://')) {
+// Helper function sanitize URLs
+const sanitizeUrl = (url?: string, projectId?: string) => {
+    if (!url) return url;
+
+    // Handle file:// protocol
+    if (url.startsWith('file://')) {
         const publicIndex = url.indexOf('/public/');
         if (publicIndex !== -1) {
             const relativePath = url.substring(publicIndex + 8);
             return staticFile(relativePath);
         }
     }
+
+    // Handle relative paths (not http/https/data)
+    if (!url.match(/^(https?:|data:|file:|\/)/)) {
+        if (projectId) {
+            // Check if it's already properly prefixed to avoid double-prefixing if logic changes
+            if (!url.startsWith(`projects/${projectId}`)) {
+                return `/projects/${projectId}/${url}`;
+            }
+        }
+    }
+
     return url;
 };
 
@@ -112,7 +146,8 @@ const OtioClip: React.FC<{
     clipIndex: number;
     trackKind?: string; // Thêm prop trackKind
     startFrame?: number;
-}> = ({ clip, fps, clipIndex, trackKind, startFrame = 0 }) => {
+    projectId?: string;
+}> = ({ clip, fps, clipIndex, trackKind, startFrame = 0, projectId }) => {
     const [hasError, setHasError] = React.useState(false);
     // [Vue: React.useState] -> Equivalent to `const hasError = ref(false)` in Vue 3 Composition API.
     // `setHasError` is the setter function. In Vue you would just assign `hasError.value = true`.
@@ -130,12 +165,18 @@ const OtioClip: React.FC<{
 
     const durationFrames = toFrames(durationStruct, fps);
 
+    // [Fix] Skip clips with 0 or negative duration to avoid Remotion error
+    if (durationFrames <= 0) {
+        console.warn(`[OtioClip] Clip "${clip.name}" has ${durationFrames} duration, skipping`);
+        return null;
+    }
+
     // Lấy URL media
     // @ts-ignore
     const mediaRefKey = clip.active_media_reference_key || 'DEFAULT_MEDIA';
     const mediaRef = clip.media_references?.[mediaRefKey];
     const rawSrc = mediaRef?.target_url;
-    const src = sanitizeUrl(rawSrc);
+    const src = sanitizeUrl(rawSrc, projectId);
 
     // if (!src) return null; // Logic gốc là return null, nhưng ta muốn debug xem clip nào lỗi hoặc missing
     // Với text clip hoặc generated clip, có thể ko có src.
@@ -160,14 +201,20 @@ const OtioClip: React.FC<{
     const isAudio = isAudioTrack;
 
     // Audio Fade Logic
-    let audioVolume = 1;
+    let baseVolume = 1;
+    if (clip.metadata?.volume !== undefined) {
+        baseVolume = parseFloat(clip.metadata.volume);
+    }
+
+    let audioVolume = baseVolume;
     if (isAudio && clip.metadata?.audio_fade_in) {
         const fadeSec = parseFloat(clip.metadata.audio_fade_in);
         const fadeFrames = fadeSec * fps;
-        audioVolume = interpolate(frame, [0, fadeFrames], [0, 1], {
+        const fadeMultiplier = interpolate(frame, [0, fadeFrames], [0, 1], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp"
         });
+        audioVolume = baseVolume * fadeMultiplier;
     }
 
     // Style Metadata Handling
@@ -182,10 +229,12 @@ const OtioClip: React.FC<{
         >
             <AbsoluteFill style={customStyle}>
                 {isImage ? (
-                    <Img
+                    <ImageWithEffect
                         src={src!}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={() => { console.error(`Failed to load image: ${src} `); setHasError(true); }}
+                        effect={clip.metadata?.effect}
+                        effectParams={clip.metadata?.effect_params}
+                        durationInFrames={durationFrames}
+                        onError={() => { console.error(`Failed to load image: ${src}`); setHasError(true); }}
                     />
                 ) : isAudio ? (
                     <Audio
@@ -264,7 +313,7 @@ const AudioShaker: React.FC<{
     );
 };
 
-const TrackRenderer: React.FC<{ track: Item, fps: number }> = ({ track, fps }) => {
+const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> = ({ track, fps, projectId }) => {
     const clips = track.children || [];
     const trackKind = track.kind; // 'Video' or 'Audio'
 
@@ -279,7 +328,7 @@ const TrackRenderer: React.FC<{ track: Item, fps: number }> = ({ track, fps }) =
     // Audio Reactivity (only relevant for Video tracks)
     const audioReactive = track.metadata?.audioReactive;
     let audioSrc = track.metadata?.audioSrc;
-    audioSrc = sanitizeUrl(audioSrc); // Can be undefined
+    audioSrc = sanitizeUrl(audioSrc, projectId); // Can be undefined
 
     if (isVideoTrack) {
         const children = (
@@ -323,7 +372,7 @@ const TrackRenderer: React.FC<{ track: Item, fps: number }> = ({ track, fps }) =
                     }
                     if (item.metadata?.remotion_component === 'FloatingEffect') {
                         const props = item.metadata.props || {};
-                        if (props.audioSrc) props.audioSrc = sanitizeUrl(props.audioSrc);
+                        if (props.audioSrc) props.audioSrc = sanitizeUrl(props.audioSrc, projectId);
 
                         const durationStruct = item.source_range?.duration;
                         const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
@@ -350,6 +399,7 @@ const TrackRenderer: React.FC<{ track: Item, fps: number }> = ({ track, fps }) =
                                 clipIndex={itemIndex}
                                 trackKind={trackKind}
                                 startFrame={0}
+                                projectId={projectId}
                             />
                         </TransitionSeries.Sequence>
                     );
@@ -398,7 +448,14 @@ const TrackRenderer: React.FC<{ track: Item, fps: number }> = ({ track, fps }) =
                 if (clip.metadata?.remotion_component === 'TikTokCaption') {
                     const props = clip.metadata.props || {};
                     const durationStruct = clip.source_range?.duration;
-                    const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                    // [Fix] Ensure minimum duration of 1 frame to avoid Remotion error
+                    // This can happen when subtitle words have same start/end timestamp
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] TikTokCaption "${clip.name}" has 0 duration, skipping`);
+                        return null; // Skip 0-duration subtitles
+                    }
 
                     return (
                         <Sequence
@@ -419,6 +476,7 @@ const TrackRenderer: React.FC<{ track: Item, fps: number }> = ({ track, fps }) =
                         fps={fps}
                         clipIndex={clipIndex}
                         trackKind={trackKind}
+                        projectId={projectId}
                     />
                 );
             })}
@@ -494,7 +552,7 @@ export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimelin
     return (
         <AbsoluteFill style={{ backgroundColor: '#000' }}>
             {tracks.map((track: Item, trackIndex: number) => (
-                <TrackRenderer key={track.name || trackIndex} track={track} fps={fps} />
+                <TrackRenderer key={track.name || trackIndex} track={track} fps={fps} projectId={projectId} />
             ))}
         </AbsoluteFill>
     );

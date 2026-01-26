@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const minimist = require('minimist');
 const { OpenAI } = require('openai');
 const textToSpeech = require('@google-cloud/text-to-speech');
+const { execSync } = require('child_process');
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -135,17 +136,34 @@ async function main() {
                 throw new Error(`Unknown provider: ${provider}`);
         }
 
+        // Post-processing: Get actual audio duration from file
+        const actualDuration = getAudioDuration(result.audioPath);
+        if (actualDuration !== null) {
+            console.log(`Actual audio duration: ${actualDuration}s`);
+            result.duration = actualDuration;
+            // Update the JSON file with actual duration
+            const meta = await fs.readJson(result.jsonPath);
+            meta.duration = actualDuration;
+            meta.audioFile = path.basename(result.audioPath);
+            await fs.writeJson(result.jsonPath, meta, { spaces: 2 });
+        }
+
         // Post-processing: Check if we need to generate timestamps via Whisper
         if (!result.timestamps && CONFIG.openaiApiKey && !ARGS['skip-timestamps']) {
             console.log('Timestamps missing. Attempting to generate via Whisper...');
             try {
-                const whisperTimestamps = await generateTimestampsWithWhisper(result.audioPath, text);
+                const whisperTimestamps = await generateTimestampsWithWhisper(result.audioPath, finalText);
                 if (whisperTimestamps) {
                     result.timestamps = whisperTimestamps;
                     // Update the JSON file
                     const meta = await fs.readJson(result.jsonPath);
                     meta.timestamps = whisperTimestamps;
-                    meta.timestamp_source = 'whisper_fallback';
+                    meta.timestamp_source = 'whisper';
+                    // Recalculate duration from timestamps if available
+                    if (whisperTimestamps.length > 0) {
+                        const lastWord = whisperTimestamps[whisperTimestamps.length - 1];
+                        meta.durationFromTimestamps = lastWord.end;
+                    }
                     await fs.writeJson(result.jsonPath, meta, { spaces: 2 });
                     console.log('Timestamps generated successfully via Whisper.');
                 }
@@ -184,6 +202,27 @@ function selectProvider(text, emotion) {
         return 'elevenlabs';
     }
     return 'gemini';
+}
+
+/**
+ * Get actual audio duration using ffprobe
+ * @param {string} audioPath - Path to audio file
+ * @returns {number} Duration in seconds, or null if failed
+ */
+function getAudioDuration(audioPath) {
+    try {
+        const result = execSync(
+            `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`,
+            { encoding: 'utf8', timeout: 10000 }
+        );
+        const duration = parseFloat(result.trim());
+        if (!isNaN(duration)) {
+            return Math.round(duration * 100) / 100; // Round to 2 decimal places
+        }
+    } catch (err) {
+        console.warn(`Warning: Could not get audio duration via ffprobe: ${err.message}`);
+    }
+    return null;
 }
 
 /**
@@ -256,8 +295,14 @@ async function generateGemini(text, voiceId, emotion, baseFilename) {
     await fs.writeFile(audioPath, wavBuffer);
 
     const jsonPath = `${basePath}.json`;
+    const audioFilename = path.basename(audioPath);
     await fs.writeJson(jsonPath, {
-        text, provider: 'gemini', voiceId: voiceName, model: activeModelId,
+        text,
+        provider: 'gemini',
+        voiceId: voiceName,
+        model: activeModelId,
+        audioFile: audioFilename,
+        duration: null, // Will be updated with actual duration from ffprobe
         timestamps: null,
     }, { spaces: 2 });
 
@@ -298,8 +343,16 @@ async function generateElevenLabs(text, voiceId, emotion, baseFilename) {
     const alignment = response.data.alignment;
     const wordTimestamps = processElevenLabsAlignment(alignment, text);
 
+    const audioFilename = `${path.basename(basePath)}.mp3`;
     await fs.writeJson(`${basePath}.json`, {
-        text, provider: 'elevenlabs', voiceId: selectedVoiceId, emotion, raw_alignment: alignment, timestamps: wordTimestamps
+        text,
+        provider: 'elevenlabs',
+        voiceId: selectedVoiceId,
+        emotion,
+        audioFile: audioFilename,
+        duration: null, // Will be updated with actual duration from ffprobe
+        raw_alignment: alignment,
+        timestamps: wordTimestamps
     }, { spaces: 2 });
 
     return { audioPath: `${basePath}.mp3`, jsonPath: `${basePath}.json`, timestamps: wordTimestamps };
@@ -332,7 +385,15 @@ async function generateVbee(text, voiceId, baseFilename) {
 
     const basePath = path.join(CONFIG.outputDir, baseFilename);
     await fs.writeFile(`${basePath}.mp3`, audioData);
-    await fs.writeJson(`${basePath}.json`, { text, provider: 'vbee', voiceId, timestamps: null }, { spaces: 2 });
+    const audioFilename = `${path.basename(basePath)}.mp3`;
+    await fs.writeJson(`${basePath}.json`, {
+        text,
+        provider: 'vbee',
+        voiceId,
+        audioFile: audioFilename,
+        duration: null, // Will be updated with actual duration from ffprobe
+        timestamps: null
+    }, { spaces: 2 });
     return { audioPath: `${basePath}.mp3`, jsonPath: `${basePath}.json`, timestamps: null };
 }
 
@@ -345,7 +406,15 @@ async function generateOpenAI(text, voiceId, baseFilename) {
 
     const basePath = path.join(CONFIG.outputDir, baseFilename);
     await fs.writeFile(`${basePath}.mp3`, buffer);
-    await fs.writeJson(`${basePath}.json`, { text, provider: 'openai', voiceId: selectedVoice, timestamps: null }, { spaces: 2 });
+    const audioFilename = `${path.basename(basePath)}.mp3`;
+    await fs.writeJson(`${basePath}.json`, {
+        text,
+        provider: 'openai',
+        voiceId: selectedVoice,
+        audioFile: audioFilename,
+        duration: null, // Will be updated with actual duration from ffprobe
+        timestamps: null
+    }, { spaces: 2 });
     return { audioPath: `${basePath}.mp3`, jsonPath: `${basePath}.json`, timestamps: null };
 }
 

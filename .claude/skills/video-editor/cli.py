@@ -49,6 +49,12 @@ def import_strategies():
     except ImportError:
         pass
 
+    try:
+        from strategies.image_slide_strategy import ImageSlideStrategy
+        STRATEGY_MAP['image-slide'] = ImageSlideStrategy
+    except ImportError:
+        pass
+
 
 def main():
     """Main CLI entry point."""

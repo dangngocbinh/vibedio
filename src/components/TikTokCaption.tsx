@@ -98,36 +98,45 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style, star
           const wordIndex = startIndex + index;
           const isActive = wordIndex === activeWordIndex;
 
-          // Scale animation for active word using interpolate (no CSS transitions)
+          // Scale animation for active word using interpolate
           // Ensure input range is strictly increasing
-          const wordDuration = word.end - word.start;
-          const scaleInDuration = Math.min(0.1, wordDuration * 0.3);
-          const scaleOutDuration = Math.min(0.1, wordDuration * 0.3);
+          const wordDuration = Math.max(word.end - word.start, 0.01); // Minimum 10ms duration
+          const safeStart = word.start;
+          const safeEnd = safeStart + wordDuration; // Use calculated safe end
 
-          const scale = isActive
-            ? interpolate(
+          const scaleInDuration = Math.min(0.05, wordDuration * 0.3);
+          const scaleOutDuration = Math.min(0.05, wordDuration * 0.3);
+
+          // Build strictly increasing input range
+          const scaleT1 = safeStart;
+          const scaleT2 = safeStart + scaleInDuration;
+          const scaleT3 = Math.max(scaleT2 + 0.001, safeEnd - scaleOutDuration);
+          const scaleT4 = Math.max(scaleT3 + 0.001, safeEnd);
+
+          let scale = 1;
+          if (isActive && scaleT1 < scaleT2 && scaleT2 < scaleT3 && scaleT3 < scaleT4) {
+            scale = interpolate(
               currentTime,
-              [
-                word.start,
-                word.start + scaleInDuration,
-                Math.max(word.start + scaleInDuration + 0.01, word.end - scaleOutDuration),
-                word.end,
-              ],
+              [scaleT1, scaleT2, scaleT3, scaleT4],
               [1, 1.15, 1.15, 1],
               { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-            )
-            : 1;
+            );
+          }
 
           // Smooth opacity transition for active state
-          const opacityDuration = Math.min(0.05, wordDuration * 0.2);
-          const opacity = isActive
-            ? interpolate(
+          const opacityDuration = Math.min(0.03, wordDuration * 0.2);
+          const opacityT1 = safeStart;
+          const opacityT2 = safeStart + Math.max(opacityDuration, 0.01);
+
+          let opacity = 0.8;
+          if (isActive && opacityT1 < opacityT2) {
+            opacity = interpolate(
               currentTime,
-              [word.start, word.start + opacityDuration],
+              [opacityT1, opacityT2],
               [0.8, 1],
               { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-            )
-            : 0.8;
+            );
+          }
 
           return (
             <div

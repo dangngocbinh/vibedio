@@ -24,9 +24,18 @@ public/projects/{project-name}/
 | Type | Status | Track Structure |
 |------|--------|----------------|
 | **listicle** | ✅ Implemented | B-Roll + Graphics + Subtitles + Voice + Music |
+| **image-slide** | ✅ **NEW** | Images (với effects) + Subtitles + Voice + Music |
 | **facts** | 🚧 Planned | Video + Fact Callouts + Subtitles + Voice + Music |
 | **motivation** | 🚧 Planned | Cinematic + Quotes + Subtitles + Voice + Music |
 | **story** | 🚧 Planned | Narrative + Chapters + Subtitles + Voice + SFX + Music |
+
+### Image-Slide Video Type (NEW)
+
+Dành cho video tạo từ ảnh AI (Gemini) hoặc stock images với:
+- **Voice-synced timing** - Ảnh sync chính xác với voice timestamps
+- **AI auto-suggest effects** - Zoom, Ken Burns, Slide dựa trên content
+- **AI auto-suggest transitions** - Crossfade, Cut, Dissolve dựa trên mood
+- **TikTok highlight captions** - Word-by-word highlight
 
 ## USAGE
 
@@ -91,18 +100,18 @@ file:///absolute/path/to/voice.mp3
 ## INPUT REQUIREMENTS
 
 ### 1. script.json (Required)
+
+#### For Listicle Type:
 ```json
 {
   "metadata": {
     "projectName": "5-sai-lam-hoc-tieng-anh",
     "videoType": "listicle",
-    "duration": 60,
-    "fps": 30
+    "duration": 60
   },
   "scenes": [
     {"id": "hook", "startTime": 0, "duration": 5},
-    {"id": "item1", "startTime": 5, "duration": 10},
-    ...
+    {"id": "item1", "startTime": 5, "duration": 10}
   ],
   "subtitle": {
     "style": "highlight-word",
@@ -111,10 +120,44 @@ file:///absolute/path/to/voice.mp3
 }
 ```
 
+#### For Image-Slide Type:
+```json
+{
+  "metadata": {
+    "projectName": "su-that-ve-meo",
+    "videoType": "image-slide",
+    "duration": 20
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "text": "Bạn có biết mèo ngủ tới 70% cuộc đời?",
+      "visualSuggestion": {
+        "type": "stock",
+        "query": "sleeping cat close up"
+      }
+    },
+    {
+      "id": "fact1",
+      "text": "Mèo không thể cảm nhận vị ngọt.",
+      "visualSuggestion": {
+        "type": "ai-generated",
+        "prompt": "A cat looking at candy, confused expression"
+      }
+    }
+  ],
+  "subtitle": {
+    "style": "highlight-word",
+    "highlightColor": "#F4D03F"
+  }
+}
+```
+
 **Required fields:**
-- `metadata.videoType` - determines which strategy to use
+- `metadata.videoType` - determines which strategy to use (`listicle`, `image-slide`)
 - `metadata.duration` - expected total duration
-- `scenes` - array with `id`, `startTime`, `duration`
+- `scenes` - array with `id`, `text` (for image-slide)
+- `scenes[].visualSuggestion` - optional, for AI effect suggestion
 
 ### 2. voice.json (Required)
 ```json
@@ -182,6 +225,31 @@ project.otio
     └── background-music.mp3 (60s, fade-in 2s)
 ```
 
+### Image-Slide Timeline (4 tracks) - NEW
+
+```
+project.otio
+├── Track 1: Images (Video) - Voice-synced timing
+│   ├── hook.png (3.1s) [effect: zoom-in, intensity: 0.7]
+│   ├── [Crossfade transition 0.5s]
+│   ├── fact1.png (2.7s) [effect: ken-burns, intensity: 0.5]
+│   ├── [Crossfade transition 0.5s]
+│   └── cta.png (0.9s) [effect: zoom-in, intensity: 0.7]
+├── Track 2: Subtitles (Video)
+│   ├── TikTokCaption "Bạn có biết..."
+│   ├── TikTokCaption "mèo ngủ..."
+│   └── ...
+├── Track 3: Voice (Audio)
+│   └── voice.mp3 (synced duration)
+└── Track 4: Music (Audio) - Optional
+    └── background-music.mp3 (fade-in 2s)
+```
+
+**Key Features:**
+- Image duration = voice timing (not fixed script duration)
+- Effects auto-suggested based on content keywords
+- Transitions auto-suggested based on scene mood
+
 ## INTEGRATION VỚI REMOTION
 
 ### Loading OTIO in Remotion
@@ -237,18 +305,21 @@ npm run render -- MyVideo  # Final render
 
 ```
 video-editor/
-├── cli.py                   # Entry point
+├── cli.py                       # Entry point
 ├── core/
-│   ├── otio_builder.py      # Timeline builder orchestrator
-│   └── asset_resolver.py    # Relative path conversion
+│   ├── otio_builder.py          # Timeline builder orchestrator
+│   └── asset_resolver.py        # Relative path conversion
 ├── strategies/
-│   ├── base_strategy.py     # Abstract strategy class
-│   └── listicle_strategy.py # Listicle implementation
+│   ├── base_strategy.py         # Abstract strategy class
+│   ├── listicle_strategy.py     # Listicle implementation
+│   └── image_slide_strategy.py  # Image-slide implementation (NEW)
 ├── templates/
-│   └── subtitle_generator.py # Subtitle track generation
+│   └── subtitle_generator.py    # Subtitle track generation
 └── utils/
-    ├── json_loader.py       # Input validation
-    └── timing_calculator.py # Time/frame conversion
+    ├── json_loader.py           # Input validation
+    ├── timing_calculator.py     # Time/frame conversion
+    ├── voice_timing_sync.py     # Voice-scene sync (NEW)
+    └── effect_suggester.py      # AI effect suggestion (NEW)
 ```
 
 ### Strategy Pattern
@@ -260,7 +331,40 @@ class ListicleStrategy(BaseStrategy):
     def populate_tracks(self, timeline, script, voice_data, resources):
         # Create 5 tracks specific to listicle format
         pass
+
+class ImageSlideStrategy(BaseStrategy):
+    def populate_tracks(self, timeline, script, voice_data, resources):
+        # 1. Sync scenes with voice timestamps
+        voice_sync = VoiceTimingSync()
+        scene_timings = voice_sync.map_scenes_to_voice(scenes, voice_data)
+
+        # 2. Auto-suggest effects and transitions
+        effect_suggester = EffectSuggester()
+        effects = effect_suggester.suggest_all_effects(scenes)
+
+        # 3. Create image track with voice-synced timing
+        # 4. Create subtitle, voice, music tracks
+        pass
 ```
+
+### Effect Suggestion Rules
+
+| Content Keywords | Suggested Effect |
+|-----------------|------------------|
+| face, portrait, close, detail | `zoom-in` (intensity: 0.7) |
+| landscape, scenery, nature, panorama | `ken-burns` (intensity: 0.5) |
+| action, move, fast, travel | `slide` (intensity: 0.6) |
+| important, highlight, wow | `scale` (intensity: 0.4) |
+| (default) | `ken-burns` (intensity: 0.5) |
+
+### Transition Suggestion Rules
+
+| Scene Pattern | Suggested Transition |
+|--------------|---------------------|
+| hook → item | `cut` (0s) |
+| item → item | `crossfade` (0.4s) |
+| item → cta | `dissolve` (0.6s) |
+| (default) | `crossfade` (0.5s) |
 
 ## VALIDATION RULES
 
@@ -345,6 +449,14 @@ pip install -r requirements.txt
 ```
 
 ## VERSION HISTORY
+
+- v1.1 (2026-01-26): Image-Slide Strategy
+  - **NEW** `image-slide` video type for AI-generated image videos
+  - **NEW** Voice-synced timing (images match voice timestamps)
+  - **NEW** AI effect suggestion (zoom, ken-burns, slide)
+  - **NEW** AI transition suggestion (crossfade, cut, dissolve)
+  - **NEW** `VoiceTimingSync` utility for scene-voice mapping
+  - **NEW** `EffectSuggester` utility for rule-based suggestions
 
 - v1.0 (2026-01-24): Initial release
   - Listicle strategy implemented

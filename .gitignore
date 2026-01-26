@@ -10,3 +10,5 @@ build/
 public/temp/
 projects/
 .claude/skills/video-script-generator/utils/__pycache__/
+generated/
+__pycache__/

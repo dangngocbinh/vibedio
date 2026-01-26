@@ -1,33 +1,46 @@
 #!/usr/bin/env node
 
+// Load environment from skill .env first, then project root .env
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '..', '.env') });
 const minimist = require('minimist');
 const path = require('path');
 
 // Import modules
 const PexelsClient = require('./api/pexels-client');
 const PixabayClient = require('./api/pixabay-client');
+const GeminiClient = require('./api/gemini-client');
 const ScriptReader = require('./utils/script-reader');
 const QueryBuilder = require('./utils/query-builder');
 const ResourceMatcher = require('./processors/resource-matcher');
 const JSONBuilder = require('./processors/json-builder');
+const { createStorageAdapter } = require('./storage');
+const ResourceDownloader = require('./downloader');
 
 /**
  * Main function to find video resources
  */
 async function main() {
   console.log('\n╔═══════════════════════════════════════════════════════╗');
-  console.log('║       VIDEO RESOURCE FINDER v1.0                      ║');
+  console.log('║       VIDEO RESOURCE FINDER v1.1                      ║');
   console.log('║       Finding free resources from Pexels & Pixabay    ║');
   console.log('╚═══════════════════════════════════════════════════════╝\n');
 
   // Parse command line arguments
   const args = minimist(process.argv.slice(2), {
-    string: ['projectDir', 'preferredSource'],
-    number: ['resultsPerQuery'],
+    string: ['projectDir', 'preferredSource', 'quality', 'storage'],
+    number: ['resultsPerQuery', 'concurrency', 'downloadCount'],
+    boolean: ['enableAI', 'noAI', 'download', 'skipDownload'],
     default: {
       resultsPerQuery: 3,
-      preferredSource: 'pexels'
+      preferredSource: 'pexels',
+      enableAI: true,
+      download: true,           // Enable download by default
+      skipDownload: false,      // Explicit skip
+      quality: 'best',          // best | hd | sd | medium
+      storage: 'local',         // local | cloud (future)
+      concurrency: 3,           // Parallel downloads
+      downloadCount: 1          // Download only first result per scene
     }
   });
 
@@ -40,12 +53,23 @@ async function main() {
     console.log('  --projectDir         Path to project directory (required)');
     console.log('  --resultsPerQuery    Number of results per query (default: 3)');
     console.log('  --preferredSource    Preferred API source: pexels|pixabay (default: pexels)');
+    console.log('  --download           Enable download (default: true)');
+    console.log('  --skipDownload       Skip downloading, only get URLs');
+    console.log('  --quality            Quality preference: best|hd|sd|medium (default: best)');
+    console.log('  --downloadCount      Number of results to download per scene (default: 1)');
+    console.log('  --concurrency        Parallel download threads (default: 3)');
+    console.log('  --storage            Storage type: local|cloud (default: local)');
     process.exit(1);
   }
 
   // Resolve project directory path
   const projectDir = path.resolve(args.projectDir);
-  console.log(`📁 Project Directory: ${projectDir}\n`);
+  console.log(`📁 Project Directory: ${projectDir}`);
+  console.log(`📥 Download: ${args.download && !args.skipDownload ? 'enabled' : 'disabled'}`);
+  if (args.download && !args.skipDownload) {
+    console.log(`   Quality: ${args.quality}, Count per scene: ${args.downloadCount}`);
+  }
+  console.log('');
 
   try {
     // Step 1: Initialize API clients
@@ -60,6 +84,22 @@ async function main() {
 
     const pexelsClient = pexelsApiKey ? new PexelsClient(pexelsApiKey) : null;
     const pixabayClient = pixabayApiKey ? new PixabayClient(pixabayApiKey) : null;
+
+    // Initialize Gemini client for AI image generation
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const enableAI = args.enableAI && !args.noAI && geminiApiKey;
+    let geminiClient = null;
+
+    if (enableAI && geminiApiKey && geminiApiKey !== 'your_gemini_api_key_here') {
+      try {
+        geminiClient = new GeminiClient(geminiApiKey);
+        console.log('✅ Gemini client initialized (AI generation enabled)');
+      } catch (error) {
+        console.warn('⚠️  Gemini client initialization failed:', error.message);
+      }
+    } else if (args.enableAI && !geminiApiKey) {
+      console.log('ℹ️  AI generation disabled (GEMINI_API_KEY not set)');
+    }
 
     if (pexelsClient) console.log('✅ Pexels client initialized');
     if (pixabayClient) console.log('✅ Pixabay client initialized');
@@ -86,22 +126,72 @@ async function main() {
     // Step 4: Fetch resources
     console.log('\n🌐 Fetching resources from APIs...\n');
     const resourceMatcher = new ResourceMatcher(pexelsClient, pixabayClient, {
+      geminiClient: geminiClient,
       resultsPerQuery: args.resultsPerQuery,
-      preferredSource: args.preferredSource
+      preferredSource: args.preferredSource,
+      enableAIGeneration: enableAI,
+      projectDir: projectDir
     });
 
-    const results = await resourceMatcher.fetchAllResources(queries);
+    let results = await resourceMatcher.fetchAllResources(queries);
 
-    // Step 5: Build and save resources.json
+    // Step 5: Download resources (if enabled)
+    let downloadSummary = null;
+    const shouldDownload = args.download && !args.skipDownload;
+
+    if (shouldDownload) {
+      console.log('\n📥 Downloading resources...\n');
+
+      // Initialize storage adapter
+      const storageAdapter = createStorageAdapter(args.storage, {
+        baseDir: projectDir,
+        structure: 'by-type'
+      });
+      await storageAdapter.initialize();
+
+      // Initialize downloader
+      const downloader = new ResourceDownloader(storageAdapter, {
+        quality: args.quality,
+        concurrency: args.concurrency,
+        downloadCount: args.downloadCount
+      });
+
+      // Download with progress
+      let downloadedCount = 0;
+      results = await downloader.downloadAllResources(results, (progress) => {
+        downloadedCount++;
+        const status = progress.result.success ? '✓' : '✗';
+        const title = progress.current.metadata?.title || progress.current.id;
+        const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
+        console.log(`  [${status}] ${progress.completed}/${progress.total} - ${truncatedTitle}`);
+      });
+
+      // Get download summary
+      const storageInfo = storageAdapter.getStorageInfo();
+      downloadSummary = {
+        enabled: true,
+        totalDownloaded: countDownloaded(results),
+        totalFailed: countFailedDownloads(results),
+        totalSkipped: countSkipped(results, args.downloadCount),
+        storageLocation: storageInfo.downloadsDir,
+        storageType: storageInfo.type,
+        qualityPreference: args.quality
+      };
+
+      console.log(`\n[Download] Complete: ${downloadSummary.totalDownloaded} downloaded, ${downloadSummary.totalFailed} failed`);
+    }
+
+    // Step 6: Build and save resources.json
     console.log('\n💾 Building resources.json...\n');
     const jsonBuilder = new JSONBuilder();
 
     const apiStats = {
       pexels: pexelsClient ? pexelsClient.getRequestCount() : 0,
-      pixabay: pixabayClient ? pixabayClient.getRequestCount() : 0
+      pixabay: pixabayClient ? pixabayClient.getRequestCount() : 0,
+      gemini: geminiClient ? geminiClient.getRequestCount() : 0
     };
 
-    const resourcesJSON = jsonBuilder.buildResourcesJSON(metadata, results, apiStats);
+    const resourcesJSON = jsonBuilder.buildResourcesJSON(metadata, results, apiStats, downloadSummary);
 
     // Validate before saving
     if (!jsonBuilder.validate(resourcesJSON)) {
@@ -110,7 +200,7 @@ async function main() {
 
     const outputPath = await jsonBuilder.saveToFile(projectDir, resourcesJSON);
 
-    // Step 6: Print summary
+    // Step 7: Print summary
     console.log('\n╔═══════════════════════════════════════════════════════╗');
     console.log('║                   ✅ SUCCESS                           ║');
     console.log('╚═══════════════════════════════════════════════════════╝\n');
@@ -118,14 +208,27 @@ async function main() {
     console.log('📊 Summary:');
     console.log(`  Total Videos:        ${resourcesJSON.summary.totalVideos}`);
     console.log(`  Total Images:        ${resourcesJSON.summary.totalImages}`);
+    if (resourcesJSON.summary.totalGeneratedImages > 0) {
+      console.log(`  AI Generated Images: ${resourcesJSON.summary.totalGeneratedImages}`);
+    }
     console.log(`  Total Music:         ${resourcesJSON.summary.totalMusic}`);
     console.log(`  Total Sound Effects: ${resourcesJSON.summary.totalSoundEffects}`);
     console.log(`  Successful Queries:  ${resourcesJSON.summary.successfulQueries}`);
     console.log(`  Failed Queries:      ${resourcesJSON.summary.failedQueries}`);
 
+    if (downloadSummary) {
+      console.log('\n📥 Download Summary:');
+      console.log(`  Downloaded:          ${downloadSummary.totalDownloaded}`);
+      console.log(`  Failed:              ${downloadSummary.totalFailed}`);
+      console.log(`  Storage Location:    ${downloadSummary.storageLocation}`);
+    }
+
     console.log('\n🔌 API Usage:');
     console.log(`  Pexels requests:     ${apiStats.pexels}`);
     console.log(`  Pixabay requests:    ${apiStats.pixabay}`);
+    if (apiStats.gemini > 0) {
+      console.log(`  Gemini requests:     ${apiStats.gemini} (AI generated images)`);
+    }
 
     if (resourcesJSON.errors.length > 0) {
       console.log('\n⚠️  Errors:');
@@ -137,10 +240,18 @@ async function main() {
     }
 
     console.log(`\n📄 Output saved to: ${outputPath}`);
-    console.log('\n✨ Next steps:');
-    console.log('  1. Review resources.json to see all found resources');
-    console.log('  2. Manually download the resources you want to use');
-    console.log('  3. Use the URLs in your video editing workflow\n');
+
+    if (shouldDownload) {
+      console.log('\n✨ Next steps:');
+      console.log('  1. Review resources.json to see all downloaded resources');
+      console.log('  2. Find downloaded files in: ' + downloadSummary.storageLocation);
+      console.log('  3. Use the local files in your video editing workflow\n');
+    } else {
+      console.log('\n✨ Next steps:');
+      console.log('  1. Review resources.json to see all found resources');
+      console.log('  2. Run again without --skipDownload to download files');
+      console.log('  3. Or manually download the resources you want to use\n');
+    }
 
     process.exit(0);
 
@@ -149,6 +260,46 @@ async function main() {
     console.error('\nStack trace:', error.stack);
     process.exit(1);
   }
+}
+
+/**
+ * Count successfully downloaded resources
+ */
+function countDownloaded(results) {
+  let count = 0;
+  for (const group of [...(results.videos || []), ...(results.images || []), ...(results.music || []), ...(results.soundEffects || [])]) {
+    for (const result of (group.results || [])) {
+      if (result.downloadStatus === 'success') count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * Count failed downloads
+ */
+function countFailedDownloads(results) {
+  let count = 0;
+  for (const group of [...(results.videos || []), ...(results.images || []), ...(results.music || []), ...(results.soundEffects || [])]) {
+    for (const result of (group.results || [])) {
+      if (result.downloadStatus === 'failed') count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * Count skipped resources (beyond downloadCount)
+ */
+function countSkipped(results, downloadCount) {
+  let count = 0;
+  for (const group of [...(results.videos || []), ...(results.images || []), ...(results.music || []), ...(results.soundEffects || [])]) {
+    const resultsArray = group.results || [];
+    if (resultsArray.length > downloadCount) {
+      count += resultsArray.length - downloadCount;
+    }
+  }
+  return count;
 }
 
 // Run main function

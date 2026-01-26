@@ -2,43 +2,87 @@
 
 ## MỤC ĐÍCH
 
-Tự động tìm kiếm FREE resources cho video production từ Pexels và Pixabay APIs:
+Tự động tìm kiếm và **tải về** FREE resources cho video production từ Pexels, Pixabay APIs và **Gemini AI Image Generation**:
 - **Stock Videos (B-roll)** - Từ Pexels, Pixabay
 - **Stock Images** - Từ Pexels, Pixabay
+- **AI Generated Images** - Từ Gemini Nano Banana (cho nội dung sáng tạo/minh họa)
 - **Background Music** - Từ Pixabay Music
 - **Sound Effects** - Từ Pixabay SFX
 
-Skill trả về metadata và URLs (không tự động download), cho phép user tự chọn resources phù hợp.
+**🆕 v1.1 - Auto Download:**
+- Tự động tải resources về local để tránh lỗi CORS khi sử dụng
+- Lưu trữ theo cấu trúc: `downloads/videos/`, `downloads/images/`, `downloads/music/`, `downloads/sfx/`
+- Hỗ trợ chọn quality: best (4K/original), hd, sd, medium
+- Thiết kế sẵn cho cloud storage integration trong tương lai
+
+**🆕 AI Image Generation:**
+- Tự động generate ảnh khi scene có `type: "ai-generated"` hoặc `type: "illustration"`
+- Fallback sang AI generation khi stock search không có kết quả phù hợp
+- Hỗ trợ tạo ảnh liên hoàn cho story/slideshow với style nhất quán
 
 ## WORKFLOW
 
 ```
-script.json → Read Scenes → Extract Queries → Call APIs → Build resources.json
+script.json → Read Scenes → Extract Queries → Call APIs/AI → Download → Build resources.json
+                                ↓
+                    [Stock Queries]    [AI Queries]
+                          ↓                  ↓
+                   Pexels/Pixabay      Gemini Nano Banana
+                          ↓                  ↓
+                      Fallback ────────→ AI Generation
+                          ↓
+                    📥 Download to local (downloads/)
 ```
 
 **Chi tiết:**
 1. Đọc `script.json` từ project directory
-2. Extract visual queries từ scenes (type="stock")
+2. Extract visual queries từ scenes:
+   - `type="stock"` → Search Pexels/Pixabay
+   - `type="ai-generated"` hoặc `type="illustration"` → Gemini AI
 3. Extract music query từ music.mood
 4. Tạo standard SFX queries (whoosh, pop, ding)
-5. Call Pexels API cho videos/images
+5. Call Pexels API cho videos/images (stock)
 6. Call Pixabay API cho music/SFX (và backup cho videos/images)
-7. Lưu kết quả vào `resources.json` với top 3 results mỗi query
+7. Call Gemini API cho AI-generated images
+8. Fallback sang Gemini nếu stock search không có kết quả
+9. **📥 Tải resources về local** (mặc định tải 1 result tốt nhất mỗi scene)
+10. Lưu kết quả vào `resources.json` với localPath cho mỗi resource
 
 ## INPUT PARAMETERS
 
 ### Required
 - **`--projectDir`**: Đường dẫn đến folder chứa script.json (bắt buộc)
 
-### Optional
+### Search Options
 - **`--resultsPerQuery`**: Số lượng results mỗi query (default: 3, max: 80)
 - **`--preferredSource`**: API ưu tiên "pexels" hoặc "pixabay" (default: pexels)
+- **`--enableAI`**: Bật AI image generation (default: true nếu có GEMINI_API_KEY)
+- **`--noAI`**: Tắt AI image generation (chỉ dùng stock)
+
+### Download Options (v1.1)
+- **`--download`**: Bật download (default: true)
+- **`--skipDownload`**: Tắt download, chỉ lấy URLs
+- **`--quality`**: Chọn quality: best | hd | sd | medium (default: best)
+  - `best`: Video 4K > HD, Image original > large
+  - `hd`: Video HD, Image large
+  - `sd`: Video SD, Image medium
+- **`--downloadCount`**: Số results tải mỗi scene (default: 1)
+- **`--concurrency`**: Số download song song (default: 3)
+- **`--storage`**: Loại storage: local | cloud (default: local, cloud cho tương lai)
 
 ### Environment Variables (.env)
 ```bash
+# Stock Resources
 PEXELS_API_KEY=your_pexels_api_key
 PIXABAY_API_KEY=your_pixabay_api_key
+
+# AI Image Generation (optional but recommended)
+GEMINI_API_KEY=your_gemini_api_key
 ```
+
+**Lưu ý:** GEMINI_API_KEY có thể đặt ở:
+- File `.env` ở root project
+- File `.env` trong thư mục skill
 
 ## OUTPUT STRUCTURE
 
@@ -50,16 +94,27 @@ File `resources.json` được lưu trong `projectDir`:
   "generatedAt": "2026-01-24T20:00:00Z",
   "apiSources": {
     "pexels": { "used": true, "requestCount": 5 },
-    "pixabay": { "used": true, "requestCount": 3 }
+    "pixabay": { "used": true, "requestCount": 3 },
+    "gemini": { "used": true, "requestCount": 2, "description": "AI image generation" }
+  },
+  "downloadSummary": {
+    "enabled": true,
+    "totalDownloaded": 7,
+    "totalFailed": 0,
+    "totalSkipped": 14,
+    "storageLocation": "/path/to/project/downloads",
+    "storageType": "local",
+    "qualityPreference": "best"
   },
   "summary": {
     "totalVideos": 15,
     "totalImages": 6,
+    "totalGeneratedImages": 2,
     "totalMusic": 6,
     "totalSoundEffects": 9,
-    "totalScenes": 5,
-    "successfulQueries": 7,
-    "failedQueries": 1
+    "totalScenes": 7,
+    "successfulQueries": 9,
+    "failedQueries": 0
   },
   "resources": {
     "videos": [
@@ -93,18 +148,29 @@ File `resources.json` được lưu trong `projectDir`:
       }
     ],
     "images": [...],
+    "generatedImages": [
+      {
+        "sceneId": "concept",
+        "query": "brain illustration showing neural connections",
+        "source": "gemini-ai",
+        "type": "ai-generated",
+        "results": [
+          {
+            "id": "gemini-concept-1706284800000",
+            "title": "AI Generated: brain illustration",
+            "localPath": "/projects/my-video/generated/concept_ai.png",
+            "prompt": "brain illustration showing neural connections...",
+            "source": "gemini-nano-banana",
+            "generated": true,
+            "license": "AI Generated"
+          }
+        ]
+      }
+    ],
     "music": [...],
     "soundEffects": [...]
   },
-  "errors": [
-    {
-      "type": "video",
-      "sceneId": "cta",
-      "query": "follow button animation",
-      "error": "No results found",
-      "suggestion": "Try simpler query or use AI-generated imagery"
-    }
-  ]
+  "errors": []
 }
 ```
 
@@ -127,6 +193,11 @@ File `resources.json` được lưu trong `projectDir`:
         "sd": "...",
         "4k": "..."
       },
+      "localPath": "/path/to/project/downloads/videos/hook_pexels-12345.mp4",
+      "publicUrl": null,
+      "downloadStatus": "success",
+      "downloadedQuality": "4k",
+      "fileSize": 15728640,
       "width": 1920,
       "height": 1080,
       "duration": 15,
@@ -209,6 +280,29 @@ File `resources.json` được lưu trong `projectDir`:
 }
 ```
 
+#### AI Generated Images (NEW)
+```json
+{
+  "sceneId": "metaphor",
+  "sceneText": "Imagine your mind as a garden...",
+  "query": "surreal garden inside a human brain, illustration",
+  "source": "gemini-ai",
+  "type": "ai-generated",
+  "results": [
+    {
+      "id": "gemini-metaphor-1706284800000",
+      "title": "AI Generated: surreal garden inside brain",
+      "localPath": "/projects/video/generated/metaphor_ai.png",
+      "prompt": "surreal garden inside a human brain, illustration...",
+      "source": "gemini-nano-banana",
+      "generated": true,
+      "license": "AI Generated (usage follows Gemini Terms of Service)",
+      "rank": 1
+    }
+  ]
+}
+```
+
 ## API SETUP
 
 ### 1. Pexels API Key
@@ -236,7 +330,19 @@ File `resources.json` được lưu trong `projectDir`:
 - 5000 requests/day
 - 100 requests/minute
 
-### 3. Tạo file .env
+### 3. Gemini API Key (cho AI Image Generation)
+
+**Lấy key miễn phí:**
+1. Truy cập: https://aistudio.google.com/apikey
+2. Đăng nhập Google account
+3. Click "Create API key"
+4. Copy API Key
+
+**Model sử dụng:** Gemini 2.0 Flash (Imagen 3)
+- Hỗ trợ image generation chất lượng cao
+- Free tier có rate limit
+
+### 4. Tạo file .env
 
 Copy `.env.example` thành `.env`:
 
@@ -245,16 +351,20 @@ cd .claude/skills/video-resource-finder
 cp .env.example .env
 ```
 
-Điền API keys:
+Hoặc thêm vào file `.env` ở root project:
 
 ```bash
+# Stock Resources
 PEXELS_API_KEY=abc123xyz...
 PIXABAY_API_KEY=def456uvw...
+
+# AI Image Generation
+GEMINI_API_KEY=AIza...your_gemini_key...
 ```
 
 ## USAGE EXAMPLES
 
-### Example 1: Basic Usage
+### Example 1: Basic Usage (với download mặc định)
 
 ```bash
 cd .claude/skills/video-resource-finder
@@ -262,28 +372,46 @@ cd .claude/skills/video-resource-finder
 # Install dependencies (first time only)
 npm install
 
-# Run skill
+# Run skill - mặc định sẽ download với quality=best, 1 result mỗi scene
 node scripts/find-resources.js \
   --projectDir "../../public/projects/tai-sao-ngu-8-tieng-van-met"
 ```
 
 **Output:**
 ```
+📥 Download: enabled
+   Quality: best, Count per scene: 1
+
 ✅ Found 15 videos, 6 images, 6 music tracks, 9 sound effects
+📥 Downloaded: 7 files to downloads/
 📄 resources.json saved to: public/projects/tai-sao-ngu-8-tieng-van-met/resources.json
 ```
 
-### Example 2: Tùy chỉnh số lượng results
+### Example 2: Chỉ lấy URLs (không download)
 
 ```bash
 node scripts/find-resources.js \
   --projectDir "../../public/projects/my-project" \
-  --resultsPerQuery 5
+  --skipDownload
 ```
 
-Mỗi query sẽ trả về 5 results thay vì 3 (default).
+Sẽ chỉ trả về URLs trong resources.json, không tải files về.
 
-### Example 3: Ưu tiên Pixabay
+### Example 3: Tùy chỉnh số lượng results và download
+
+```bash
+node scripts/find-resources.js \
+  --projectDir "../../public/projects/my-project" \
+  --resultsPerQuery 5 \
+  --downloadCount 2 \
+  --quality hd
+```
+
+- Search 5 results mỗi query
+- Download 2 results tốt nhất mỗi scene
+- Ưu tiên quality HD (thay vì 4K)
+
+### Example 5: Ưu tiên Pixabay
 
 ```bash
 node scripts/find-resources.js \
@@ -292,6 +420,27 @@ node scripts/find-resources.js \
 ```
 
 Sẽ search Pixabay trước, Pexels làm fallback.
+
+### Example 6: Với AI Image Generation
+
+```bash
+node scripts/find-resources.js \
+  --projectDir "../../public/projects/creative-story" \
+  --enableAI
+```
+
+Scenes với `type: "ai-generated"` sẽ được generate bằng Gemini.
+Stock search không có kết quả sẽ fallback sang AI.
+
+### Example 7: Tắt AI Generation
+
+```bash
+node scripts/find-resources.js \
+  --projectDir "../../public/projects/my-project" \
+  --noAI
+```
+
+Chỉ dùng stock resources, bỏ qua AI generation.
 
 ## CONVERSATION FLOW
 

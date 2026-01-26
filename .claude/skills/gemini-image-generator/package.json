@@ -1,0 +1,22 @@
+{
+  "name": "gemini-image-generator",
+  "version": "1.0.0",
+  "description": "Generate images using Google Gemini AI (Imagen 3)",
+  "main": "scripts/generate.js",
+  "scripts": {
+    "generate": "node scripts/generate.js"
+  },
+  "keywords": [
+    "gemini",
+    "ai",
+    "image-generation",
+    "imagen"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "fs-extra": "^11.1.1",
+    "minimist": "^1.2.8"
+  }
+}

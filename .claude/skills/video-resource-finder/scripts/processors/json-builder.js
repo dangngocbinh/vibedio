@@ -7,9 +7,10 @@ class JSONBuilder {
    * @param {Object} metadata - Project metadata
    * @param {Object} results - Resource results from ResourceMatcher
    * @param {Object} apiStats - API usage statistics
+   * @param {Object} downloadSummary - Download summary (optional)
    * @returns {Object} Complete resources.json object
    */
-  buildResourcesJSON(metadata, results, apiStats) {
+  buildResourcesJSON(metadata, results, apiStats, downloadSummary = null) {
     const timestamp = new Date().toISOString();
 
     // Calculate summary statistics
@@ -17,6 +18,9 @@ class JSONBuilder {
 
     // Collect errors
     const errors = this.collectErrors(results);
+
+    // Handle generatedImages (AI generated)
+    const generatedImages = results.generatedImages || [];
 
     const resourcesJSON = {
       projectName: metadata.projectName,
@@ -29,12 +33,27 @@ class JSONBuilder {
         pixabay: {
           used: apiStats.pixabay > 0,
           requestCount: apiStats.pixabay
+        },
+        gemini: {
+          used: apiStats.gemini > 0,
+          requestCount: apiStats.gemini,
+          description: 'AI image generation using Gemini Nano Banana'
         }
+      },
+      downloadSummary: downloadSummary || {
+        enabled: false,
+        totalDownloaded: 0,
+        totalFailed: 0,
+        totalSkipped: 0,
+        storageLocation: null,
+        storageType: null,
+        qualityPreference: null
       },
       summary,
       resources: {
         videos: results.videos.filter(v => v.results.length > 0),
         images: results.images.filter(i => i.results.length > 0),
+        generatedImages: generatedImages.filter(g => g.results && g.results.length > 0),
         music: results.music.filter(m => m.results.length > 0),
         soundEffects: results.soundEffects.filter(s => s.results.length > 0)
       },
@@ -44,6 +63,7 @@ class JSONBuilder {
     console.log('\n[JSONBuilder] Built resources.json:');
     console.log(`  - Videos: ${resourcesJSON.resources.videos.length} scenes with results`);
     console.log(`  - Images: ${resourcesJSON.resources.images.length} scenes with results`);
+    console.log(`  - Generated Images: ${resourcesJSON.resources.generatedImages.length} AI-created`);
     console.log(`  - Music: ${resourcesJSON.resources.music.length} tracks`);
     console.log(`  - Sound Effects: ${resourcesJSON.resources.soundEffects.length} types`);
     console.log(`  - Errors: ${resourcesJSON.errors.length}`);
@@ -59,6 +79,7 @@ class JSONBuilder {
   calculateSummary(results) {
     let totalVideos = 0;
     let totalImages = 0;
+    let totalGeneratedImages = 0;
     let totalMusic = 0;
     let totalSoundEffects = 0;
 
@@ -70,6 +91,14 @@ class JSONBuilder {
     // Count image results
     for (const image of results.images) {
       totalImages += image.results.length;
+    }
+
+    // Count AI generated images
+    const generatedImages = results.generatedImages || [];
+    for (const genImg of generatedImages) {
+      if (genImg.results) {
+        totalGeneratedImages += genImg.results.length;
+      }
     }
 
     // Count music results
@@ -85,9 +114,10 @@ class JSONBuilder {
     return {
       totalVideos,
       totalImages,
+      totalGeneratedImages,
       totalMusic,
       totalSoundEffects,
-      totalScenes: results.videos.length + results.images.length,
+      totalScenes: results.videos.length + results.images.length + generatedImages.length,
       successfulQueries: this.countSuccessful(results),
       failedQueries: this.countFailed(results)
     };
@@ -103,6 +133,7 @@ class JSONBuilder {
 
     count += results.videos.filter(v => v.results.length > 0).length;
     count += results.images.filter(i => i.results.length > 0).length;
+    count += (results.generatedImages || []).filter(g => g.results && g.results.length > 0).length;
     count += results.music.filter(m => m.results.length > 0).length;
     count += results.soundEffects.filter(s => s.results.length > 0).length;
 
@@ -119,6 +150,7 @@ class JSONBuilder {
 
     count += results.videos.filter(v => v.results.length === 0).length;
     count += results.images.filter(i => i.results.length === 0).length;
+    count += (results.generatedImages || []).filter(g => !g.results || g.results.length === 0).length;
     count += results.music.filter(m => m.results.length === 0).length;
     count += results.soundEffects.filter(s => s.results.length === 0).length;
 

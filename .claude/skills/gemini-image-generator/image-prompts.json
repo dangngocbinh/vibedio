@@ -1,0 +1,42 @@
+{
+    "prompts": [
+        {
+            "id": "scene_1",
+            "prompt": "CapCut video editing interface with complex timeline, multiple tracks, cuts, zooms, subtitles, cluttered workspace, screenshot style"
+        },
+        {
+            "id": "scene_2",
+            "prompt": "Tired content creator staring at computer screen, hand on mouse, exhausted expression, dark room with monitor glow, realistic photo style"
+        },
+        {
+            "id": "scene_3",
+            "prompt": "Video editing software showing repetitive copy-paste of subtitles, same font settings, boring workflow, screenshot mockup"
+        },
+        {
+            "id": "scene_4",
+            "prompt": "Black fade background with glowing text '2025 rồi, sao vẫn edit như 2019?', minimalist design, dramatic lighting"
+        },
+        {
+            "id": "scene_5",
+            "prompt": "Clean modern code editor interface showing Vibe Video code, simple and organized, VS Code style, dark theme"
+        },
+        {
+            "id": "scene_6",
+            "prompt": "Split screen: left side shows code, right side shows video timeline rendering automatically, smooth animation visualization, tech illustration"
+        },
+        {
+            "id": "scene_7",
+            "prompt": "Side-by-side comparison: left shows CapCut complex interface, right shows simple code editor, versus symbol in middle, infographic style"
+        },
+        {
+            "id": "scene_8",
+            "prompt": "Content creator typing AI prompt on laptop, AI generating video content in background, futuristic workspace, modern illustration"
+        },
+        {
+            "id": "scene_9",
+            "prompt": "Vibe Video Agent logo with tagline 'Ngừng edit tay. Bắt đầu vibe coding video', professional branding, gradient background"
+        }
+    ],
+    "style": "professional, high quality, 16:9 aspect ratio",
+    "outputDir": "../../../public/projects/vibe-video-capcut-replacement/images"
+}

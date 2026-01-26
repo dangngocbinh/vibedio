@@ -19,6 +19,7 @@ import { LogoReveal } from './compositions/LogoReveal';
 import { LogoReveal2 } from './compositions/LogoReveal2';
 import { CartoonCharacter } from './compositions/CartoonCharacter';
 import { HomePage } from './components/HomePage';
+import { ProcessFlow } from './compositions/ProcessFlow';
 import { OtioPlayer, calculateTotalDuration } from './compositions/OtioPlayer';
 // @ts-ignore
 import projectsList from './generated/projects.json';
@@ -208,15 +209,23 @@ export const RemotionRoot: React.FC = () => {
           projectId: projectIds[0]
         }}
         calculateMetadata={async ({ props }) => {
+          console.log('[OtioTimeline] Starting calculateMetadata with props:', props);
           if (props.projectId) {
             const project = projectsList.find((p: any) => p.id === props.projectId);
+            console.log('[OtioTimeline] Found project:', project);
             if (project) {
               try {
                 const tl = await loadProject(project);
+                console.log('[OtioTimeline] Loaded timeline:', tl);
+                console.log('[OtioTimeline] Timeline tracks:', tl?.tracks);
+                console.log('[OtioTimeline] Timeline tracks children:', tl?.tracks?.children);
                 const dur = calculateTotalDuration(tl, fps);
-                return { durationInFrames: dur };
+                console.log('[OtioTimeline] Calculated duration:', dur);
+                if (dur > 0) {
+                  return { durationInFrames: dur };
+                }
               } catch (e) {
-                console.error("Failed to calc duration", e);
+                console.error("[OtioTimeline] Failed to calc duration", e);
               }
             }
           }
@@ -425,6 +434,15 @@ export const RemotionRoot: React.FC = () => {
         id="HomePage"
         component={HomePage}
         durationInFrames={1}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      {/* Process Flow Animation */}
+      <Composition
+        id="ProcessFlow"
+        component={ProcessFlow}
+        durationInFrames={150}
         fps={30}
         width={1920}
         height={1080}

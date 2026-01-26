@@ -31,15 +31,16 @@ class ScriptReader {
   /**
    * Extract video/image queries from scenes
    * @param {Object} script - Parsed script object
-   * @returns {Array} Array of query objects
+   * @returns {Object} Object with stock and ai arrays
    */
   extractVisualQueries(script) {
     if (!script.scenes || !Array.isArray(script.scenes)) {
       console.warn('[ScriptReader] No scenes found in script');
-      return [];
+      return { stock: [], ai: [] };
     }
 
-    const queries = [];
+    const stockQueries = [];
+    const aiQueries = [];
 
     for (const scene of script.scenes) {
       if (!scene.visualSuggestion) {
@@ -48,20 +49,46 @@ class ScriptReader {
 
       const { type, query, style } = scene.visualSuggestion;
 
-      // Only process stock footage queries (skip ai-generated for now)
-      if (type === 'stock' && query) {
-        queries.push({
-          sceneId: scene.id,
-          sceneText: scene.text,
-          query: query,
-          style: style || null,
-          duration: scene.duration || 5
-        });
+      const queryObj = {
+        sceneId: scene.id,
+        sceneText: scene.text,
+        query: query,
+        style: style || null,
+        duration: scene.duration || 5
+      };
+
+      // Categorize by type
+      if (type === 'ai-generated' || type === 'ai' || type === 'illustration') {
+        if (query) {
+          aiQueries.push({ ...queryObj, type: 'ai-generated' });
+        }
+      } else if (type === 'stock' && query) {
+        stockQueries.push(queryObj);
       }
     }
 
-    console.log(`[ScriptReader] Extracted ${queries.length} visual queries (stock type)`);
-    return queries;
+    console.log(`[ScriptReader] Extracted ${stockQueries.length} stock queries, ${aiQueries.length} AI queries`);
+    return { stock: stockQueries, ai: aiQueries };
+  }
+
+  /**
+   * Legacy method for backward compatibility
+   * @param {Object} script - Parsed script object
+   * @returns {Array} Array of stock query objects only
+   */
+  extractStockQueries(script) {
+    const { stock } = this.extractVisualQueries(script);
+    return stock;
+  }
+
+  /**
+   * Extract AI-generated image queries from scenes
+   * @param {Object} script - Parsed script object
+   * @returns {Array} Array of AI query objects
+   */
+  extractAIQueries(script) {
+    const { ai } = this.extractVisualQueries(script);
+    return ai;
   }
 
   /**

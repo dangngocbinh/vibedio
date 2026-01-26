@@ -271,3 +271,78 @@ class BaseStrategy(ABC):
             in_offset=otio.opentime.RationalTime(half_duration, self.fps),
             out_offset=otio.opentime.RationalTime(half_duration, self.fps)
         )
+
+    def create_image_clip_with_effect(
+        self,
+        url: str,
+        name: str,
+        duration_sec: float,
+        effect: str = 'ken-burns',
+        effect_params: Optional[Dict[str, Any]] = None
+    ) -> otio.schema.Clip:
+        """
+        Create image clip with effect metadata for Remotion.
+
+        Args:
+            url: Image URL (can be remote or relative path)
+            name: Clip name
+            duration_sec: Duration in seconds
+            effect: Effect type ('zoom-in', 'zoom-out', 'ken-burns', 'slide', 'scale', 'none')
+            effect_params: Optional effect parameters (intensity, direction, etc.)
+
+        Returns:
+            OTIO Clip with effect metadata
+        """
+        # Create base clip
+        clip = self.create_clip_from_url(url, name, duration_sec)
+
+        # Add effect metadata for Remotion
+        clip.metadata['effect'] = effect
+        clip.metadata['effect_params'] = effect_params or {
+            'intensity': 0.5,
+            'direction': 'random',
+            'easing': 'ease-in-out'
+        }
+
+        # Mark as image clip (vs video)
+        clip.metadata['media_type'] = 'image'
+
+        return clip
+
+    def create_transition(
+        self,
+        transition_type: str = 'crossfade',
+        duration_sec: float = 0.5
+    ) -> otio.schema.Transition:
+        """
+        Create transition with specified type.
+
+        Args:
+            transition_type: Type of transition ('crossfade', 'cut', 'dissolve', 'wipe', 'none')
+            duration_sec: Transition duration in seconds
+
+        Returns:
+            OTIO Transition object or None for 'cut'/'none'
+        """
+        # Cut and none don't need actual transition objects
+        if transition_type in ('cut', 'none'):
+            return None
+
+        duration_frames = self.timing.seconds_to_frames(duration_sec)
+        half_duration = duration_frames // 2
+
+        # Map transition types to OTIO types
+        # Note: OTIO only supports SMPTE_Dissolve natively, we store type in metadata
+        otio_type = otio.schema.TransitionTypes.SMPTE_Dissolve
+
+        transition = otio.schema.Transition(
+            transition_type=otio_type,
+            in_offset=otio.opentime.RationalTime(half_duration, self.fps),
+            out_offset=otio.opentime.RationalTime(half_duration, self.fps)
+        )
+
+        # Add custom metadata for Remotion to read specific transition type
+        transition.metadata['transition_type'] = transition_type
+        transition.metadata['duration_sec'] = duration_sec
+
+        return transition

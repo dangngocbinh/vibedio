@@ -110,7 +110,7 @@ class QueryBuilder {
 
   /**
    * Build all queries from script data
-   * @param {Array} visualQueries - Visual queries from scenes
+   * @param {Object} visualQueries - Object with stock and ai arrays (or legacy Array)
    * @param {Object|null} musicQuery - Music query
    * @returns {Object} Organized queries object
    */
@@ -118,12 +118,26 @@ class QueryBuilder {
     const organized = {
       videos: [],
       images: [],
+      aiImages: [],
       music: [],
       soundEffects: []
     };
 
-    // Process visual queries
-    for (const vq of visualQueries) {
+    // Handle both new format {stock, ai} and legacy Array format
+    let stockQueries = [];
+    let aiQueries = [];
+
+    if (Array.isArray(visualQueries)) {
+      // Legacy format - all are stock queries
+      stockQueries = visualQueries;
+    } else {
+      // New format with stock and ai separation
+      stockQueries = visualQueries.stock || [];
+      aiQueries = visualQueries.ai || [];
+    }
+
+    // Process stock visual queries
+    for (const vq of stockQueries) {
       const cleanedQuery = this.buildVisualQuery(vq);
       const mediaType = this.determineMediaType(vq);
 
@@ -142,6 +156,17 @@ class QueryBuilder {
       }
     }
 
+    // Process AI image queries (keep original prompt for better generation)
+    for (const vq of aiQueries) {
+      organized.aiImages.push({
+        sceneId: vq.sceneId,
+        sceneText: vq.sceneText,
+        query: vq.query, // Keep original prompt for AI generation
+        style: vq.style,
+        type: 'ai-generated'
+      });
+    }
+
     // Process music query
     if (musicQuery) {
       organized.music.push({
@@ -157,6 +182,7 @@ class QueryBuilder {
     console.log('[QueryBuilder] Built queries:', {
       videos: organized.videos.length,
       images: organized.images.length,
+      aiImages: organized.aiImages.length,
       music: organized.music.length,
       soundEffects: organized.soundEffects.length
     });
