@@ -119,21 +119,38 @@ class QueryBuilder {
       videos: [],
       images: [],
       aiImages: [],
+      pinned: [],
       music: [],
       soundEffects: []
     };
 
-    // Handle both new format {stock, ai} and legacy Array format
+    // Handle both new format {stock, ai, pinned} and legacy Array format
     let stockQueries = [];
     let aiQueries = [];
+    let pinnedQueries = [];
 
     if (Array.isArray(visualQueries)) {
       // Legacy format - all are stock queries
       stockQueries = visualQueries;
     } else {
-      // New format with stock and ai separation
+      // New format with stock, ai, and pinned separation
       stockQueries = visualQueries.stock || [];
       aiQueries = visualQueries.ai || [];
+      pinnedQueries = visualQueries.pinned || [];
+    }
+
+    // Process pinned resources (pass through as-is, no query cleaning)
+    for (const pq of pinnedQueries) {
+      organized.pinned.push({
+        sceneId: pq.sceneId,
+        sceneText: pq.sceneText,
+        path: pq.path || null,
+        url: pq.url || null,
+        description: pq.description || '',
+        style: pq.style,
+        query: pq.query || null, // fallback search query
+        duration: pq.duration
+      });
     }
 
     // Process stock visual queries
@@ -183,6 +200,7 @@ class QueryBuilder {
       videos: organized.videos.length,
       images: organized.images.length,
       aiImages: organized.aiImages.length,
+      pinned: organized.pinned.length,
       music: organized.music.length,
       soundEffects: organized.soundEffects.length
     });

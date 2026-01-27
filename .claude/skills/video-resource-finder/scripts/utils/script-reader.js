@@ -36,18 +36,36 @@ class ScriptReader {
   extractVisualQueries(script) {
     if (!script.scenes || !Array.isArray(script.scenes)) {
       console.warn('[ScriptReader] No scenes found in script');
-      return { stock: [], ai: [] };
+      return { stock: [], ai: [], pinned: [] };
     }
 
     const stockQueries = [];
     const aiQueries = [];
+    const pinnedQueries = [];
 
     for (const scene of script.scenes) {
       if (!scene.visualSuggestion) {
         continue;
       }
 
-      const { type, query, style } = scene.visualSuggestion;
+      const { type, query, style, path, url, description } = scene.visualSuggestion;
+
+      // Pinned resources: user-provided local path or URL
+      if (type === 'pinned') {
+        if (path || url) {
+          pinnedQueries.push({
+            sceneId: scene.id,
+            sceneText: scene.text,
+            path: path || null,
+            url: url || null,
+            description: description || '',
+            style: style || null,
+            query: query || null, // fallback search query
+            duration: scene.duration || 5
+          });
+        }
+        continue;
+      }
 
       const queryObj = {
         sceneId: scene.id,
@@ -67,8 +85,8 @@ class ScriptReader {
       }
     }
 
-    console.log(`[ScriptReader] Extracted ${stockQueries.length} stock queries, ${aiQueries.length} AI queries`);
-    return { stock: stockQueries, ai: aiQueries };
+    console.log(`[ScriptReader] Extracted ${stockQueries.length} stock, ${aiQueries.length} AI, ${pinnedQueries.length} pinned queries`);
+    return { stock: stockQueries, ai: aiQueries, pinned: pinnedQueries };
   }
 
   /**

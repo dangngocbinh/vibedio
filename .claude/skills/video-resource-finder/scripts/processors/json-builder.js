@@ -22,6 +22,9 @@ class JSONBuilder {
     // Handle generatedImages (AI generated)
     const generatedImages = results.generatedImages || [];
 
+    // Handle pinned resources (user-provided local files or URLs)
+    const pinnedResources = results.pinnedResources || [];
+
     const resourcesJSON = {
       projectName: metadata.projectName,
       generatedAt: timestamp,
@@ -51,6 +54,7 @@ class JSONBuilder {
       },
       summary,
       resources: {
+        pinnedResources: pinnedResources.filter(p => p.results && p.results.length > 0),
         videos: results.videos.filter(v => v.results.length > 0),
         images: results.images.filter(i => i.results.length > 0),
         generatedImages: generatedImages.filter(g => g.results && g.results.length > 0),
@@ -61,6 +65,9 @@ class JSONBuilder {
     };
 
     console.log('\n[JSONBuilder] Built resources.json:');
+    if (resourcesJSON.resources.pinnedResources.length > 0) {
+      console.log(`  - Pinned: ${resourcesJSON.resources.pinnedResources.length} user-provided resources`);
+    }
     console.log(`  - Videos: ${resourcesJSON.resources.videos.length} scenes with results`);
     console.log(`  - Images: ${resourcesJSON.resources.images.length} scenes with results`);
     console.log(`  - Generated Images: ${resourcesJSON.resources.generatedImages.length} AI-created`);
@@ -80,8 +87,17 @@ class JSONBuilder {
     let totalVideos = 0;
     let totalImages = 0;
     let totalGeneratedImages = 0;
+    let totalPinned = 0;
     let totalMusic = 0;
     let totalSoundEffects = 0;
+
+    // Count pinned resources
+    const pinnedResources = results.pinnedResources || [];
+    for (const pinned of pinnedResources) {
+      if (pinned.results) {
+        totalPinned += pinned.results.length;
+      }
+    }
 
     // Count video results
     for (const video of results.videos) {
@@ -115,9 +131,10 @@ class JSONBuilder {
       totalVideos,
       totalImages,
       totalGeneratedImages,
+      totalPinned,
       totalMusic,
       totalSoundEffects,
-      totalScenes: results.videos.length + results.images.length + generatedImages.length,
+      totalScenes: results.videos.length + results.images.length + generatedImages.length + pinnedResources.length,
       successfulQueries: this.countSuccessful(results),
       failedQueries: this.countFailed(results)
     };

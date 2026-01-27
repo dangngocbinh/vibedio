@@ -20,6 +20,13 @@ Tự động tìm kiếm và **tải về** FREE resources cho video production 
 - Fallback sang AI generation khi stock search không có kết quả phù hợp
 - Hỗ trợ tạo ảnh liên hoàn cho story/slideshow với style nhất quán
 
+**🆕 Pinned Resources (User-provided assets):**
+- Scene có `type: "pinned"` → skip API search, dùng file/URL user cung cấp
+- Local files ngoài project tự động copy vào `imports/{videos,images,music,sfx}/`
+- Hỗ trợ path: absolute, `~/...`, relative to project, hoặc remote URL
+- Tên file được expand rõ ràng: `import_{sceneId}_{description}_{originalName}.ext`
+- Kết quả lưu trong `resources.pinnedResources[]` trong resources.json
+
 ## WORKFLOW
 
 ```
@@ -39,6 +46,7 @@ script.json → Read Scenes → Extract Queries → Call APIs/AI → Download �
 2. Extract visual queries từ scenes:
    - `type="stock"` → Search Pexels/Pixabay
    - `type="ai-generated"` hoặc `type="illustration"` → Gemini AI
+   - `type="pinned"` → User-provided file/URL (skip search, auto-import local files)
 3. Extract music query từ music.mood
 4. Tạo standard SFX queries (whoosh, pop, ding)
 5. Call Pexels API cho videos/images (stock)

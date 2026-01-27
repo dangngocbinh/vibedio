@@ -180,9 +180,42 @@ class AssetResolver:
 
         return None
 
+    def resolve_pinned_from_scene(self, scene_id: str, resources: Dict[str, Any]) -> Optional[str]:
+        """
+        Find and resolve pinned resource (user-provided) for a specific scene ID.
+
+        Pinned resources take highest priority - they are user-provided local files or URLs
+        that should be used directly without searching APIs.
+
+        Args:
+            scene_id: Scene identifier (e.g., "hook", "item1")
+            resources: Parsed resources.json content
+
+        Returns:
+            Pinned asset URL/path or None if not found
+        """
+        pinned_list = resources.get("resources", {}).get("pinnedResources", [])
+
+        for pinned_entry in pinned_list:
+            if pinned_entry.get("sceneId") == scene_id:
+                results = pinned_entry.get("results", [])
+                if results and len(results) > 0:
+                    result = results[0]
+                    # Prefer relativePath (portable), then localPath, then url
+                    if result.get("relativePath"):
+                        return result["relativePath"]
+                    if result.get("localPath"):
+                        return self.sanitize_for_otio(result["localPath"])
+                    if result.get("url"):
+                        return result["url"]
+
+        return None
+
     def resolve_video_from_scene(self, scene_id: str, resources: Dict[str, Any]) -> Optional[str]:
         """
         Find and resolve video URL for a specific scene ID.
+
+        Checks pinned resources first, then falls back to API-fetched videos.
 
         Args:
             scene_id: Scene identifier (e.g., "hook", "item1")
@@ -191,6 +224,11 @@ class AssetResolver:
         Returns:
             Video URL/path or None if not found
         """
+        # Check pinned resources FIRST (user-provided assets take priority)
+        pinned = self.resolve_pinned_from_scene(scene_id, resources)
+        if pinned:
+            return pinned
+
         videos = resources.get("resources", {}).get("videos", [])
 
         # Find matching scene
@@ -206,6 +244,8 @@ class AssetResolver:
         """
         Find and resolve image URL for a specific scene ID.
 
+        Checks pinned resources first, then falls back to API-fetched images.
+
         Args:
             scene_id: Scene identifier
             resources: Parsed resources.json content
@@ -213,6 +253,11 @@ class AssetResolver:
         Returns:
             Image URL/path or None if not found
         """
+        # Check pinned resources FIRST (user-provided assets take priority)
+        pinned = self.resolve_pinned_from_scene(scene_id, resources)
+        if pinned:
+            return pinned
+
         images = resources.get("resources", {}).get("images", [])
 
         for image_entry in images:

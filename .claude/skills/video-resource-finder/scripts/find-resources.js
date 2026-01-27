@@ -113,9 +113,10 @@ async function main() {
     const visualQueries = scriptReader.extractVisualQueries(script);
     const musicQuery = scriptReader.extractMusicQuery(script);
 
-    if (visualQueries.length === 0 && !musicQuery) {
+    const totalQueries = (visualQueries.stock?.length || 0) + (visualQueries.ai?.length || 0) + (visualQueries.pinned?.length || 0);
+    if (totalQueries === 0 && !musicQuery) {
       console.warn('⚠️  No queries found in script.json');
-      console.log('Make sure your script has scenes with visualSuggestion.type="stock"');
+      console.log('Make sure your script has scenes with visualSuggestion.type="stock", "ai-generated", or "pinned"');
       process.exit(0);
     }
 
@@ -215,6 +216,9 @@ async function main() {
     console.log(`  Total Images:        ${resourcesJSON.summary.totalImages}`);
     if (resourcesJSON.summary.totalGeneratedImages > 0) {
       console.log(`  AI Generated Images: ${resourcesJSON.summary.totalGeneratedImages}`);
+    }
+    if (resourcesJSON.summary.totalPinned > 0) {
+      console.log(`  Pinned Resources:    ${resourcesJSON.summary.totalPinned}`);
     }
     console.log(`  Total Music:         ${resourcesJSON.summary.totalMusic}`);
     console.log(`  Total Sound Effects: ${resourcesJSON.summary.totalSoundEffects}`);

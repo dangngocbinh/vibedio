@@ -1,3 +1,8 @@
+const fs = require('fs');
+const fsp = fs.promises;
+const path = require('path');
+const os = require('os');
+
 class ResourceMatcher {
   constructor(pexelsClient, pixabayClient, options = {}) {
     this.pexelsClient = pexelsClient;
@@ -23,10 +28,29 @@ class ResourceMatcher {
       videos: [],
       images: [],
       generatedImages: [],
+      pinnedResources: [],
       music: [],
       soundEffects: [],
       errors: []
     };
+
+    // Process pinned resources FIRST (user-provided local files or URLs)
+    if (queries.pinned && queries.pinned.length > 0) {
+      console.log(`\n--- Processing ${queries.pinned.length} Pinned Resources ---`);
+      for (const pinnedQuery of queries.pinned) {
+        try {
+          const pinnedResult = await this.processPinnedResource(pinnedQuery);
+          results.pinnedResources.push(pinnedResult);
+        } catch (error) {
+          console.error(`[ResourceMatcher] Error processing pinned resource for "${pinnedQuery.sceneId}":`, error.message);
+          results.errors.push({
+            sceneId: pinnedQuery.sceneId,
+            type: 'pinned',
+            error: error.message
+          });
+        }
+      }
+    }
 
     // Fetch videos
     if (queries.videos.length > 0) {
@@ -466,6 +490,225 @@ class ResourceMatcher {
     }
 
     return results;
+  }
+
+  // ─── Pinned Resource Processing ─────────────────────────────────────
+
+  /**
+   * Process a pinned resource (user-provided local file or URL)
+   * @param {Object} queryObj - Pinned query object
+   * @returns {Promise<Object>} Pinned resource result
+   */
+  async processPinnedResource(queryObj) {
+    const { sceneId, sceneText, path: filePath, url, description, style } = queryObj;
+
+    // URL-based pinned resource
+    if (url) {
+      return this._processPinnedUrl(sceneId, sceneText, url, description, style);
+    }
+
+    // Local file path pinned resource
+    if (filePath) {
+      return this._processPinnedLocalFile(sceneId, sceneText, filePath, description, style);
+    }
+
+    return {
+      sceneId,
+      sceneText,
+      source: null,
+      description,
+      contentType: 'unknown',
+      results: [],
+      error: 'Pinned resource has neither path nor url'
+    };
+  }
+
+  /**
+   * Process a pinned URL resource
+   */
+  _processPinnedUrl(sceneId, sceneText, url, description, style) {
+    const contentType = this._detectContentTypeFromUrl(url);
+
+    console.log(`[ResourceMatcher] Pinned URL for "${sceneId}": ${url} (${contentType})`);
+
+    return {
+      sceneId,
+      sceneText,
+      source: 'url-pinned',
+      description,
+      contentType,
+      results: [{
+        id: `pinned-${sceneId}-${Date.now()}`,
+        title: `User Pinned: ${url.split('/').pop() || url}`,
+        url: url,
+        localPath: null,
+        relativePath: null,
+        originalPath: url,
+        pinned: true,
+        description,
+        style: style || null,
+        license: 'User Provided',
+        rank: 1
+      }]
+    };
+  }
+
+  /**
+   * Process a pinned local file resource - imports into project if needed
+   */
+  async _processPinnedLocalFile(sceneId, sceneText, filePath, description, style) {
+    // Expand ~ to home directory
+    const expandedPath = filePath.startsWith('~')
+      ? path.resolve(os.homedir(), filePath.slice(2))
+      : path.resolve(this.projectDir || '.', filePath);
+
+    // Check if file exists
+    try {
+      await fsp.access(expandedPath);
+    } catch {
+      console.warn(`[ResourceMatcher] Pinned file not found: ${expandedPath}`);
+      return {
+        sceneId,
+        sceneText,
+        source: null,
+        description,
+        contentType: 'unknown',
+        results: [],
+        error: `File not found: ${expandedPath} (original: ${filePath})`
+      };
+    }
+
+    const contentType = this._detectContentTypeFromExt(expandedPath);
+    const stat = await fsp.stat(expandedPath);
+    const projectDir = this.projectDir ? path.resolve(this.projectDir) : null;
+
+    // Check if file is already inside project
+    const isInProject = projectDir && expandedPath.startsWith(projectDir + path.sep);
+
+    let localPath = expandedPath;
+    let relativePath = null;
+    let action = 'referenced';
+
+    if (isInProject) {
+      // Already in project - just reference it
+      relativePath = path.relative(projectDir, expandedPath);
+      console.log(`[ResourceMatcher] Pinned file already in project: ${relativePath}`);
+    } else if (projectDir) {
+      // Outside project - copy into imports/{type}/
+      const folderMap = { video: 'videos', image: 'images', music: 'music', sfx: 'sfx' };
+      const targetFolder = folderMap[contentType] || 'misc';
+      const targetDir = path.join(projectDir, 'imports', targetFolder);
+      const filename = this._buildImportFilename(sceneId, expandedPath, description);
+      const targetPath = path.join(targetDir, filename);
+
+      await fsp.mkdir(targetDir, { recursive: true });
+
+      // Copy file (don't overwrite if exists)
+      try {
+        await fsp.access(targetPath);
+        console.log(`[ResourceMatcher] Pinned file already imported: ${targetPath}`);
+      } catch {
+        await fsp.copyFile(expandedPath, targetPath);
+        console.log(`[ResourceMatcher] Imported pinned file: ${expandedPath} → ${targetPath}`);
+      }
+
+      localPath = targetPath;
+      relativePath = path.relative(projectDir, targetPath);
+      action = 'imported';
+    }
+
+    return {
+      sceneId,
+      sceneText,
+      source: 'local-pinned',
+      description,
+      contentType,
+      results: [{
+        id: `pinned-${sceneId}-${Date.now()}`,
+        title: `User Pinned: ${path.basename(localPath)}`,
+        localPath,
+        relativePath,
+        originalPath: filePath,
+        url: null,
+        pinned: true,
+        description,
+        style: style || null,
+        fileSize: stat.size,
+        action,
+        importedAt: new Date().toISOString(),
+        license: 'User Provided',
+        rank: 1
+      }]
+    };
+  }
+
+  /**
+   * Build import filename for pinned local file
+   * Pattern: import_{sceneId}_{description}_{originalName}.{ext}
+   */
+  _buildImportFilename(sceneId, filePath, description) {
+    const ext = path.extname(filePath).toLowerCase();
+    const originalName = path.basename(filePath, ext)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 40);
+
+    const parts = ['import'];
+
+    if (sceneId) {
+      parts.push(sceneId.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 20));
+    }
+
+    if (description) {
+      const descSlug = description.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 30);
+      if (descSlug) parts.push(descSlug);
+    }
+
+    if (originalName) {
+      parts.push(originalName);
+    }
+
+    let filename = parts.join('_') + ext;
+
+    // Max 120 chars
+    if (filename.length > 120) {
+      filename = filename.substring(0, 120 - ext.length) + ext;
+    }
+
+    return filename;
+  }
+
+  /**
+   * Detect content type from file extension
+   */
+  _detectContentTypeFromExt(filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+    const videoExts = ['.mp4', '.mov', '.webm', '.avi', '.mkv', '.m4v', '.flv', '.wmv'];
+    const imageExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.bmp', '.tiff', '.tif', '.heic', '.avif'];
+    const audioExts = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.wma', '.aiff', '.opus'];
+
+    if (videoExts.includes(ext)) return 'video';
+    if (imageExts.includes(ext)) return 'image';
+    if (audioExts.includes(ext)) return 'music';
+    return 'unknown';
+  }
+
+  /**
+   * Detect content type from URL
+   */
+  _detectContentTypeFromUrl(url) {
+    try {
+      const urlPath = new URL(url).pathname;
+      return this._detectContentTypeFromExt(urlPath);
+    } catch {
+      // Guess from URL keywords
+      const lowerUrl = url.toLowerCase();
+      if (lowerUrl.includes('video') || lowerUrl.includes('.mp4')) return 'video';
+      if (lowerUrl.includes('image') || lowerUrl.includes('.jpg') || lowerUrl.includes('.png')) return 'image';
+      if (lowerUrl.includes('audio') || lowerUrl.includes('.mp3')) return 'music';
+      return 'unknown';
+    }
   }
 }
 

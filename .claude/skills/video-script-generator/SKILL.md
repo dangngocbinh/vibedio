@@ -48,9 +48,12 @@ Skill trả về JSON với cấu trúc sau:
       "text": "Hook text...",
       "voiceNotes": "Đọc chậm, nhấn mạnh",
       "visualSuggestion": {
-        "type": "stock|ai-generated",
+        "type": "stock|ai-generated|pinned",
         "query": "tired waking up",
-        "style": "zoom-in"
+        "style": "zoom-in",
+        "path": "(pinned only) local file path e.g. ~/Downloads/demo.mp4",
+        "url": "(pinned only) remote URL e.g. https://example.com/video.mp4",
+        "description": "(pinned only) mô tả nội dung asset"
       }
     }
   ],
@@ -141,6 +144,28 @@ Mỗi scene cần có visual suggestion với:
 - **Abstract concepts**: "brain neural network visualization, blue purple gradient, minimal style, dark background --ar 9:16"
 - **Scientific**: "sleep cycle diagram, scientific illustration, clean design --ar 9:16"
 - **Emotional**: "person feeling [emotion], cinematic lighting, photorealistic --ar 9:16"
+
+### Pinned resources (user-provided)
+Khi user cung cấp file cụ thể cho scene, dùng `type: "pinned"`:
+
+```json
+{
+  "visualSuggestion": {
+    "type": "pinned",
+    "path": "~/Downloads/product-demo.mp4",
+    "description": "Video demo sản phẩm quay bằng iPhone",
+    "style": "zoom-in"
+  }
+}
+```
+
+Hỗ trợ 3 dạng path:
+- **Absolute**: `/Users/binhpc/Downloads/demo.mp4`
+- **Home-relative**: `~/Downloads/demo.mp4`
+- **Project-relative**: `imports/videos/import_hook_demo.mp4`
+- **Remote URL**: dùng `url` thay `path`: `"url": "https://example.com/video.mp4"`
+
+Optional `query` field: fallback search query nếu pinned file không tìm thấy.
 
 ### Animation styles
 - `zoom-in`: Tạo focus, nhấn mạnh

@@ -308,7 +308,7 @@ video-editor/
 ├── cli.py                       # Entry point
 ├── core/
 │   ├── otio_builder.py          # Timeline builder orchestrator
-│   └── asset_resolver.py        # Relative path conversion
+│   └── asset_resolver.py        # Relative path conversion (supports pinned resources)
 ├── strategies/
 │   ├── base_strategy.py         # Abstract strategy class
 │   ├── listicle_strategy.py     # Listicle implementation
@@ -366,13 +366,25 @@ class ImageSlideStrategy(BaseStrategy):
 | item → cta | `dissolve` (0.6s) |
 | (default) | `crossfade` (0.5s) |
 
+### Asset Resolution Priority
+
+Khi tìm asset cho mỗi scene, `AssetResolver` kiểm tra theo thứ tự:
+
+1. **Pinned resources** (`resources.pinnedResources[]`) — user-provided files/URLs, ưu tiên cao nhất
+2. **Videos** (`resources.videos[]`) — stock footage từ Pexels/Pixabay
+3. **Images** (`resources.images[]`) — stock images
+4. **Generated images** (`generated/{sceneId}_ai.png`) — AI-generated fallback
+5. **Placeholder** — component hiển thị "image missing"
+
+Pinned resources hỗ trợ `relativePath`, `localPath`, hoặc `url`. Paths được convert sang relative cho OTIO portability.
+
 ## VALIDATION RULES
 
 Before generating timeline:
 - ✅ All 3 JSON files exist
 - ✅ `script.json` has valid `videoType`
 - ✅ `voice.json` has `timestamps` array
-- ✅ `resources.json` has at least one resource type
+- ✅ `resources.json` has at least one resource type (including pinnedResources)
 - ✅ Scene durations sum to expected total (±3s tolerance)
 
 ## BEST PRACTICES
