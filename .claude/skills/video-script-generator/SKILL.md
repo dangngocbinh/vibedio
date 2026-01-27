@@ -15,9 +15,27 @@ User có thể cung cấp:
 - **Topic**: Chủ đề video (bắt buộc)
 - **Video Type**: facts | listicle | motivation | story (mặc định: facts)
 - **Duration**: 30 | 60 | 90 giây (mặc định: 60)
+- **Aspect Ratio**: 9:16 | 16:9 | 1:1 | 4:5 (mặc định: tự suy từ platform, hoặc 9:16)
 - **Target Audience**: Đối tượng xem (optional)
 - **Tone**: professional | casual | energetic | dramatic (mặc định: professional)
 - **Platform**: youtube | tiktok | reels | shorts (mặc định: shorts)
+
+### ASPECT RATIO - PLATFORM MAPPING
+
+Nếu user không chỉ định aspect ratio, tự động suy từ platform:
+
+| Platform | Default Ratio | Width | Height | Ghi chú |
+|----------|--------------|-------|--------|---------|
+| tiktok   | 9:16         | 1080  | 1920   | Portrait - TikTok/Reels |
+| reels    | 9:16         | 1080  | 1920   | Portrait - Instagram Reels |
+| shorts   | 9:16         | 1080  | 1920   | Portrait - YouTube Shorts |
+| youtube  | 16:9         | 1920  | 1080   | Landscape - YouTube |
+| instagram| 4:5          | 1080  | 1350   | Portrait 4:5 - Instagram Feed |
+| facebook | 4:5          | 1080  | 1350   | Portrait 4:5 - Facebook Feed |
+
+User cũng có thể override trực tiếp: `"ratio": "1:1"` cho Square format.
+
+**Supported ratios**: `9:16`, `16:9`, `1:1`, `4:5`
 
 ## OUTPUT STRUCTURE
 
@@ -30,6 +48,8 @@ Skill trả về JSON với cấu trúc sau:
     "videoType": "facts|listicle|motivation|story",
     "duration": 60,
     "ratio": "9:16",
+    "width": 1080,
+    "height": 1920,
     "targetAudience": "string",
     "platform": "shorts",
     "createdAt": "ISO date"
@@ -141,9 +161,12 @@ Mỗi scene cần có visual suggestion với:
 - **CTA**: "follow gesture", "subscribe button", "call to action"
 
 ### AI-generated prompts
-- **Abstract concepts**: "brain neural network visualization, blue purple gradient, minimal style, dark background --ar 9:16"
-- **Scientific**: "sleep cycle diagram, scientific illustration, clean design --ar 9:16"
-- **Emotional**: "person feeling [emotion], cinematic lighting, photorealistic --ar 9:16"
+Sử dụng `--ar` khớp với `metadata.ratio` của video:
+- **Abstract concepts**: "brain neural network visualization, blue purple gradient, minimal style, dark background --ar {ratio}"
+- **Scientific**: "sleep cycle diagram, scientific illustration, clean design --ar {ratio}"
+- **Emotional**: "person feeling [emotion], cinematic lighting, photorealistic --ar {ratio}"
+
+**Ví dụ**: Nếu `ratio: "16:9"`, prompt sẽ là: `"... --ar 16:9"`. Nếu `ratio: "1:1"`, prompt sẽ là: `"... --ar 1:1"`.
 
 ### Pinned resources (user-provided)
 Khi user cung cấp file cụ thể cho scene, dùng `type: "pinned"`:
@@ -526,6 +549,13 @@ Trước khi output JSON, validate:
 - ✅ CTA có trong 5-10s
 - ✅ Mỗi scene có visual suggestion
 - ✅ Script text không trống
+- ✅ `metadata.ratio` là giá trị hợp lệ: `9:16`, `16:9`, `1:1`, `4:5`
+- ✅ `metadata.width` và `metadata.height` khớp với ratio:
+  - `9:16` → 1080×1920
+  - `16:9` → 1920×1080
+  - `1:1` → 1080×1080
+  - `4:5` → 1080×1350
+- ✅ AI-generated prompts sử dụng đúng `--ar {ratio}` theo metadata
 
 ## ERROR HANDLING
 

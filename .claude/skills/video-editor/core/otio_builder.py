@@ -68,6 +68,20 @@ class OtioTimelineBuilder:
         # Create timeline
         timeline = otio.schema.Timeline(name=project_name)
 
+        # Add aspect ratio metadata from script
+        metadata = self.script.get('metadata', {})
+        ratio = metadata.get('ratio', '9:16')
+        width = metadata.get('width')
+        height = metadata.get('height')
+
+        # Auto-resolve width/height from ratio if not provided
+        if not width or not height:
+            width, height = self._resolve_dimensions(ratio)
+
+        timeline.metadata['ratio'] = ratio
+        timeline.metadata['width'] = width
+        timeline.metadata['height'] = height
+
         # Delegate to strategy to populate tracks
         strategy.populate_tracks(timeline, self.script, self.voice_data, self.resources)
 
@@ -75,6 +89,17 @@ class OtioTimelineBuilder:
         self.timeline = timeline
 
         return timeline
+
+    @staticmethod
+    def _resolve_dimensions(ratio: str):
+        """Resolve width/height from aspect ratio string."""
+        RATIO_MAP = {
+            '9:16': (1080, 1920),
+            '16:9': (1920, 1080),
+            '1:1': (1080, 1080),
+            '4:5': (1080, 1350),
+        }
+        return RATIO_MAP.get(ratio, (1080, 1920))
 
     def save(self, output_path: Optional[str] = None) -> str:
         """
@@ -132,3 +157,18 @@ class OtioTimelineBuilder:
             raise RuntimeError("Must call load_inputs() first")
 
         return self.script.get('metadata', {}).get('duration', 60)
+
+    def get_aspect_ratio(self) -> str:
+        """
+        Get aspect ratio from script metadata.
+
+        Returns:
+            Aspect ratio string (e.g., '9:16', '16:9', '1:1', '4:5')
+
+        Raises:
+            RuntimeError: If script hasn't been loaded
+        """
+        if not self.script:
+            raise RuntimeError("Must call load_inputs() first")
+
+        return self.script.get('metadata', {}).get('ratio', '9:16')

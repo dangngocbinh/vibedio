@@ -11,6 +11,7 @@ This skill allows you to generate high-quality voiceovers from text using multip
 - **Multi-Provider**: Support for ElevenLabs (Emotive), Vbee (Vietnamese), OpenAI (General), and Google (Cloud TTS).
 - **Emotion-Aware**: valid logic to select appropriate voices based on the detailed emotion of the text.
 - **Timestamps**: improving subtitle creation by attempting to fetch word-level timestamps (Alignment) where supported (ElevenLabs, Google).
+- **Timestamp Generation for Existing Voice**: Generate word-level timestamps from any existing audio file using OpenAI Whisper API.
 
 ## Usage
 
@@ -84,7 +85,49 @@ If `voiceId` is not provided, the Agent (you) or the Script should attempt to se
 | **Meditation / Soothing** | `Kore` | Gemini | Very calm, slow, relaxing. |
 | | `shimmer` | OpenAI | Clear, resonant, pure. |
 
-### 5. Utility: List Available Voices
+### 5. Generate Timestamps for Existing Voice Files
+
+Nếu bạn đã có voice file từ nguồn khác (thu âm, tải về, hoặc từ provider không hỗ trợ timestamps), bạn có thể tạo timestamps riêng bằng script `generate-timestamps.js`.
+
+**Use Cases**:
+- ✅ Voice file từ TikTok, YouTube, hoặc nguồn khác
+- ✅ Voice đã thu âm sẵn
+- ✅ Voice từ Gemini/OpenAI không có timestamps
+- ✅ Cần timestamps chính xác hơn cho subtitle
+
+**Command Syntax**:
+```bash
+node .claude/skills/voice-generation/scripts/generate-timestamps.js \
+  --audio "path/to/voice.mp3" \
+  --text "Optional: original text for better accuracy" \
+  --outputDir "public/projects/folder"  # Optional: custom output directory
+```
+
+**Example 1: Generate timestamps for existing voice file**
+```bash
+node .claude/skills/voice-generation/scripts/generate-timestamps.js \
+  --audio "public/projects/my-video/voice.mp3" \
+  --text "Xin chào các bạn, hôm nay tôi sẽ hướng dẫn các bạn..."
+```
+
+**Example 2: Generate timestamps without original text**
+```bash
+# Whisper sẽ tự transcribe audio và tạo timestamps
+node .claude/skills/voice-generation/scripts/generate-timestamps.js \
+  --audio "public/projects/my-video/voice.mp3"
+```
+
+**Output**:
+- Tạo file `voice.json` cùng thư mục với audio file
+- Chứa word-level timestamps và metadata
+- Format tương thích với video editor skill
+
+**Requirements**:
+- ⚠️ Cần `OPENAI_API_KEY` trong file `.env`
+- ⚠️ Chi phí: ~$0.006/phút audio (~140đ/phút)
+- ⚠️ Cần cài `ffprobe` (thường đi kèm với ffmpeg)
+
+### 6. Utility: List Available Voices
  To see a list of available voice IDs (Gemini, OpenAI, Vbee, ElevenLabs), run:
 ```bash
 node skill-voice-gen/scripts/list-voices.js
@@ -160,6 +203,14 @@ If no `--outputDir` is specified, files go to main output folder:
 public/projects/
 ├── <timestamp>_<provider>.mp3
 └── <timestamp>_<provider>.json
+```
+
+### Timestamp generation for existing voice:
+When using `generate-timestamps.js`, the JSON file is created in the same directory as the audio file:
+```
+public/projects/{your-folder}/
+├── voice.mp3         # Your existing audio file (unchanged)
+└── voice.json        # NEW: Generated metadata with timestamps
 ```
 
 ### Metadata content (voice.json):

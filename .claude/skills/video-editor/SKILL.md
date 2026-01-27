@@ -101,13 +101,34 @@ file:///absolute/path/to/voice.mp3
 
 ### 1. script.json (Required)
 
+#### Aspect Ratio Support
+`script.json` chứa thông tin `ratio`, `width`, `height` trong `metadata`:
+```json
+{
+  "metadata": {
+    "ratio": "9:16",
+    "width": 1080,
+    "height": 1920
+  }
+}
+```
+
+**Supported ratios**: `9:16` (1080×1920), `16:9` (1920×1080), `1:1` (1080×1080), `4:5` (1080×1350)
+
+Video editor sẽ đọc `metadata.ratio` và ghi vào `project.otio` metadata để OtioPlayer/Remotion render đúng kích thước.
+
+Nếu `ratio` không có trong script.json, mặc định là `9:16` (1080×1920).
+
 #### For Listicle Type:
 ```json
 {
   "metadata": {
     "projectName": "5-sai-lam-hoc-tieng-anh",
     "videoType": "listicle",
-    "duration": 60
+    "duration": 60,
+    "ratio": "9:16",
+    "width": 1080,
+    "height": 1920
   },
   "scenes": [
     {"id": "hook", "startTime": 0, "duration": 5},
@@ -254,28 +275,30 @@ project.otio
 
 ### Loading OTIO in Remotion
 
-1. Import timeline in `Root.tsx`:
+OtioTimeline composition tự động đọc `ratio` từ `script.json` metadata và render đúng kích thước.
+
+1. Import timeline:
 ```typescript
 import projectTimeline from '../public/projects/my-project/project.otio';
 ```
 
-2. Register composition:
+2. Composition tự động chọn đúng kích thước dựa trên `script.json` metadata:
 ```typescript
-<Composition
-  id="MyVideo"
-  component={OtioPlayer}
-  durationInFrames={calculateDuration(projectTimeline)}
-  fps={30}
-  width={1080}
-  height={1920}
-  defaultProps={{timeline: projectTimeline}}
-/>
+// Root.tsx đã đăng ký các OtioTimeline variants:
+// - OtioTimeline        → Auto-detect từ script.json (default 9:16)
+// - OtioTimelineLandscape → 16:9 (1920×1080)
+// - OtioTimelineSquare    → 1:1 (1080×1080)
+// - OtioTimeline4x5       → 4:5 (1080×1350)
 ```
 
 3. Render:
 ```bash
-npm run dev  # Preview
-npm run render -- MyVideo  # Final render
+npm run dev  # Preview - tự chọn composition phù hợp
+# Render cụ thể:
+npx remotion render OtioTimeline          # 9:16 (default)
+npx remotion render OtioTimelineLandscape # 16:9
+npx remotion render OtioTimelineSquare    # 1:1
+npx remotion render OtioTimeline4x5       # 4:5
 ```
 
 ## ERROR HANDLING

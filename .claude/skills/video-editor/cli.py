@@ -119,10 +119,11 @@ Examples:
         builder.load_inputs()
         print(f"✓ Loaded inputs from {args.project_dir}")
 
-        # Determine video type
+        # Determine video type and aspect ratio
         video_type = builder.get_video_type()
         duration = builder.get_duration()
-        print(f"✓ Video type: {video_type} ({duration}s @ {args.fps}fps)")
+        ratio = builder.get_aspect_ratio()
+        print(f"✓ Video type: {video_type} ({duration}s @ {args.fps}fps, ratio: {ratio})")
 
         # Validate only mode
         if args.validate_only:

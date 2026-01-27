@@ -15,8 +15,10 @@
  *   node add-music-to-project.js --projectDir "path/to/project" --query "epic cinematic"
  *   node add-music-to-project.js --projectDir "path/to/project" --updateOtio
  */
-
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+// Load environment variables from project root
+// NOTE FOR VUE DEVELOPER:
+// Đi lên 4 cấp thư mục (../../../../) để đến thư mục gốc project
+// File này nằm ở: .claude/skills/video-resource-finder/scripts/
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '..', '.env') });
 
 const path = require('path');
@@ -68,7 +70,7 @@ async function downloadFile(url, destPath) {
                 resolve(destPath);
             });
         }).on('error', (err) => {
-            require('fs').unlink(destPath, () => {});
+            require('fs').unlink(destPath, () => { });
             reject(err);
         });
     });

@@ -2,8 +2,10 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const path = require('path');
 
-
-dotenv.config({ path: path.join(__dirname, '../.env') });
+// Load environment variables from project root
+// NOTE FOR VUE DEVELOPER:
+// Tương tự như file generate-voice.js, đi lên 4 cấp thư mục để đến thư mục gốc
+dotenv.config({ path: path.join(__dirname, '../../../../.env') });
 
 /*
  * NOTE FOR VUE DEVELOPER:

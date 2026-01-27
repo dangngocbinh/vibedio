@@ -16,6 +16,42 @@ export interface CompositionMetadata {
 
 export const compositions: CompositionMetadata[] = [
     {
+        id: 'OtioTimeline',
+        name: 'Otio Timeline (Portrait 9:16)',
+        description: 'OTIO project player - TikTok/Shorts/Reels format',
+        width: 1080,
+        height: 1920,
+        fps: 30,
+        durationInFrames: 900,
+    },
+    {
+        id: 'OtioTimelineLandscape',
+        name: 'Otio Timeline (Landscape 16:9)',
+        description: 'OTIO project player - YouTube format',
+        width: 1920,
+        height: 1080,
+        fps: 30,
+        durationInFrames: 900,
+    },
+    {
+        id: 'OtioTimelineSquare',
+        name: 'Otio Timeline (Square 1:1)',
+        description: 'OTIO project player - Instagram format',
+        width: 1080,
+        height: 1080,
+        fps: 30,
+        durationInFrames: 900,
+    },
+    {
+        id: 'OtioTimeline4x5',
+        name: 'Otio Timeline (Portrait 4:5)',
+        description: 'OTIO project player - Instagram/Facebook Feed',
+        width: 1080,
+        height: 1350,
+        fps: 30,
+        durationInFrames: 900,
+    },
+    {
         id: 'JSONVideo',
         name: 'JSON Video (Portrait)',
         description: 'TikTok/Reels format - Load video from JSON data',
@@ -106,6 +142,11 @@ export const HomePage: React.FC = () => {
     const [selectedComposition, setSelectedComposition] = useState<CompositionMetadata | null>(null);
 
     const getAspectRatioLabel = (width: number, height: number): string => {
+        const ratio = width / height;
+        if (Math.abs(ratio - 16 / 9) < 0.01) return 'Landscape 16:9';
+        if (Math.abs(ratio - 9 / 16) < 0.01) return 'Portrait 9:16';
+        if (Math.abs(ratio - 1) < 0.01) return 'Square 1:1';
+        if (Math.abs(ratio - 4 / 5) < 0.01) return 'Portrait 4:5';
         if (width > height) return 'Landscape';
         if (width === height) return 'Square';
         return 'Portrait';

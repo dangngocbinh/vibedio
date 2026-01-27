@@ -28,6 +28,19 @@ function getProjects() {
             const hasOtio = otioFiles.length > 0;
 
             if (hasScript || hasOtio) {
+                // Read aspect ratio from script.json if available
+                let ratio = null;
+                if (hasScript) {
+                    try {
+                        const scriptContent = JSON.parse(
+                            fs.readFileSync(path.join(itemPath, 'script.json'), 'utf-8')
+                        );
+                        ratio = scriptContent.metadata?.ratio || null;
+                    } catch (e) {
+                        // Ignore parse errors
+                    }
+                }
+
                 projects.push({
                     id: item,
                     name: item,
@@ -35,6 +48,7 @@ function getProjects() {
                     hasScript,
                     hasOtio,
                     otioFile: hasOtio ? otioFiles[0] : null,
+                    ratio,
                     modifiedAt: stats.mtime.toISOString(),
                     timestamp: stats.mtime.getTime()
                 });

@@ -1,6 +1,7 @@
 import { staticFile } from 'remotion';
 // @ts-ignore
 import projectsList from '../generated/projects.json';
+import { getAspectRatio, DEFAULT_ASPECT_RATIO } from '../config/aspect-ratios';
 
 export interface ProjectItem {
     id: string;
@@ -9,6 +10,7 @@ export interface ProjectItem {
     hasScript: boolean;
     hasOtio: boolean;
     otioFile: string | null;
+    ratio?: string;
     modifiedAt: string;
     timestamp: number;
 }
@@ -86,6 +88,10 @@ const convertScriptToOtio = (script: any, resources: any, projectBase: string) =
     const fps = 30;
     const scenes = script.scenes || [];
 
+    // Read aspect ratio from script metadata
+    const ratio = script.metadata?.ratio || DEFAULT_ASPECT_RATIO;
+    const aspectConfig = getAspectRatio(ratio);
+
     // Map resources by sceneId
     const videoResources: Record<string, string> = {};
     if (resources && resources.resources && resources.resources.videos) {
@@ -114,8 +120,8 @@ const convertScriptToOtio = (script: any, resources: any, projectBase: string) =
         const durationFrames = Math.round(scene.duration * fps);
         const startFrames = Math.round(scene.startTime * fps);
 
-        // Find media
-        const mediaUrl = videoResources[scene.id] || `https://placehold.co/1920x1080?text=${encodeURIComponent(scene.id)}`;
+        // Find media - use aspect-ratio-aware placeholder
+        const mediaUrl = videoResources[scene.id] || `https://placehold.co/${aspectConfig.width}x${aspectConfig.height}?text=${encodeURIComponent(scene.id)}`;
 
         return {
             "OTIO_SCHEMA": "Clip.1", // Standardize schema name
@@ -192,6 +198,11 @@ const convertScriptToOtio = (script: any, resources: any, projectBase: string) =
     return {
         "OTIO_SCHEMA": "Timeline.1",
         "name": script.metadata?.projectName || "Converted Project",
+        "metadata": {
+            "ratio": ratio,
+            "width": aspectConfig.width,
+            "height": aspectConfig.height,
+        },
         "tracks": {
             "OTIO_SCHEMA": "Stack.1",
             "children": [

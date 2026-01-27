@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 // Load environment from skill .env first, then project root .env
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '..', '.env') });
 const minimist = require('minimist');
 const path = require('path');

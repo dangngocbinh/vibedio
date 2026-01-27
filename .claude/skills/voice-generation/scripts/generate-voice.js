@@ -8,7 +8,11 @@ const textToSpeech = require('@google-cloud/text-to-speech');
 const { execSync } = require('child_process');
 
 // Load environment variables
-dotenv.config({ path: path.join(__dirname, '../.env') });
+// NOTE FOR VUE DEVELOPER:
+// __dirname là biến global trong Node.js, tương tự như import.meta.url trong Vue/Vite
+// Nó trỏ đến thư mục hiện tại của file này: /Users/binhpc/code/automation-video/.claude/skills/voice-generation/scripts
+// Đi lên 4 cấp (../../../..) để đến thư mục gốc project: /Users/binhpc/code/automation-video/
+dotenv.config({ path: path.join(__dirname, '../../../../.env') });
 
 const ARGS = minimist(process.argv.slice(2));
 
@@ -19,7 +23,7 @@ const CONFIG = {
     vbeeApiKey: process.env.VBEE_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY,
     googleCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    googleApiKey: process.env.GOOGLE_API_KEY
+    googleApiKey: process.env.GEMINI_API_KEY
 };
 
 // Ensure output directory exists
@@ -121,6 +125,26 @@ async function main() {
         console.log(`Provider: ${provider}`);
         console.log(`Emotion: ${emotion}`);
 
+        // NOTE FOR VUE DEVELOPER:
+        // Validation này giống như form validation trong Vue
+        // Kiểm tra điều kiện trước khi submit/execute
+        // Validate API key for selected provider
+        const providerKeyMap = {
+            'elevenlabs': { key: CONFIG.elevenLabsApiKey, name: 'ELEVENLABS_API_KEY' },
+            'vbee': { key: CONFIG.vbeeApiKey, name: 'VBEE_API_KEY' },
+            'openai': { key: CONFIG.openaiApiKey, name: 'OPENAI_API_KEY' },
+            'gemini': { key: CONFIG.googleApiKey, name: 'GEMINI_API_KEY' }
+        };
+
+        const providerInfo = providerKeyMap[provider];
+        if (providerInfo && !providerInfo.key) {
+            throw new Error(
+                `Cannot use provider "${provider}": Missing ${providerInfo.name} in .env file.\n` +
+                `Please add it to: /Users/binhpc/code/automation-video/.env\n` +
+                `Or use a different provider with: --provider <elevenlabs|vbee|openai|gemini>`
+            );
+        }
+
         let result;
 
         switch (provider) {
@@ -199,14 +223,62 @@ console.logError = (error) => {
     }
 };
 
+// NOTE FOR VUE DEVELOPER:
+// Function này tương tự như computed property trong Vue
+// Nó tự động chọn provider phù hợp dựa trên text và emotion
+// Và kiểm tra xem có API key không trước khi chọn
 function selectProvider(text, emotion) {
-    if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text)) {
-        return 'vbee';
+    // Detect Vietnamese text
+    const isVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text);
+    const hasEmotion = ['sad', 'angry', 'excited', 'fearful'].includes(emotion);
+
+    // Priority list based on text characteristics
+    let preferredProvider = null;
+
+    if (isVietnamese) {
+        // Vietnamese: prefer Vbee > Gemini > OpenAI
+        if (CONFIG.vbeeApiKey) {
+            preferredProvider = 'vbee';
+        } else if (CONFIG.googleApiKey) {
+            preferredProvider = 'gemini';
+            console.log('⚠️  Vbee not available (no API key), using Gemini instead');
+        } else if (CONFIG.openaiApiKey) {
+            preferredProvider = 'openai';
+            console.log('⚠️  Vbee & Gemini not available, using OpenAI instead');
+        }
+    } else if (hasEmotion) {
+        // English with emotion: prefer ElevenLabs > Gemini > OpenAI
+        if (CONFIG.elevenLabsApiKey) {
+            preferredProvider = 'elevenlabs';
+        } else if (CONFIG.googleApiKey) {
+            preferredProvider = 'gemini';
+            console.log('⚠️  ElevenLabs not available (no API key), using Gemini instead');
+        } else if (CONFIG.openaiApiKey) {
+            preferredProvider = 'openai';
+            console.log('⚠️  ElevenLabs & Gemini not available, using OpenAI instead');
+        }
+    } else {
+        // Default: prefer Gemini > OpenAI > ElevenLabs
+        if (CONFIG.googleApiKey) {
+            preferredProvider = 'gemini';
+        } else if (CONFIG.openaiApiKey) {
+            preferredProvider = 'openai';
+            console.log('⚠️  Gemini not available (no API key), using OpenAI instead');
+        } else if (CONFIG.elevenLabsApiKey) {
+            preferredProvider = 'elevenlabs';
+            console.log('⚠️  Gemini & OpenAI not available, using ElevenLabs instead');
+        }
     }
-    if (['sad', 'angry', 'excited', 'fearful'].includes(emotion)) {
-        return 'elevenlabs';
+
+    if (!preferredProvider) {
+        throw new Error('No voice provider available. Please add at least one API key to .env file:\n' +
+            '  - GEMINI_API_KEY (Google Gemini)\n' +
+            '  - OPENAI_API_KEY (OpenAI)\n' +
+            '  - ELEVENLABS_API_KEY (ElevenLabs)\n' +
+            '  - VBEE_API_KEY (Vbee - Vietnamese)');
     }
-    return 'gemini';
+
+    return preferredProvider;
 }
 
 /**
@@ -252,7 +324,7 @@ async function generateTimestampsWithWhisper(audioPath, originalText) {
 }
 
 async function generateGemini(text, voiceId, emotion, baseFilename, styleInstruction = null) {
-    if (!CONFIG.googleApiKey) throw new Error('Missing GOOGLE_API_KEY');
+    if (!CONFIG.googleApiKey) throw new Error('Missing GEMINI_API_KEY');
 
     const activeModelId = 'gemini-2.5-pro-preview-tts';
     console.log(`Using Gemini Generative API with model ${activeModelId}...`);

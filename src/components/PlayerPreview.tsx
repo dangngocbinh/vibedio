@@ -12,6 +12,7 @@ import { NetworkVisualization } from '../compositions/NetworkVisualization';
 import { LogoReveal } from '../compositions/LogoReveal';
 import { LogoReveal2 } from '../compositions/LogoReveal2';
 import { CartoonCharacter } from '../compositions/CartoonCharacter';
+import { OtioPlayer } from '../compositions/OtioPlayer';
 
 interface PlayerPreviewProps {
     composition: CompositionMetadata;
@@ -32,6 +33,10 @@ const compositionComponents: Record<string, React.ComponentType<any>> = {
     LogoReveal: LogoReveal,
     LogoReveal2: LogoReveal2,
     CartoonCharacter: CartoonCharacter,
+    OtioTimeline: OtioPlayer,
+    OtioTimelineLandscape: OtioPlayer,
+    OtioTimelineSquare: OtioPlayer,
+    OtioTimeline4x5: OtioPlayer,
 };
 
 export const PlayerPreview: React.FC<PlayerPreviewProps> = ({ composition, onClose }) => {

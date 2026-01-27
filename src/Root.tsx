@@ -24,6 +24,7 @@ import { OtioPlayer, calculateTotalDuration } from './compositions/OtioPlayer';
 // @ts-ignore
 import projectsList from './generated/projects.json';
 import { loadProject } from './utils/project-loader';
+import { ASPECT_RATIOS, getAspectRatio, DEFAULT_ASPECT_RATIO } from './config/aspect-ratios';
 
 const projectIds = projectsList.length > 0
   ? projectsList.map((p: any) => p.id)
@@ -196,8 +197,40 @@ export const RemotionRoot: React.FC = () => {
           subtitle: "Powered by Remotion & Agentic AI"
         }}
       />
+      {/* OtioTimeline - Portrait 9:16 (Default for TikTok/Shorts/Reels) */}
       <Composition
         id="OtioTimeline"
+        component={OtioPlayer}
+        durationInFrames={defaultTimelineDuration}
+        fps={fps}
+        width={1080}
+        height={1920}
+        schema={OtioSchema}
+        defaultProps={{
+          // @ts-ignore
+          projectId: projectIds[0]
+        }}
+        calculateMetadata={async ({ props }) => {
+          if (props.projectId) {
+            const project = projectsList.find((p: any) => p.id === props.projectId);
+            if (project) {
+              try {
+                const tl = await loadProject(project);
+                const dur = calculateTotalDuration(tl, fps);
+                if (dur > 0) {
+                  return { durationInFrames: dur };
+                }
+              } catch (e) {
+                console.error("[OtioTimeline] Failed to calc duration", e);
+              }
+            }
+          }
+          return { durationInFrames: defaultTimelineDuration };
+        }}
+      />
+      {/* OtioTimeline - Landscape 16:9 (YouTube) */}
+      <Composition
+        id="OtioTimelineLandscape"
         component={OtioPlayer}
         durationInFrames={defaultTimelineDuration}
         fps={fps}
@@ -209,23 +242,79 @@ export const RemotionRoot: React.FC = () => {
           projectId: projectIds[0]
         }}
         calculateMetadata={async ({ props }) => {
-          console.log('[OtioTimeline] Starting calculateMetadata with props:', props);
           if (props.projectId) {
             const project = projectsList.find((p: any) => p.id === props.projectId);
-            console.log('[OtioTimeline] Found project:', project);
             if (project) {
               try {
                 const tl = await loadProject(project);
-                console.log('[OtioTimeline] Loaded timeline:', tl);
-                console.log('[OtioTimeline] Timeline tracks:', tl?.tracks);
-                console.log('[OtioTimeline] Timeline tracks children:', tl?.tracks?.children);
                 const dur = calculateTotalDuration(tl, fps);
-                console.log('[OtioTimeline] Calculated duration:', dur);
                 if (dur > 0) {
                   return { durationInFrames: dur };
                 }
               } catch (e) {
-                console.error("[OtioTimeline] Failed to calc duration", e);
+                console.error("[OtioTimelineLandscape] Failed to calc duration", e);
+              }
+            }
+          }
+          return { durationInFrames: defaultTimelineDuration };
+        }}
+      />
+      {/* OtioTimeline - Square 1:1 (Instagram) */}
+      <Composition
+        id="OtioTimelineSquare"
+        component={OtioPlayer}
+        durationInFrames={defaultTimelineDuration}
+        fps={fps}
+        width={1080}
+        height={1080}
+        schema={OtioSchema}
+        defaultProps={{
+          // @ts-ignore
+          projectId: projectIds[0]
+        }}
+        calculateMetadata={async ({ props }) => {
+          if (props.projectId) {
+            const project = projectsList.find((p: any) => p.id === props.projectId);
+            if (project) {
+              try {
+                const tl = await loadProject(project);
+                const dur = calculateTotalDuration(tl, fps);
+                if (dur > 0) {
+                  return { durationInFrames: dur };
+                }
+              } catch (e) {
+                console.error("[OtioTimelineSquare] Failed to calc duration", e);
+              }
+            }
+          }
+          return { durationInFrames: defaultTimelineDuration };
+        }}
+      />
+      {/* OtioTimeline - Portrait 4:5 (Instagram/Facebook Feed) */}
+      <Composition
+        id="OtioTimeline4x5"
+        component={OtioPlayer}
+        durationInFrames={defaultTimelineDuration}
+        fps={fps}
+        width={1080}
+        height={1350}
+        schema={OtioSchema}
+        defaultProps={{
+          // @ts-ignore
+          projectId: projectIds[0]
+        }}
+        calculateMetadata={async ({ props }) => {
+          if (props.projectId) {
+            const project = projectsList.find((p: any) => p.id === props.projectId);
+            if (project) {
+              try {
+                const tl = await loadProject(project);
+                const dur = calculateTotalDuration(tl, fps);
+                if (dur > 0) {
+                  return { durationInFrames: dur };
+                }
+              } catch (e) {
+                console.error("[OtioTimeline4x5] Failed to calc duration", e);
               }
             }
           }
