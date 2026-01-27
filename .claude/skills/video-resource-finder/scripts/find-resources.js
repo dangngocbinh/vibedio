@@ -14,6 +14,7 @@ const ScriptReader = require('./utils/script-reader');
 const QueryBuilder = require('./utils/query-builder');
 const ResourceMatcher = require('./processors/resource-matcher');
 const JSONBuilder = require('./processors/json-builder');
+const PixabayScraper = require('./api/pixabay-scraper'); // New Scraper
 const { createStorageAdapter } = require('./storage');
 const ResourceDownloader = require('./downloader');
 
@@ -123,10 +124,14 @@ async function main() {
     const queryBuilder = new QueryBuilder();
     const queries = queryBuilder.buildAllQueries(visualQueries, musicQuery);
 
+    // Initialize Pixabay Scraper for music
+    const pixabayScraper = new PixabayScraper();
+
     // Step 4: Fetch resources
     console.log('\n🌐 Fetching resources from APIs...\n');
     const resourceMatcher = new ResourceMatcher(pexelsClient, pixabayClient, {
       geminiClient: geminiClient,
+      pixabayScraper: pixabayScraper, // Pass scraper instance
       resultsPerQuery: args.resultsPerQuery,
       preferredSource: args.preferredSource,
       enableAIGeneration: enableAI,

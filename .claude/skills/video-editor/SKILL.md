@@ -450,6 +450,14 @@ pip install -r requirements.txt
 
 ## VERSION HISTORY
 
+- v1.2 (2026-01-26): Enhanced Music Support
+  - **IMPROVED** `AssetResolver.resolve_music_from_resources()` supports multiple formats:
+    - Nested format: `resources.music[].results[].downloadUrl`
+    - Flat format: `resources.music[].downloadUrl`
+    - Direct URL: `resources.music[].url` or `resources.music[].sourceUrl`
+  - Compatible with both `find-resources.js` and `add-music-to-project.js` outputs
+  - Music track auto-added when resources.json has music entry
+
 - v1.1 (2026-01-26): Image-Slide Strategy
   - **NEW** `image-slide` video type for AI-generated image videos
   - **NEW** Voice-synced timing (images match voice timestamps)

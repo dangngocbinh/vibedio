@@ -55,15 +55,20 @@ Skill trả về JSON với cấu trúc sau:
     }
   ],
   "voice": {
-    "provider": "elevenlabs|openai",
+    "provider": "elevenlabs|openai|gemini|vbee",
     "voiceId": "suggested-voice-id",
     "speed": 1.0,
-    "notes": "Male voice, professional tone"
+    "styleInstruction": "Trầm – ấm – chậm – rất đời",
+    "notes": "Male voice, professional tone. styleInstruction chỉ hoạt động với Gemini provider để tùy chỉnh cảm xúc và phong cách giọng đọc."
   },
   "music": {
-    "mood": "calm|energetic|dramatic",
+    "query": "ambient calm peaceful",
+    "mood": "calm|energetic|dramatic|uplifting|dark|happy|sad|mysterious",
+    "genre": "ambient|cinematic|electronic|acoustic|corporate|epic",
     "volume": 0.15,
-    "suggestions": ["ambient-calm-1", "upbeat-motivation-2"]
+    "fadeIn": 1.0,
+    "fadeOut": 2.0,
+    "notes": "Nhạc nền nên có volume thấp (0.1-0.2) để không át giọng voice-over. Query nên kết hợp mood + genre để tìm chính xác hơn trên Pixabay."
   },
   "subtitle": {
     "style": "highlight-word|karaoke|minimal",
@@ -143,6 +148,148 @@ Mỗi scene cần có visual suggestion với:
 - `ken-burns`: Cho ảnh tĩnh, smooth pan
 - `fade`: Chuyển cảnh mượt
 - `slide`: Dynamic, energetic
+
+## MUSIC SELECTION GUIDELINES
+
+### Pixabay Search Strategy
+
+Khi tạo music config, cần kết hợp **query**, **mood**, và **genre** để tìm nhạc phù hợp:
+
+**Query Format**: `[genre] [mood] [style/instrument]`
+
+Ví dụ:
+- `"ambient calm peaceful"` → Nhạc nền êm dịu
+- `"cinematic epic dramatic"` → Nhạc hùng tráng
+- `"electronic upbeat energetic"` → Nhạc sôi động
+
+### Music by Video Type
+
+#### 1. FACTS Video
+**Mục đích**: Giữ attention, không át voice, hỗ trợ thông tin
+
+```json
+{
+  "query": "ambient corporate minimal",
+  "mood": "calm",
+  "genre": "ambient",
+  "volume": 0.12
+}
+```
+
+**Pixabay keywords tốt**:
+- `"corporate background"` - Nhạc văn phòng, chuyên nghiệp
+- `"ambient minimal"` - Tối giản, không gây xao nhãng
+- `"soft piano calm"` - Piano nhẹ nhàng
+- `"technology background"` - Phù hợp nội dung tech/science
+
+**Tránh**: Nhạc có beat mạnh, vocal, melody quá nổi bật
+
+#### 2. LISTICLE Video
+**Mục đích**: Tạo năng lượng, giữ pace, upbeat
+
+```json
+{
+  "query": "upbeat corporate energetic",
+  "mood": "energetic",
+  "genre": "corporate",
+  "volume": 0.15
+}
+```
+
+**Pixabay keywords tốt**:
+- `"upbeat corporate"` - Sôi động nhưng không quá ồn
+- `"motivational background"` - Tạo động lực
+- `"positive energy"` - Năng lượng tích cực
+- `"bright happy"` - Vui tươi, lạc quan
+
+**Tránh**: Nhạc quá chậm, buồn, hoặc quá dramatic
+
+#### 3. MOTIVATION Video
+**Mục đích**: Tạo cảm xúc, build up, inspiring
+
+```json
+{
+  "query": "cinematic inspiring emotional",
+  "mood": "uplifting",
+  "genre": "cinematic",
+  "volume": 0.18
+}
+```
+
+**Pixabay keywords tốt**:
+- `"cinematic inspiring"` - Hùng tráng, truyền cảm hứng
+- `"epic motivational"` - Epic nhưng không quá loud
+- `"emotional piano"` - Piano cảm xúc
+- `"uplifting orchestral"` - Dàn nhạc nâng cao tinh thần
+
+**Lưu ý**: Volume có thể cao hơn (0.18-0.22) vì cần tạo impact
+
+#### 4. STORY Video
+**Mục đích**: Theo dõi cảm xúc câu chuyện, build tension
+
+```json
+{
+  "query": "cinematic mysterious dramatic",
+  "mood": "mysterious",
+  "genre": "cinematic",
+  "volume": 0.15
+}
+```
+
+**Pixabay keywords tốt**:
+- `"cinematic suspense"` - Hồi hộp, căng thẳng
+- `"mysterious dark"` - Bí ẩn, tối tăm
+- `"dramatic tension"` - Kịch tính
+- `"storytelling background"` - Phù hợp kể chuyện
+
+**Advanced**: Có thể dùng 2 tracks khác nhau cho setup vs climax
+
+### Volume Guidelines
+
+**Quan trọng**: Nhạc nền KHÔNG được át voice-over!
+
+| Video Type | Recommended Volume | Notes |
+|------------|-------------------|-------|
+| Facts | 0.10 - 0.12 | Rất nhỏ, chỉ làm nền |
+| Listicle | 0.12 - 0.15 | Vừa phải, tạo energy |
+| Motivation | 0.15 - 0.20 | Cao hơn, cần impact |
+| Story | 0.12 - 0.18 | Tùy scene, có thể fade |
+
+**Fade Settings**:
+- `fadeIn`: 1.0-2.0s - Tránh nhạc bật đột ngột
+- `fadeOut`: 2.0-3.0s - Kết thúc mượt mà
+
+### Mood-Genre Matrix
+
+Bảng kết hợp mood + genre phù hợp:
+
+| Mood | Best Genres | Pixabay Query Example |
+|------|-------------|----------------------|
+| calm | ambient, acoustic | `"ambient calm peaceful"` |
+| energetic | electronic, corporate | `"electronic upbeat energetic"` |
+| dramatic | cinematic, epic | `"cinematic dramatic tension"` |
+| uplifting | cinematic, corporate | `"cinematic inspiring uplifting"` |
+| dark | cinematic, ambient | `"dark ambient mysterious"` |
+| happy | acoustic, electronic | `"happy bright positive"` |
+| sad | piano, ambient | `"sad emotional piano"` |
+| mysterious | cinematic, ambient | `"mysterious suspense dark"` |
+
+### Common Mistakes
+
+❌ **Tránh những lỗi này**:
+1. **Volume quá cao** → Át voice, khó nghe
+2. **Nhạc có vocal** → Conflict với voice-over
+3. **Genre không match tone** → Epic music cho facts video
+4. **Query quá chung** → `"music"` thay vì `"ambient calm corporate"`
+5. **Không fade** → Nhạc bật/tắt đột ngột
+
+✅ **Best Practices**:
+1. **Test volume**: Voice phải rõ hơn music ít nhất 2x
+2. **Match energy**: Nhạc phải theo pace của script
+3. **Specific query**: Càng cụ thể càng tốt
+4. **Consider platform**: TikTok thích upbeat hơn YouTube
+5. **Fade transitions**: Luôn dùng fadeIn/fadeOut
+
 
 ## QUALITY CHECKERS
 
@@ -229,8 +376,9 @@ Duration: 60s
 3. Generate hook: "Bạn ngủ đủ 8 tiếng mà sáng dậy vẫn mệt?"
 4. Build body: 3 points về sleep cycles
 5. Write CTA: "Follow để biết thêm mẹo ngủ ngon"
-6. Quality check: Hook strength 8/10, pacing 9/10
-7. Output JSON
+6. **Select music**: `query: "ambient calm peaceful"`, `mood: "calm"`, `genre: "ambient"`, `volume: 0.12`
+7. Quality check: Hook strength 8/10, pacing 9/10
+8. Output JSON
 
 ### Example 2: Listicle Video
 

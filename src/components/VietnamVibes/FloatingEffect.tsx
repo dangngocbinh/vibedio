@@ -62,10 +62,10 @@ const FloatingCanvas: React.FC<{ shakeX: number; shakeY: number; bloom: number }
                             width: currentRadius,
                             height: currentRadius,
                             borderRadius: '50%',
-                            backgroundColor: 'white',
                             opacity: opacity,
                             // Enhance glow on beat
-                            boxShadow: `0 0 ${currentRadius * 2}px rgba(255, 255, 255, ${0.4 + bloom * 0.05})`,
+                            backgroundColor: '#503b06ff',
+                            boxShadow: `0 0 ${currentRadius * 2}px rgba(184, 134, 11, ${0.4 + bloom * 0.05})`,
                             filter: 'blur(1px)',
                         }}
                     />

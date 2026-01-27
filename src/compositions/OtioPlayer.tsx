@@ -9,6 +9,7 @@ import { clockWipe } from "@remotion/transitions/clock-wipe";
 import { OpeningTitle } from '../components/OpeningTitle';
 import { PersistentTitle } from '../components/VietnamVibes/PersistentTitle';
 import { FloatingEffect } from '../components/VietnamVibes/FloatingEffect';
+import { StarParticles } from '../components/StarParticles';
 import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader';
 import { TikTokCaption } from '../components/TikTokCaption';
@@ -379,6 +380,18 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                         return (
                             <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
                                 <FloatingEffect {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+                    if (item.metadata?.remotion_component === 'StarParticles') {
+                        const props = item.metadata.props || {};
+                        if (props.audioSrc) props.audioSrc = sanitizeUrl(props.audioSrc, projectId);
+
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <StarParticles {...props} />
                             </TransitionSeries.Sequence>
                         );
                     }

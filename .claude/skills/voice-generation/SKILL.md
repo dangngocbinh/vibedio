@@ -27,10 +27,11 @@ The script accepts the following arguments:
 node skill-voice-gen/scripts/generate-voice.js \
   --text "Your text here" \ # should use for short text
   --script "path/to/script.json" \ # should use for long text: path to script.json
-  --provider "elevenlabs" \    # options: elevenlabs, vbee, openai, google
+  --provider "elevenlabs" \    # options: elevenlabs, vbee, openai, gemini
   --emotion "happy" \          # optional: happy, sad, angry, neutral, excited
   --voiceId "specific_id" \    # optional: override automatic selection
-  --outputDir "public/projects/folder"  # optional: custom output directory (default: /Users/binhpc/code/skill-generate-video-automation/output)
+  --styleInstruction "Trầm – ấm – chậm – rất đời" \  # optional (Gemini only): custom voice style
+  --outputDir "public/projects/folder"  # optional: custom output directory
 ```
 
 **IMPORTANT**: When generating voice for a script, always use `--outputDir` to match the script folder:
@@ -38,10 +39,26 @@ node skill-voice-gen/scripts/generate-voice.js \
 node .claude/skills/voice-generation/scripts/generate-voice.js \
   --text "Your text here" \ # should use for short text
   --script "path/to/script.json" \ # should use for long text: path to script.json
-  --provider "openai" \
-  --voiceId "onyx" \
+  --provider "gemini" \
+  --voiceId "Charon" \
+  --styleInstruction "Trầm – ấm – chậm – rất đời" \  # Custom style for Gemini
   --outputDir "public/projects/ten-kich-ban"  # Same folder as script.json
 ```
+
+### 3.1. Style Instruction (Gemini Only)
+
+Gemini API hỗ trợ **style instruction** - mô tả tự do về cách bạn muốn giọng nói được thể hiện.
+
+**Ví dụ style instructions**:
+- `"Trầm – ấm – chậm – rất đời"` - Giọng sâu, ấm áp, nhịp chậm, chân thành
+- `"Vui tươi – năng động – nhiệt tình"` - Giọng sôi nổi, tràn đầy năng lượng  
+- `"Nghiêm túc – chuyên nghiệp – rõ ràng"` - Giọng trang trọng, dễ hiểu
+- `"Nhẹ nhàng – êm dịu – thư giãn"` - Giọng dịu dàng, meditation
+
+**Lưu ý**: 
+- Style instruction chỉ hoạt động với provider `gemini`
+- Nó sẽ bị bỏ qua với các provider khác (elevenlabs, openai, vbee)
+- Kết hợp với `voiceId` để tùy chỉnh cả giọng nói và phong cách
 
 ### 4. Automatic Voice Selection Logic
 If `voiceId` is not provided, the Agent (you) or the Script should attempt to select a voice based on the `emotion` and `language` of the text.
@@ -76,13 +93,39 @@ node skill-voice-gen/scripts/list-voices.js
 ## Voice Reference (Quick Look)
 
 ### Google Gemini (Generative)
-| ID | Gender | Style |
-| :--- | :--- | :--- |
-| `Puck` | Male | Energetic, Mischievous |
-| `Charon` | Male | Deep, Authoritative |
-| `Kore` | Female | Calm, Soothing |
-| `Fenrir` | Male | Wild, Intense |
-| `Aoede` | Female | Musical, Expressive |
+| id            | description                 |
+|---------------|-----------------------------|
+| Zephyr        | Tươi sáng                   |
+| Puck          | Rộn ràng                    |
+| Charon        | Cung cấp nhiều thông tin    |
+| Kore          | Firm                        |
+| Fenrir        | Dễ kích động                |
+| Leda          | Trẻ trung                   |
+| Orus          | Firm                        |
+| Aoede         | Breezy                      |
+| Callirrhoe    | Dễ chịu                     |
+| Autonoe       | Tươi sáng                   |
+| Enceladus     | Breathy                     |
+| Iapetus       | Rõ ràng                     |
+| Umbriel       | Dễ tính                     |
+| Algieba       | Làm mịn                     |
+| Despina       | Smooth (Mượt mà)            |
+| Erinome       | Clear                       |
+| Algenib       | Khàn                        |
+| Rasalgethi    | Cung cấp nhiều thông tin    |
+| Laomedeia     | Rộn ràng                    |
+| Achernar      | Mềm                         |
+| Alnilam       | Firm                        |
+| Schedar       | Even                        |
+| Gacrux        | Người trưởng thành          |
+| Pulcherrima   | Lạc quan                    |
+| Achird        | Thân thiện                  |
+| Zubenelgenubi | Thông thường                |
+| Vindemiatrix  | Êm dịu                      |
+| Sadachbia     | Lively                      |
+| Sadaltager    | Hiểu biết                   |
+| Sulafat       | Ấm                          |
+
 
 ### OpenAI
 | ID | Gender | Description |

@@ -74,7 +74,11 @@ async function main() {
         const emotion = ARGS.emotion || 'neutral';
         const title = ARGS.title || null;
 
+        // NOTE FOR VUE DEVELOPER:
+        // ARGS là object chứa command-line arguments, tương tự như props trong Vue component
+        // minimist library parse command line thành object: --voiceId "Charon" → ARGS.voiceId = "Charon"
         const voiceId = ARGS.voiceId;
+        const styleInstruction = ARGS.styleInstruction || null; // Gemini style instruction
         let scriptPath = ARGS.script;
 
         let finalText = textArg;
@@ -130,7 +134,8 @@ async function main() {
                 result = await generateOpenAI(finalText, voiceId, baseFilename);
                 break;
             case 'gemini':
-                result = await generateGemini(finalText, voiceId, emotion, baseFilename);
+                // Pass styleInstruction to Gemini generator
+                result = await generateGemini(finalText, voiceId, emotion, baseFilename, styleInstruction);
                 break;
             default:
                 throw new Error(`Unknown provider: ${provider}`);
@@ -246,7 +251,7 @@ async function generateTimestampsWithWhisper(audioPath, originalText) {
     return null;
 }
 
-async function generateGemini(text, voiceId, emotion, baseFilename) {
+async function generateGemini(text, voiceId, emotion, baseFilename, styleInstruction = null) {
     if (!CONFIG.googleApiKey) throw new Error('Missing GOOGLE_API_KEY');
 
     const activeModelId = 'gemini-2.5-pro-preview-tts';
@@ -255,11 +260,29 @@ async function generateGemini(text, voiceId, emotion, baseFilename) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${activeModelId}:streamGenerateContent?key=${CONFIG.googleApiKey}`;
     const voiceName = voiceId || 'Puck';
 
+    // NOTE FOR VUE DEVELOPER:
+    // Đây là cách build object động trong JavaScript
+    // Tương tự như computed properties trong Vue, nhưng đơn giản hơn
+    // Nếu styleInstruction tồn tại, thêm vào payload, nếu không thì bỏ qua
     const payload = {
-        contents: [{ role: "user", parts: [{ text: text }] }],
+        contents: [
+            {
+                role: "user",
+                parts: [
+                    // Nếu có styleInstruction, thêm vào đầu text để Gemini hiểu style
+                    { text: styleInstruction ? `${styleInstruction}\n\n${text}` : text }
+                ]
+            }
+        ],
         generationConfig: {
             responseModalities: ["audio"],
-            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } }
+            speechConfig: {
+                voiceConfig: {
+                    prebuiltVoiceConfig: {
+                        voiceName: voiceName
+                    }
+                }
+            }
         }
     };
 
@@ -300,6 +323,7 @@ async function generateGemini(text, voiceId, emotion, baseFilename) {
         text,
         provider: 'gemini',
         voiceId: voiceName,
+        styleInstruction: styleInstruction || null, // Save style instruction to metadata
         model: activeModelId,
         audioFile: audioFilename,
         duration: null, // Will be updated with actual duration from ffprobe

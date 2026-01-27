@@ -1,177 +1,240 @@
 import React from 'react';
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, spring } from 'remotion';
 import { CaptionWord, CaptionStyle } from '../types';
+import { CAPTION_THEMES, CaptionTheme, getTheme } from './caption-themes';
 
 interface TikTokCaptionProps {
-  words: CaptionWord[];
-  style: CaptionStyle;
-  startOffset?: number;
+    words: CaptionWord[];
+    style?: CaptionStyle | string;
+    startOffset?: number;
+    // Theme support
+    theme?: string;  // Theme name like 'gold-bold', 'clean-minimal', etc.
+    // Direct props from OTIO (flat structure)
+    position?: 'top' | 'center' | 'bottom';
+    font?: string;
+    highlightColor?: string;
+    fontSize?: number;
 }
 
-export const TikTokCaption: React.FC<TikTokCaptionProps> = ({ words, style, startOffset = 0 }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const currentTime = (frame / fps) + startOffset;
+export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
+    words,
+    style,
+    startOffset = 0,
+    theme: themeName,
+    position: directPosition,
+    font: directFont,
+    highlightColor: directHighlightColor,
+    fontSize: directFontSize,
+}) => {
+    const frame = useCurrentFrame();
+    const { fps } = useVideoConfig();
+    const currentTime = (frame / fps) + startOffset;
 
-  // Compute effective style with defaults
-  // Use explicit casts or checks since 'style' prop might be a flat object from OTIO (e.g. { font: '...' } instead of { fontFamily: '...' })
-  // or it might be missing properties.
-  const rawStyle = style as any || {};
+    // Get theme (default to gold-bold)
+    const theme: CaptionTheme = themeName ? getTheme(themeName) : CAPTION_THEMES['gold-bold'];
 
-  const computedStyle: CaptionStyle = {
-    fontFamily: rawStyle.fontFamily || rawStyle.font || 'Montserrat, sans-serif',
-    fontSize: rawStyle.fontSize || 70, // Default to large size
-    color: rawStyle.color || '#FFFFFF',
-    backgroundColor: rawStyle.backgroundColor || 'transparent', // Transparent by default for TikTok style text-only look, or 'rgba(0,0,0,0.5)' for box
-    position: rawStyle.position || 'center',
-    highlightColor: rawStyle.highlightColor || '#F4D03F', // Gold/Yellow highlight
-    strokeColor: rawStyle.strokeColor || '#000000',
-    strokeWidth: rawStyle.strokeWidth || 6,
-  };
+    // Merge theme with direct props (direct props override theme)
+    const rawStyle = (typeof style === 'object' ? style : {}) as any || {};
 
-  // Find currently active words (show 3-5 words at a time)
-  const wordsPerLine = 4;
-  const activeWordIndex = words.findIndex(
-    (word) => currentTime >= word.start && currentTime <= word.end
-  );
+    const effectiveStyle = {
+        fontFamily: directFont || rawStyle.fontFamily || theme.style.fontFamily,
+        fontSize: directFontSize || rawStyle.fontSize || theme.style.fontSize,
+        fontWeight: theme.style.fontWeight,
+        textTransform: theme.style.textTransform || 'none',
+        letterSpacing: theme.style.letterSpacing || 0,
+        textColor: rawStyle.color || theme.style.textColor,
+        activeColor: directHighlightColor || rawStyle.highlightColor || theme.style.activeColor,
+        strokeColor: theme.style.strokeColor || '#000000',
+        strokeWidth: theme.style.strokeWidth || 0,
+        shadowColor: theme.style.shadowColor || 'rgba(0,0,0,0.5)',
+        activeBgColor: theme.style.activeBgColor,
+        activeBorderRadius: theme.style.activeBorderRadius || 8,
+        activePadding: theme.style.activePadding || '4px 12px',
+        containerBg: theme.style.containerBg,
+        containerPadding: theme.style.containerPadding || '8px 16px',
+        containerBorderRadius: theme.style.containerBorderRadius || 0,
+        position: directPosition || rawStyle.position || 'center',
+    };
 
-  // Allow showing words even if no single word is strictly "active" (e.g. between words gap)
-  // Logic: find word that just ended or is about to start to keep context? 
-  // For now, keep original visibility logic but maybe extend range?
-  if (activeWordIndex === -1 && words.length > 0) {
-    // Check if we are within range of the entire caption block?
-    // For now return null to keep it simple, but we improved visibility via style.
-    return null;
-  }
+    // Find currently active words
+    const wordsPerLine = 4;
+    const activeWordIndex = words.findIndex(
+        (word) => currentTime >= word.start && currentTime <= word.end
+    );
 
-  // Get context words around the active word
-  const startIndex = Math.max(0, activeWordIndex - Math.floor(wordsPerLine / 2));
-  const endIndex = Math.min(words.length, startIndex + wordsPerLine);
-  const displayWords = words.slice(startIndex, endIndex);
-
-  const getPositionStyle = (): React.CSSProperties => {
-    switch (computedStyle.position) {
-      case 'top':
-        return {
-          top: '20%',
-          justifyContent: 'flex-start',
-        };
-      case 'center':
-        return {
-          top: '50%',
-          transform: 'translateY(-50%)',
-          justifyContent: 'center',
-        };
-      case 'bottom':
-        return {
-          bottom: '25%', // Lift up a bit
-          justifyContent: 'flex-end',
-        };
-      default:
-        return {
-          bottom: '25%',
-          justifyContent: 'flex-end',
-        };
+    if (activeWordIndex === -1 && words.length > 0) {
+        return null;
     }
-  };
 
-  return (
-    <AbsoluteFill
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        ...getPositionStyle(),
-        pointerEvents: 'none',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          maxWidth: '90%',
-          gap: '8px',
-        }}
-      >
-        {displayWords.map((word, index) => {
-          const wordIndex = startIndex + index;
-          const isActive = wordIndex === activeWordIndex;
+    // Get context words around the active word
+    const startIndex = Math.max(0, activeWordIndex - Math.floor(wordsPerLine / 2));
+    const endIndex = Math.min(words.length, startIndex + wordsPerLine);
+    const displayWords = words.slice(startIndex, endIndex);
 
-          // Scale animation for active word using interpolate
-          // Ensure input range is strictly increasing
-          const wordDuration = Math.max(word.end - word.start, 0.01); // Minimum 10ms duration
-          const safeStart = word.start;
-          const safeEnd = safeStart + wordDuration; // Use calculated safe end
+    const getPositionStyle = (): React.CSSProperties => {
+        switch (effectiveStyle.position) {
+            case 'top':
+                return { top: '15%', justifyContent: 'flex-start' };
+            case 'center':
+                return { top: '50%', transform: 'translateY(-50%)', justifyContent: 'center' };
+            case 'bottom':
+            default:
+                return { bottom: '20%', justifyContent: 'flex-end' };
+        }
+    };
 
-          const scaleInDuration = Math.min(0.05, wordDuration * 0.3);
-          const scaleOutDuration = Math.min(0.05, wordDuration * 0.3);
+    // Generate text shadow based on stroke
+    const getTextShadow = (isActive: boolean): string => {
+        const shadows: string[] = [];
+        const strokeW = effectiveStyle.strokeWidth;
+        const strokeC = effectiveStyle.strokeColor;
 
-          // Build strictly increasing input range
-          const scaleT1 = safeStart;
-          const scaleT2 = safeStart + scaleInDuration;
-          const scaleT3 = Math.max(scaleT2 + 0.001, safeEnd - scaleOutDuration);
-          const scaleT4 = Math.max(scaleT3 + 0.001, safeEnd);
+        if (strokeW > 0) {
+            // Create stroke effect with multiple shadows
+            for (let x = -strokeW; x <= strokeW; x++) {
+                for (let y = -strokeW; y <= strokeW; y++) {
+                    if (x !== 0 || y !== 0) {
+                        shadows.push(`${x}px ${y}px 0 ${strokeC}`);
+                    }
+                }
+            }
+        }
 
-          let scale = 1;
-          if (isActive && scaleT1 < scaleT2 && scaleT2 < scaleT3 && scaleT3 < scaleT4) {
-            scale = interpolate(
-              currentTime,
-              [scaleT1, scaleT2, scaleT3, scaleT4],
-              [1, 1.15, 1.15, 1],
-              { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-            );
-          }
+        // Add drop shadow
+        shadows.push(`3px 3px 6px ${effectiveStyle.shadowColor}`);
 
-          // Smooth opacity transition for active state
-          const opacityDuration = Math.min(0.03, wordDuration * 0.2);
-          const opacityT1 = safeStart;
-          const opacityT2 = safeStart + Math.max(opacityDuration, 0.01);
+        // Neon glow effect for neon theme
+        if (themeName === 'neon-glow' && isActive) {
+            const glowColor = effectiveStyle.activeColor;
+            shadows.push(`0 0 10px ${glowColor}`);
+            shadows.push(`0 0 20px ${glowColor}`);
+            shadows.push(`0 0 40px ${glowColor}`);
+        }
 
-          let opacity = 0.8;
-          if (isActive && opacityT1 < opacityT2) {
-            opacity = interpolate(
-              currentTime,
-              [opacityT1, opacityT2],
-              [0.8, 1],
-              { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-            );
-          }
+        return shadows.join(', ');
+    };
 
-          return (
+    // Animation helpers
+    const getWordAnimation = (word: CaptionWord, isActive: boolean, wordIndex: number) => {
+        const wordDuration = Math.max(word.end - word.start, 0.01);
+        const animDuration = theme.animation.duration || 0.1;
+
+        let scale = 1;
+        let translateY = 0;
+        let opacity = isActive ? 1 : 0.7;
+
+        if (isActive) {
+            const progress = Math.min((currentTime - word.start) / animDuration, 1);
+
+            switch (theme.animation.type) {
+                case 'scale':
+                    const scaleAmount = theme.animation.scaleAmount || 1.15;
+                    scale = interpolate(progress, [0, 0.5, 1], [1, scaleAmount, scaleAmount], {
+                        extrapolateRight: 'clamp',
+                    });
+                    break;
+
+                case 'drop':
+                    const dropDist = theme.animation.dropDistance || 50;
+                    translateY = interpolate(progress, [0, 1], [-dropDist, 0], {
+                        extrapolateRight: 'clamp',
+                    });
+                    opacity = interpolate(progress, [0, 0.5], [0, 1], {
+                        extrapolateRight: 'clamp',
+                    });
+                    break;
+
+                case 'bounce':
+                    const bounceScale = theme.animation.scaleAmount || 1.2;
+                    const springValue = spring({
+                        frame: (currentTime - word.start) * fps,
+                        fps,
+                        config: { damping: 10, stiffness: 200 },
+                    });
+                    scale = 1 + (bounceScale - 1) * springValue;
+                    break;
+
+                case 'fade':
+                    opacity = interpolate(progress, [0, 1], [0.5, 1], {
+                        extrapolateRight: 'clamp',
+                    });
+                    break;
+
+                case 'none':
+                default:
+                    break;
+            }
+        }
+
+        return { scale, translateY, opacity };
+    };
+
+    return (
+        <AbsoluteFill
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                ...getPositionStyle(),
+                pointerEvents: 'none',
+            }}
+        >
+            {/* Container with optional background */}
             <div
-              key={`${word.word}-${wordIndex}`}
-              style={{
-                fontFamily: computedStyle.fontFamily,
-                fontSize: computedStyle.fontSize,
-                fontWeight: '900', // Extra bold
-                color: isActive ? computedStyle.highlightColor : computedStyle.color,
-                backgroundColor: 'transparent',
-                padding: '4px 8px',
-                borderRadius: '8px',
-                transform: `scale(${scale})`,
-                opacity,
-                textTransform: 'uppercase',
-                textAlign: 'center',
-                lineHeight: 1.2,
-                WebkitTextStroke: isActive ? '0px' : `${computedStyle.strokeWidth! / 2}px ${computedStyle.strokeColor}`,
-                textShadow: computedStyle.strokeColor
-                  ? `
-                    -${computedStyle.strokeWidth}px -${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
-                    ${computedStyle.strokeWidth}px -${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
-                    -${computedStyle.strokeWidth}px ${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
-                    ${computedStyle.strokeWidth}px ${computedStyle.strokeWidth}px 0 ${computedStyle.strokeColor},
-                    3px 3px 5px rgba(0,0,0,0.5)
-                  `
-                  : 'none',
-                filter: isActive ? `drop-shadow(0 0 10px ${computedStyle.highlightColor})` : 'none',
-              }}
+                style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    maxWidth: '90%',
+                    gap: '8px',
+                    ...(effectiveStyle.containerBg && {
+                        backgroundColor: effectiveStyle.containerBg,
+                        padding: effectiveStyle.containerPadding,
+                        borderRadius: effectiveStyle.containerBorderRadius,
+                    }),
+                }}
             >
-              {word.word}
+                {displayWords.map((word, index) => {
+                    const wordIndex = startIndex + index;
+                    const isActive = wordIndex === activeWordIndex;
+                    const { scale, translateY, opacity } = getWordAnimation(word, isActive, wordIndex);
+
+                    // Word style
+                    const wordStyle: React.CSSProperties = {
+                        fontFamily: effectiveStyle.fontFamily,
+                        fontSize: effectiveStyle.fontSize,
+                        fontWeight: effectiveStyle.fontWeight,
+                        textTransform: effectiveStyle.textTransform as any,
+                        letterSpacing: effectiveStyle.letterSpacing,
+                        color: isActive ? effectiveStyle.activeColor : effectiveStyle.textColor,
+                        textShadow: getTextShadow(isActive),
+                        transform: `scale(${scale}) translateY(${translateY}px)`,
+                        opacity,
+                        textAlign: 'center',
+                        lineHeight: 1.2,
+                        transition: 'color 0.1s ease',
+                        // Active background (for red-box style)
+                        ...(isActive && effectiveStyle.activeBgColor && {
+                            backgroundColor: effectiveStyle.activeBgColor,
+                            padding: effectiveStyle.activePadding,
+                            borderRadius: effectiveStyle.activeBorderRadius,
+                        }),
+                        // Non-active padding to maintain spacing
+                        ...(!isActive && effectiveStyle.activeBgColor && {
+                            padding: effectiveStyle.activePadding,
+                        }),
+                    };
+
+                    return (
+                        <span key={`${word.word}-${wordIndex}`} style={wordStyle}>
+                            {word.word}
+                        </span>
+                    );
+                })}
             </div>
-          );
-        })}
-      </div>
-    </AbsoluteFill>
-  );
+        </AbsoluteFill>
+    );
 };
+
+export default TikTokCaption;

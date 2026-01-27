@@ -1,5 +1,15 @@
 [
   {
+    "id": "the-unfinished-painting",
+    "name": "the-unfinished-painting",
+    "path": "projects/the-unfinished-painting",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-26T14:21:36.258Z",
+    "timestamp": 1769437296258
+  },
+  {
     "id": "vibe-video-capcut",
     "name": "vibe-video-capcut",
     "path": "projects/vibe-video-capcut",

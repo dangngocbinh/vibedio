@@ -7,6 +7,8 @@ class ResourceMatcher {
     this.preferredSource = options.preferredSource || 'pexels';
     this.enableAIGeneration = options.enableAIGeneration !== false;
     this.projectDir = options.projectDir || null;
+    // Initialize Pixabay Scraper from options
+    this.pixabayScraper = options.pixabayScraper || null;
   }
 
   /**
@@ -212,8 +214,18 @@ class ResourceMatcher {
     let source = null;
 
     try {
-      // Use Pixabay for music (Pexels doesn't have music)
-      if (this.pixabayClient) {
+      // Use Pixabay Scraper for Music (High priority, real files)
+      if (this.pixabayScraper) {
+        // Only use the main keyword for scraping to get better results
+        // e.g. "epic cinematic background music" -> "epic"
+        const scrapeQuery = mood || query.split(' ')[0] || 'background';
+
+        results = await this.pixabayScraper.searchMusic(scrapeQuery, this.resultsPerQuery);
+        if (results.length > 0) source = 'pixabay-scraper';
+      }
+
+      // Fallback: Use Pixabay API (Placeholder if scraper failed or not available)
+      if (results.length === 0 && this.pixabayClient) {
         results = await this.pixabayClient.searchMusic(query, this.resultsPerQuery);
         source = 'pixabay';
       }
@@ -225,7 +237,7 @@ class ResourceMatcher {
           query,
           source: null,
           results: [],
-          error: 'No results found - visit Pixabay Music manually'
+          error: 'No results found - manual download required'
         };
       }
 

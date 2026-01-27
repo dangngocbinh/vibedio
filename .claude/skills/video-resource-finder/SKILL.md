@@ -442,6 +442,72 @@ node scripts/find-resources.js \
 
 Chỉ dùng stock resources, bỏ qua AI generation.
 
+## ADD MUSIC TO PROJECT (NEW)
+
+Script riêng để tìm và thêm nhạc nền vào project đã có sẵn.
+
+### Tại sao cần script riêng?
+
+- Pixabay Music API không hỗ trợ tìm kiếm trực tiếp
+- Script này dùng PixabayScraper (Puppeteer) để tìm và tải nhạc thực sự
+- Tự động cập nhật resources.json và project.otio
+
+### Cách sử dụng
+
+```bash
+# Cơ bản - tự động đọc music query từ script.json
+node scripts/add-music-to-project.js \
+  --projectDir "../../public/projects/my-project"
+
+# Custom query
+node scripts/add-music-to-project.js \
+  --projectDir "../../public/projects/my-project" \
+  --query "epic cinematic"
+
+# Cập nhật cả OTIO timeline
+node scripts/add-music-to-project.js \
+  --projectDir "../../public/projects/my-project" \
+  --updateOtio
+
+# Ghi đè file nhạc đã có
+node scripts/add-music-to-project.js \
+  --projectDir "../../public/projects/my-project" \
+  --force
+```
+
+### Options
+
+| Option | Default | Mô tả |
+|--------|---------|-------|
+| `--projectDir` | (required) | Đường dẫn đến thư mục project |
+| `--query` | từ script.json | Custom music search query |
+| `--limit` | 3 | Số lượng kết quả tìm kiếm |
+| `--outputFile` | background-music.mp3 | Tên file output |
+| `--updateOtio` | false | Cập nhật project.otio với music track |
+| `--force` | false | Ghi đè file nhạc đã có |
+
+### Output
+
+```
+public/projects/my-project/
+├── audio/
+│   └── background-music.mp3    ← File nhạc tải về
+├── resources.json              ← Cập nhật với music info
+└── project.otio                ← (nếu --updateOtio) Thêm Music track
+```
+
+### Music Query Tips
+
+Script sử dụng 3 từ đầu tiên của query để tìm kiếm. Nên dùng các từ khóa:
+
+| Mood | Query gợi ý |
+|------|-------------|
+| Calm | `piano ambient calm` |
+| Epic | `epic cinematic orchestral` |
+| Happy | `upbeat happy cheerful` |
+| Sad | `emotional piano melancholy` |
+| Inspiring | `motivational inspiring corporate` |
+
 ## CONVERSATION FLOW
 
 ### Flow 1: Simple Flow (Đã có script.json)

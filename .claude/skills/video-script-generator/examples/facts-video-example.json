@@ -1,0 +1,111 @@
+{
+    "metadata": {
+        "projectName": "tai-sao-ngu-8-tieng-van-met",
+        "videoType": "facts",
+        "duration": 60,
+        "ratio": "9:16",
+        "targetAudience": "Dân văn phòng 25-35 tuổi",
+        "platform": "shorts",
+        "createdAt": "2026-01-26T17:40:00+07:00"
+    },
+    "script": {
+        "fullText": "Bạn ngủ đủ 8 tiếng mà sáng dậy vẫn mệt? Đây là lý do. Nghiên cứu cho thấy 35% người Việt Nam gặp vấn đề này. Vấn đề không phải ở số giờ ngủ, mà ở chu kỳ giấc ngủ. Mỗi chu kỳ kéo dài 90 phút, gồm 4 giai đoạn. Nếu thức dậy giữa chu kỳ, bạn sẽ thấy mệt mỏi. Giải pháp? Tính ngược từ giờ thức dậy. Ví dụ: Thức 6h sáng, ngủ lúc 10h30 tối hoặc 12h đêm. Như vậy bạn hoàn thành đúng 5 hoặc 6 chu kỳ. Follow để biết thêm mẹo ngủ ngon!",
+        "wordCount": 142,
+        "estimatedDuration": 58,
+        "readingSpeed": 147
+    },
+    "scenes": [
+        {
+            "id": "hook",
+            "startTime": 0,
+            "duration": 5,
+            "text": "Bạn ngủ đủ 8 tiếng mà sáng dậy vẫn mệt?",
+            "voiceNotes": "Đọc chậm, nhấn mạnh từ 'mệt'",
+            "visualSuggestion": {
+                "type": "stock",
+                "query": "tired person waking up morning",
+                "style": "zoom-in"
+            }
+        },
+        {
+            "id": "problem",
+            "startTime": 5,
+            "duration": 15,
+            "text": "Đây là lý do. Nghiên cứu cho thấy 35% người Việt Nam gặp vấn đề này. Vấn đề không phải ở số giờ ngủ, mà ở chu kỳ giấc ngủ.",
+            "voiceNotes": "Tốc độ bình thường, nhấn mạnh '35%'",
+            "visualSuggestion": {
+                "type": "ai-generated",
+                "query": "sleep cycle diagram, scientific illustration, blue gradient, minimal style --ar 9:16",
+                "style": "fade"
+            }
+        },
+        {
+            "id": "insight",
+            "startTime": 20,
+            "duration": 20,
+            "text": "Mỗi chu kỳ kéo dài 90 phút, gồm 4 giai đoạn. Nếu thức dậy giữa chu kỳ, bạn sẽ thấy mệt mỏi.",
+            "voiceNotes": "Giải thích rõ ràng, dễ hiểu",
+            "visualSuggestion": {
+                "type": "ai-generated",
+                "query": "brain waves during sleep, scientific visualization, purple blue gradient --ar 9:16",
+                "style": "ken-burns"
+            }
+        },
+        {
+            "id": "solution",
+            "startTime": 40,
+            "duration": 15,
+            "text": "Giải pháp? Tính ngược từ giờ thức dậy. Ví dụ: Thức 6h sáng, ngủ lúc 10h30 tối hoặc 12h đêm. Như vậy bạn hoàn thành đúng 5 hoặc 6 chu kỳ.",
+            "voiceNotes": "Nói rõ ràng, nhấn mạnh giờ giấc",
+            "visualSuggestion": {
+                "type": "stock",
+                "query": "person sleeping peacefully bedroom",
+                "style": "zoom-out"
+            }
+        },
+        {
+            "id": "cta",
+            "startTime": 55,
+            "duration": 5,
+            "text": "Follow để biết thêm mẹo ngủ ngon!",
+            "voiceNotes": "Nhiệt tình, kêu gọi hành động",
+            "visualSuggestion": {
+                "type": "stock",
+                "query": "follow button social media",
+                "style": "fade"
+            }
+        }
+    ],
+    "voice": {
+        "provider": "gemini",
+        "voiceId": "Charon",
+        "speed": 1.0,
+        "notes": "Male voice, professional tone, phù hợp nội dung educational"
+    },
+    "music": {
+        "query": "ambient calm peaceful",
+        "mood": "calm",
+        "genre": "ambient",
+        "volume": 0.12,
+        "fadeIn": 1.5,
+        "fadeOut": 2.5,
+        "notes": "Nhạc nền nhẹ nhàng, không át voice. Volume thấp vì đây là facts video cần tập trung vào thông tin. Query 'ambient calm peaceful' sẽ tìm được nhạc phù hợp trên Pixabay."
+    },
+    "subtitle": {
+        "style": "highlight-word",
+        "position": "center",
+        "font": "Montserrat",
+        "highlightColor": "#FFD700"
+    },
+    "qualityMetrics": {
+        "hookStrength": 8.5,
+        "pacingScore": 9.0,
+        "engagementPotential": "high",
+        "suggestions": [
+            "Hook có câu hỏi và relatable - tốt",
+            "Có số liệu 35% - tăng credibility",
+            "Solution cụ thể với ví dụ - dễ áp dụng",
+            "CTA rõ ràng - good"
+        ]
+    }
+}

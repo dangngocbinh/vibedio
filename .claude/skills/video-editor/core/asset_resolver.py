@@ -142,6 +142,11 @@ class AssetResolver:
         """
         Extract and resolve music URL from resources.json.
 
+        Supports multiple formats:
+        - Format 1 (nested): resources.music[].results[].downloadUrl
+        - Format 2 (flat): resources.music[].downloadUrl
+        - Format 3 (direct): resources.music[].url
+
         Args:
             resources: Parsed resources.json content
 
@@ -156,13 +161,24 @@ class AssetResolver:
         # Take first music entry
         first_music = music_list[0]
 
-        if "results" not in first_music or len(first_music["results"]) == 0:
-            return None
+        # Format 1: Nested results array (from find-resources.js)
+        if "results" in first_music and len(first_music["results"]) > 0:
+            music_resource = first_music["results"][0]
+            return self.resolve_resource_url(music_resource)
 
-        # Take first result
-        music_resource = first_music["results"][0]
+        # Format 2: Direct downloadUrl on music entry (from add-music script)
+        if "downloadUrl" in first_music and first_music["downloadUrl"]:
+            return first_music["downloadUrl"]
 
-        return self.resolve_resource_url(music_resource)
+        # Format 3: Direct url field
+        if "url" in first_music and first_music["url"]:
+            return first_music["url"]
+
+        # Format 4: sourceUrl (original remote URL)
+        if "sourceUrl" in first_music and first_music["sourceUrl"]:
+            return first_music["sourceUrl"]
+
+        return None
 
     def resolve_video_from_scene(self, scene_id: str, resources: Dict[str, Any]) -> Optional[str]:
         """
