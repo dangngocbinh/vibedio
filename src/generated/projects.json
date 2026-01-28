@@ -1,5 +1,16 @@
 [
   {
+    "id": "duong-vuot-bien-can-gio-vung-tau",
+    "name": "duong-vuot-bien-can-gio-vung-tau",
+    "path": "projects/duong-vuot-bien-can-gio-vung-tau",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "ratio": "9:16",
+    "modifiedAt": "2026-01-28T14:54:53.931Z",
+    "timestamp": 1769612093931
+  },
+  {
     "id": "may-bay-yak130-roi-dak-lak",
     "name": "may-bay-yak130-roi-dak-lak",
     "path": "projects/may-bay-yak130-roi-dak-lak",
@@ -7,8 +18,8 @@
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-28T07:50:24.200Z",
-    "timestamp": 1769586624200
+    "modifiedAt": "2026-01-28T12:32:48.757Z",
+    "timestamp": 1769603568757
   },
   {
     "id": "lao-dong-tieng-trung",

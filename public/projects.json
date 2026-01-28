@@ -1,5 +1,15 @@
 [
   {
+    "id": "duong-vuot-bien-can-gio-vung-tau",
+    "name": "duong-vuot-bien-can-gio-vung-tau",
+    "path": "projects/duong-vuot-bien-can-gio-vung-tau",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "modifiedAt": "2026-01-28T18:00:00.000Z",
+    "timestamp": 1769270400000
+  },
+  {
     "id": "5-sai-lam-hoc-tieng-anh",
     "name": "5-sai-lam-hoc-tieng-anh",
     "path": "projects/5-sai-lam-hoc-tieng-anh",

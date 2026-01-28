@@ -14,6 +14,7 @@ import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader';
 import { TikTokCaption } from '../components/TikTokCaption';
 import { ImageWithEffect } from '../components/ImageWithEffect';
+import { BrollTitle } from '../components/BrollTitle';
 
 // Helpers cho Transition
 const FadePresentation: React.FC<any> = ({ children, presentationProgress }) => {
@@ -321,8 +322,10 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
 
     // Check if this is a Subtitle track (which is technically Video kind but acts as overlay)
     const isSubtitleTrack = track.kind === 'Video' && track.name?.includes('Subtitles');
+    // Check if this is Title Overlays track
+    const isTitleOverlayTrack = track.kind === 'Video' && track.name?.includes('Title Overlays');
     // Main Video track uses TransitionSeries
-    const isVideoTrack = trackKind === 'Video' && !isSubtitleTrack;
+    const isVideoTrack = trackKind === 'Video' && !isSubtitleTrack && !isTitleOverlayTrack;
 
     // Track-level Style
     const trackStyle: React.CSSProperties = track.metadata?.style || {};
@@ -393,6 +396,16 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                         return (
                             <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
                                 <StarParticles {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+                    if (item.metadata?.remotion_component === 'BrollTitle') {
+                        const props = item.metadata.props || {};
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <BrollTitle {...props} />
                             </TransitionSeries.Sequence>
                         );
                     }
@@ -478,6 +491,28 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             durationInFrames={durationFrames}
                         >
                             <TikTokCaption {...props} startOffset={startOffsetSeconds} />
+                        </Sequence>
+                    );
+                }
+
+                // Handle BrollTitle overlay components
+                if (clip.metadata?.remotion_component === 'BrollTitle') {
+                    const props = clip.metadata.props || {};
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] BrollTitle "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
+
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <BrollTitle {...props} />
                         </Sequence>
                     );
                 }
