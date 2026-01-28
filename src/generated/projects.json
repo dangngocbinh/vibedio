@@ -1,101 +1,24 @@
 [
   {
-    "id": "nguoi-que",
-    "name": "nguoi-que",
-    "path": "projects/nguoi-que",
+    "id": "may-bay-yak130-roi-dak-lak",
+    "name": "may-bay-yak130-roi-dak-lak",
+    "path": "projects/may-bay-yak130-roi-dak-lak",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-27T10:35:01.642Z",
-    "timestamp": 1769510101642
+    "modifiedAt": "2026-01-28T07:50:24.200Z",
+    "timestamp": 1769586624200
   },
   {
-    "id": "choi-gi-cuoi-tuan",
-    "name": "choi-gi-cuoi-tuan",
-    "path": "projects/choi-gi-cuoi-tuan",
+    "id": "lao-dong-tieng-trung",
+    "name": "lao-dong-tieng-trung",
+    "path": "projects/lao-dong-tieng-trung",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-27T05:00:05.297Z",
-    "timestamp": 1769490005297
-  },
-  {
-    "id": "the-unfinished-painting",
-    "name": "the-unfinished-painting",
-    "path": "projects/the-unfinished-painting",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-01-26T14:21:36.258Z",
-    "timestamp": 1769437296258
-  },
-  {
-    "id": "vibe-video-capcut",
-    "name": "vibe-video-capcut",
-    "path": "projects/vibe-video-capcut",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-26T06:49:07.794Z",
-    "timestamp": 1769410147794
-  },
-  {
-    "id": "vibe-video-capcut-replacement",
-    "name": "vibe-video-capcut-replacement",
-    "path": "projects/vibe-video-capcut-replacement",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project-final.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-26T06:22:09.380Z",
-    "timestamp": 1769408529380
-  },
-  {
-    "id": "su-that-ve-meo",
-    "name": "su-that-ve-meo",
-    "path": "projects/su-that-ve-meo",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "9:16",
-    "modifiedAt": "2026-01-26T04:51:18.435Z",
-    "timestamp": 1769403078435
-  },
-  {
-    "id": "10-su-that-thu-vi-ve-giong-noi",
-    "name": "10-su-that-thu-vi-ve-giong-noi",
-    "path": "projects/10-su-that-thu-vi-ve-giong-noi",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "9:16",
-    "modifiedAt": "2026-01-24T17:22:49.540Z",
-    "timestamp": 1769275369540
-  },
-  {
-    "id": "vietnam",
-    "name": "vietnam",
-    "path": "projects/vietnam",
-    "hasScript": false,
-    "hasOtio": true,
-    "otioFile": "vietnam_vibes.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-24T16:16:19.254Z",
-    "timestamp": 1769271379254
-  },
-  {
-    "id": "sample",
-    "name": "sample",
-    "path": "projects/sample",
-    "hasScript": false,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-24T16:05:49.942Z",
-    "timestamp": 1769270749942
+    "modifiedAt": "2026-01-28T04:08:28.803Z",
+    "timestamp": 1769573308803
   }
 ]

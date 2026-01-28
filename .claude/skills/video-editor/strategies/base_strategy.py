@@ -194,7 +194,8 @@ class BaseStrategy(ABC):
     def create_voice_clip(
         self,
         voice_data: Dict[str, Any],
-        duration_sec: float
+        duration_sec: float,
+        volume: float = 1.0
     ) -> otio.schema.Clip:
         """
         Create voice audio clip from voice.json.
@@ -202,6 +203,7 @@ class BaseStrategy(ABC):
         Args:
             voice_data: Parsed voice.json
             duration_sec: Duration in seconds
+            volume: Audio volume (0.0 to 1.0, default 1.0 = 100%)
 
         Returns:
             OTIO Clip for voice audio
@@ -211,17 +213,23 @@ class BaseStrategy(ABC):
         else:
             voice_url = "voice.mp3"
 
-        return self.create_clip_from_url(
+        clip = self.create_clip_from_url(
             url=voice_url,
             name="Voiceover",
             duration_sec=duration_sec
         )
 
+        # Add volume metadata
+        clip.metadata['volume'] = str(volume)
+
+        return clip
+
     def create_music_clip(
         self,
         resources: Dict[str, Any],
         duration_sec: float,
-        fade_in_sec: float = 2.0
+        fade_in_sec: float = 2.0,
+        volume: float = 0.2
     ) -> Optional[otio.schema.Clip]:
         """
         Create background music clip from resources.
@@ -230,6 +238,7 @@ class BaseStrategy(ABC):
             resources: Parsed resources.json
             duration_sec: Duration in seconds
             fade_in_sec: Fade-in duration in seconds
+            volume: Audio volume (0.0 to 1.0, default 0.2 = 20%)
 
         Returns:
             OTIO Clip for music or None if no music found
@@ -248,8 +257,9 @@ class BaseStrategy(ABC):
             duration_sec=duration_sec
         )
 
-        # Add fade-in metadata
+        # Add fade-in and volume metadata
         clip.metadata['audio_fade_in'] = str(fade_in_sec)
+        clip.metadata['volume'] = str(volume)
 
         return clip
 

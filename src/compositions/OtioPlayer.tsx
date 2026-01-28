@@ -247,6 +247,7 @@ const OtioClip: React.FC<{
                     <Video
                         src={src!}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : 0.2}
                         onError={(e) => { console.error(`Video error: ${src} `, e); setHasError(true); }}
                     />
                 ) : (

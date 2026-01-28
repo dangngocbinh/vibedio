@@ -107,7 +107,8 @@ class ImageSlideStrategy(BaseStrategy):
         timeline.tracks.append(voice_track)
 
         # Track 4: Background Music (optional)
-        music_track = self._create_music_track(resources, total_duration)
+        music_config = script.get('music', {})
+        music_track = self._create_music_track(resources, total_duration, music_config)
         if music_track:
             timeline.tracks.append(music_track)
 
@@ -281,7 +282,8 @@ class ImageSlideStrategy(BaseStrategy):
     def _create_music_track(
         self,
         resources: Dict[str, Any],
-        duration: float
+        duration: float,
+        music_config: Optional[Dict[str, Any]] = None
     ) -> Optional[otio.schema.Track]:
         """
         Create background music track.
@@ -289,11 +291,19 @@ class ImageSlideStrategy(BaseStrategy):
         Args:
             resources: Parsed resources.json
             duration: Duration in seconds
+            music_config: Optional music config from script.json (contains volume, fadeIn, fadeOut)
 
         Returns:
             OTIO Track with music clip or None if no music found
         """
-        music_clip = self.create_music_clip(resources, duration, fade_in_sec=2.0)
+        # Get volume from music config, default to 0.2 (20%)
+        volume = 0.2
+        fade_in = 2.0
+        if music_config:
+            volume = music_config.get('volume', 0.2)
+            fade_in = music_config.get('fadeIn', 2.0)
+
+        music_clip = self.create_music_clip(resources, duration, fade_in_sec=fade_in, volume=volume)
 
         if not music_clip:
             return None

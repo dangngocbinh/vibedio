@@ -12,3 +12,4 @@ projects/
 .claude/skills/video-script-generator/utils/__pycache__/
 generated/
 __pycache__/
+.claude/settings.local.json
