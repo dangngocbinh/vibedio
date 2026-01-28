@@ -29,11 +29,17 @@ class AssetResolver:
 
     def resolve_voice_path(self) -> str:
         """
-        Resolve voice.mp3 path (always in same folder as project).
-
+        Resolve voice audio path (voice.mp3, voice.m4a, etc.).
+        
         Returns:
-            Relative path: "voice.mp3"
+            Relative path to the voice file
         """
+        # Check common extensions
+        for ext in ['.mp3', '.m4a', '.wav', '.ogg']:
+            if (self.project_dir / f"voice{ext}").exists():
+                return f"voice{ext}"
+                
+        # Fallback to .mp3 as default
         return "voice.mp3"
 
     def resolve_resource_url(self, resource: Dict[str, Any]) -> str:
@@ -41,18 +47,15 @@ class AssetResolver:
         Resolve resource URL from resources.json entry.
 
         Priority:
-        1. downloadUrls.hd (best quality)
-        2. downloadUrls.sd (fallback)
-        3. downloadUrl (single URL)
-        4. url (view page URL - should not be used for direct playback)
-
-        Args:
-            resource: Resource dict from resources.json
-
-        Returns:
-            URL string (remote) or relative path (local)
+        1. localPath (downloaded file - top priority for performance/stability)
+        2. downloadUrls.hd (remote fallback)
+        ...
         """
-        # Try downloadUrls first
+        # [NEW] Prefer local downloaded file if available
+        if "localPath" in resource and resource["localPath"]:
+            return self.sanitize_for_otio(resource["localPath"])
+
+        # Try downloadUrls if local file missing or not downloaded
         if "downloadUrls" in resource:
             urls = resource["downloadUrls"]
             if "hd" in urls and urls["hd"]:
@@ -259,8 +262,12 @@ class AssetResolver:
             return pinned
 
         images = resources.get("resources", {}).get("images", [])
+        generated = resources.get("resources", {}).get("generatedImages", [])
+        
+        # Combine lists to search
+        all_images = images + generated
 
-        for image_entry in images:
+        for image_entry in all_images:
             if image_entry.get("sceneId") == scene_id:
                 results = image_entry.get("results", [])
                 if results and len(results) > 0:

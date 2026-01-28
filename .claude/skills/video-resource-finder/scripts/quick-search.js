@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Quick Image Search - Tìm ảnh nhanh từ Pexels/Pixabay
+ * Quick Image Search - Tìm ảnh nhanh từ Pexels/Pixabay/Unslash
  * 
  * Usage:
  *   node quick-search.js --query "woman walking dog on beach" --type image
@@ -13,13 +13,14 @@ require('dotenv').config({ path: require('path').join(__dirname, '../../../../.e
 const minimist = require('minimist');
 const PexelsClient = require('./api/pexels-client');
 const PixabayClient = require('./api/pixabay-client');
+const UnsplashClient = require('./api/unsplash-client');
 
 const args = minimist(process.argv.slice(2), {
     string: ['query', 'type', 'source'],
     number: ['limit'],
     default: {
         type: 'image',  // image | video
-        source: 'pexels', // pexels | pixabay
+        source: 'pexels', // pexels | pixabay | unsplash
         limit: 5
     }
 });
@@ -34,7 +35,7 @@ async function main() {
         console.log('\nOptions:');
         console.log('  --query      Search query (required)');
         console.log('  --type       Resource type: image | video (default: image)');
-        console.log('  --source     API source: pexels | pixabay (default: pexels)');
+        console.log('  --source     API source: pexels | pixabay | unsplash (default: pexels)');
         console.log('  --limit      Number of results (default: 5)');
         process.exit(1);
     }
@@ -74,6 +75,15 @@ async function main() {
             } else if (type === 'video') {
                 results = await client.searchVideos(query, limit);
             }
+        } else if (source === 'unsplash') {
+            if (type === 'video') {
+                throw new Error('Unsplash only supports image search, not video.');
+            }
+            if (!process.env.UNSPLASH_API_KEY) {
+                throw new Error('Missing UNSPLASH_API_KEY in .env file');
+            }
+            const client = new UnsplashClient(process.env.UNSPLASH_API_KEY);
+            results = await client.searchPhotos(query, limit);
         }
 
         if (results.length === 0) {

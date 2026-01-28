@@ -12,3 +12,4 @@ projects/
 .claude/skills/video-script-generator/utils/__pycache__/
 generated/
 __pycache__/
+.claude/skills/video-editor/core/__pycache__/asset_resolver.cpython-313.pyc

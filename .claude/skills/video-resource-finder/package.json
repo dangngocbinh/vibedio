@@ -1,7 +1,7 @@
 {
   "name": "video-resource-finder",
   "version": "1.0.0",
-  "description": "Find free video/image/music/SFX resources from Pexels and Pixabay APIs",
+  "description": "Find free video/image/music/SFX resources from Pexels, Pixabay, and Unsplash APIs",
   "main": "scripts/find-resources.js",
   "scripts": {
     "find": "node scripts/find-resources.js"
@@ -11,6 +11,7 @@
     "stock",
     "pexels",
     "pixabay",
+    "unsplash",
     "resources",
     "b-roll"
   ],

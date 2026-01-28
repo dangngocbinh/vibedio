@@ -8,6 +8,7 @@ const path = require('path');
 // Import modules
 const PexelsClient = require('./api/pexels-client');
 const PixabayClient = require('./api/pixabay-client');
+const UnsplashClient = require('./api/unsplash-client');
 const GeminiClient = require('./api/gemini-client');
 const ScriptReader = require('./utils/script-reader');
 const QueryBuilder = require('./utils/query-builder');
@@ -77,13 +78,15 @@ async function main() {
 
     const pexelsApiKey = process.env.PEXELS_API_KEY;
     const pixabayApiKey = process.env.PIXABAY_API_KEY;
+    const unsplashApiKey = process.env.UNSPLASH_API_KEY;
 
-    if (!pexelsApiKey && !pixabayApiKey) {
-      throw new Error('At least one API key (PEXELS_API_KEY or PIXABAY_API_KEY) must be set in .env file');
+    if (!pexelsApiKey && !pixabayApiKey && !unsplashApiKey) {
+      throw new Error('At least one API key (PEXELS_API_KEY, PIXABAY_API_KEY, or UNSPLASH_API_KEY) must be set in .env file');
     }
 
     const pexelsClient = pexelsApiKey ? new PexelsClient(pexelsApiKey) : null;
     const pixabayClient = pixabayApiKey ? new PixabayClient(pixabayApiKey) : null;
+    const unsplashClient = unsplashApiKey ? new UnsplashClient(unsplashApiKey) : null;
 
     // Initialize Gemini client for AI image generation
     const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -103,6 +106,7 @@ async function main() {
 
     if (pexelsClient) console.log('✅ Pexels client initialized');
     if (pixabayClient) console.log('✅ Pixabay client initialized');
+    if (unsplashClient) console.log('✅ Unsplash client initialized');
 
     // Step 2: Read script.json
     console.log('\n📖 Reading script.json...\n');
@@ -130,6 +134,7 @@ async function main() {
     // Step 4: Fetch resources
     console.log('\n🌐 Fetching resources from APIs...\n');
     const resourceMatcher = new ResourceMatcher(pexelsClient, pixabayClient, {
+      unsplashClient: unsplashClient,
       geminiClient: geminiClient,
       pixabayScraper: pixabayScraper, // Pass scraper instance
       resultsPerQuery: args.resultsPerQuery,
@@ -193,6 +198,7 @@ async function main() {
     const apiStats = {
       pexels: pexelsClient ? pexelsClient.getRequestCount() : 0,
       pixabay: pixabayClient ? pixabayClient.getRequestCount() : 0,
+      unsplash: unsplashClient ? unsplashClient.getRequestCount() : 0,
       gemini: geminiClient ? geminiClient.getRequestCount() : 0
     };
 
@@ -234,6 +240,7 @@ async function main() {
     console.log('\n🔌 API Usage:');
     console.log(`  Pexels requests:     ${apiStats.pexels}`);
     console.log(`  Pixabay requests:    ${apiStats.pixabay}`);
+    console.log(`  Unsplash requests:   ${apiStats.unsplash}`);
     if (apiStats.gemini > 0) {
       console.log(`  Gemini requests:     ${apiStats.gemini} (AI generated images)`);
     }

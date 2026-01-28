@@ -2,9 +2,9 @@
 
 ## MỤC ĐÍCH
 
-Tự động tìm kiếm và **tải về** FREE resources cho video production từ Pexels, Pixabay APIs và **Gemini AI Image Generation**:
+Tự động tìm kiếm và **tải về** FREE resources cho video production từ Pexels, Pixabay, Unsplash APIs và **Gemini AI Image Generation**:
 - **Stock Videos (B-roll)** - Từ Pexels, Pixabay
-- **Stock Images** - Từ Pexels, Pixabay
+- **Stock Images** - Từ Pexels, Unsplash, Pixabay
 - **AI Generated Images** - Từ Gemini Nano Banana (cho nội dung sáng tạo/minh họa)
 - **Background Music** - Từ Pixabay Music
 - **Sound Effects** - Từ Pixabay SFX
@@ -83,6 +83,7 @@ script.json → Read Scenes → Extract Queries → Call APIs/AI → Download �
 # Stock Resources
 PEXELS_API_KEY=your_pexels_api_key
 PIXABAY_API_KEY=your_pixabay_api_key
+UNSPLASH_API_KEY=your_unsplash_access_key
 
 # AI Image Generation (optional but recommended)
 GEMINI_API_KEY=your_gemini_api_key
@@ -338,7 +339,27 @@ File `resources.json` được lưu trong `projectDir`:
 - 5000 requests/day
 - 100 requests/minute
 
-### 3. Gemini API Key (cho AI Image Generation)
+### 3. Unsplash API Key
+
+**Lấy key miễn phí:**
+1. Truy cập: https://unsplash.com/developers
+2. Click "Register as a Developer"
+3. Đăng ký tài khoản (email + password)
+4. Tạo "New Application"
+5. Điền thông tin ứng dụng (tên, mô tả, chọn "Demo" nếu là test)
+6. Chấp nhận API Terms
+7. Copy **Access Key** (không phải Secret Key)
+
+**Rate Limits:**
+- 50 requests/hour (Demo/Development mode)
+- 5000 requests/hour (Production - cần submit app để review)
+
+**Lưu ý:**
+- Free tier đủ cho hầu hết use case
+- Ảnh chất lượng cao, phù hợp cho commercial use
+- Bắt buộc credit photographer theo license
+
+### 4. Gemini API Key (cho AI Image Generation)
 
 **Lấy key miễn phí:**
 1. Truy cập: https://aistudio.google.com/apikey
@@ -365,6 +386,7 @@ Hoặc thêm vào file `.env` ở root project:
 # Stock Resources
 PEXELS_API_KEY=abc123xyz...
 PIXABAY_API_KEY=def456uvw...
+UNSPLASH_API_KEY=ghi789rst...
 
 # AI Image Generation
 GEMINI_API_KEY=AIza...your_gemini_key...
