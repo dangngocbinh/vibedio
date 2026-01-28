@@ -7,6 +7,7 @@ class ResourceMatcher {
   constructor(pexelsClient, pixabayClient, options = {}) {
     this.pexelsClient = pexelsClient;
     this.pixabayClient = pixabayClient;
+    this.unsplashClient = options.unsplashClient || null;
     this.geminiClient = options.geminiClient || null;
     this.resultsPerQuery = options.resultsPerQuery || 3;
     this.preferredSource = options.preferredSource || 'pexels';
@@ -173,6 +174,13 @@ class ResourceMatcher {
       if (this.pexelsClient && this.preferredSource === 'pexels') {
         results = await this.pexelsClient.searchPhotos(query, this.resultsPerQuery);
         source = 'pexels';
+      }
+
+      // Fallback to Unsplash (high quality images)
+      if (results.length === 0 && this.unsplashClient) {
+        console.log(`[ResourceMatcher] Trying Unsplash fallback for: "${query}"`);
+        results = await this.unsplashClient.searchPhotos(query, this.resultsPerQuery);
+        source = 'unsplash';
       }
 
       // Fallback to Pixabay

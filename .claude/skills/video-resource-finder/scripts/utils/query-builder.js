@@ -97,7 +97,7 @@ class QueryBuilder {
     const query = visualQuery.query.toLowerCase();
 
     // Short scenes or static concepts -> prefer images
-    const staticKeywords = ['logo', 'text', 'title', 'quote', 'number', 'chart', 'graph', 'diagram'];
+    const staticKeywords = ['logo', 'text', 'title', 'quote', 'number', 'chart', 'graph', 'diagram', 'photo', 'image'];
     const hasStaticKeyword = staticKeywords.some(keyword => query.includes(keyword));
 
     if (duration < 3 || hasStaticKeyword) {
