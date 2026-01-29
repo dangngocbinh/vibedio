@@ -548,42 +548,56 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
 
                     if (durationFrames <= 0) {
                         console.warn(`[OtioPlayer] TitleCard "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
 
-                        // Handle BrollTitle overlay components
-                        if (clip.metadata?.remotion_component === 'BrollTitle') {
-                            const props = clip.metadata.props || {};
-                            const durationStruct = clip.source_range?.duration;
-                            let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <TitleCard {...props} />
+                        </Sequence>
+                    );
+                }
 
-                            if (durationFrames <= 0) {
-                                console.warn(`[OtioPlayer] BrollTitle "${clip.name}" has 0 duration, skipping`);
-                                return null;
-                            }
+                // Handle BrollTitle overlay components
+                if (clip.metadata?.remotion_component === 'BrollTitle') {
+                    const props = clip.metadata.props || {};
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
 
-                            return (
-                                <Sequence
-                                    key={clip.name || clipIndex}
-                                    from={startFrame}
-                                    durationInFrames={durationFrames}
-                                >
-                                    <TitleCard {...props} />
-                                </Sequence >
-                            );
-                        }
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] BrollTitle "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
 
-                        return (
-                            <OtioClip
-                                key={clip.name || clipIndex}
-                                clip={clip}
-                                startFrame={startFrame}
-                                fps={fps}
-                                clipIndex={clipIndex}
-                                trackKind={trackKind}
-                                projectId={projectId}
-                            />
-                        );
-                    })}
-        </AbsoluteFill >
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <BrollTitle {...props} />
+                        </Sequence>
+                    );
+                }
+
+                // Default clip rendering
+                return (
+                    <OtioClip
+                        key={clip.name || clipIndex}
+                        clip={clip}
+                        startFrame={startFrame}
+                        fps={fps}
+                        clipIndex={clipIndex}
+                        trackKind={trackKind}
+                        projectId={projectId}
+                    />
+                );
+            })}
+        </AbsoluteFill>
     );
 }
 
