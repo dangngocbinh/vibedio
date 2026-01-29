@@ -1,15 +1,15 @@
-# Hướng dẫn sử dụng B-roll Title trong Vibe Video
+# Hướng dẫn sử dụng Layer Title trong Vibe Video
 
 ## Tổng quan
 
-BrollTitle là component Remotion để hiển thị title/text overlay trên video. Được tích hợp sẵn trong OtioPlayer và có thể sử dụng qua file `project.otio`.
+LayerTitle là component Remotion để hiển thị title/text overlay trên video. Được tích hợp sẵn trong OtioPlayer và có thể sử dụng qua file `project.otio`.
 
 ## Cách sử dụng trong Prompt
 
 ### 1. Thêm Title Hook ở đầu video
 
 ```
-Thêm B-roll title ở đầu video:
+Thêm layer title ở đầu video:
 - Title: "Nội dung tiêu đề"
 - Style: centered
 - Animation: scale
@@ -22,7 +22,7 @@ Thêm B-roll title ở đầu video:
 ### 2. Thêm Lower-third (góc dưới trái)
 
 ```
-Thêm B-roll title lower-third ở giây thứ 10:
+Thêm layer title lower-third ở giây thứ 10:
 - Title: "Tên người nói"
 - Subtitle: "Chức vụ"
 - Style: lower-third
@@ -33,7 +33,7 @@ Thêm B-roll title lower-third ở giây thứ 10:
 ### 3. Thêm Badge góc trên phải
 
 ```
-Thêm B-roll title badge ở góc trên phải:
+Thêm layer title badge ở góc trên phải:
 - Title: "LIVE" hoặc "HOT"
 - Style: corner-badge
 - Màu nền: đỏ
@@ -42,7 +42,7 @@ Thêm B-roll title badge ở góc trên phải:
 
 ## Cấu trúc trong project.otio
 
-BrollTitle được thêm vào track "Title Overlays" trong file `project.otio`:
+LayerTitle được thêm vào track "Title Overlays" trong file `project.otio`:
 
 ```json
 {
@@ -53,7 +53,7 @@ BrollTitle được thêm vào track "Title Overlays" trong file `project.otio`:
         {
             "OTIO_SCHEMA": "Clip.2",
             "metadata": {
-                "remotion_component": "BrollTitle",
+                "remotion_component": "LayerTitle",
                 "props": {
                     "title": "Tiêu đề của bạn",
                     "subtitle": "Phụ đề (tùy chọn)",
@@ -66,7 +66,7 @@ BrollTitle được thêm vào track "Title Overlays" trong file `project.otio`:
                     "showAccentLine": false
                 }
             },
-            "name": "Title Hook BrollTitle",
+            "name": "Title Hook LayerTitle",
             "source_range": {
                 "OTIO_SCHEMA": "TimeRange.1",
                 "duration": {
@@ -99,9 +99,9 @@ BrollTitle được thêm vào track "Title Overlays" trong file `project.otio`:
 | `subtitle` | string | - | Nội dung phụ |
 | `style` | `centered`, `lower-third`, `corner-badge`, `full-screen` | `lower-third` | Vị trí trên màn hình |
 | `animation` | `scale`, `slide-up`, `slide-left`, `fade`, `typewriter` | `slide-up` | Hiệu ứng xuất hiện |
-| `backgroundColor` | Mã màu | `rgba(0,0,0,0.85)` | Màu nền |
-| `textColor` | Mã màu | `#ffffff` | Màu chữ chính |
-| `accentColor` | Mã màu | `#00d4ff` | Màu accent (subtitle, viền) |
+| `backgroundColor` | Mã màu | `rgba(6, 182, 79, 0.85)` | Màu nền |
+| `textColor` | Mã màu | `#eb0000ff` | Màu chữ chính |
+| `accentColor` | Mã màu | `#ffae00ff` | Màu accent (subtitle, viền) |
 | `fontSize` | number | `48` | Cỡ chữ title |
 | `subtitleSize` | number | `28` | Cỡ chữ subtitle |
 | `showAccentLine` | boolean | `true` | Hiển thị viền accent bên trái |
@@ -160,44 +160,16 @@ BrollTitle được thêm vào track "Title Overlays" trong file `project.otio`:
 Trong `project.otio`, thứ tự tracks từ trên xuống:
 1. Images (video/image content)
 2. Subtitles (TikTokCaption)
-3. **Title Overlays** (BrollTitle) ← Đặt SAU Subtitles để hiển thị trên cùng
+3. **Title Overlays** (LayerTitle) ← Đặt SAU Subtitles để hiển thị trên cùng
 4. Voice (audio)
 5. Background Music (audio)
-
-## Color Presets sẵn có
-
-### Dark themes
-```
-dark:     nền đen, chữ trắng, accent xanh dương
-darkRed:  nền đỏ đen, chữ trắng, accent đỏ
-darkGold: nền vàng đen, chữ trắng, accent vàng
-```
-
-### Light themes
-```
-light:     nền trắng, chữ đen, accent xanh
-lightWarm: nền kem, chữ xám, accent cam
-```
-
-### Brand colors
-```
-youtube:   nền xám, chữ trắng, accent đỏ YouTube
-tech:      nền xanh đậm, chữ xanh nhạt, accent xanh neon
-corporate: nền xanh dương đậm, chữ trắng, accent xanh sáng
-```
-
-### Vibrant
-```
-neon:   nền đen, chữ trắng, accent xanh neon
-sunset: nền tím, chữ trắng, accent đỏ cam
-```
 
 ## Ví dụ Prompt đầy đủ
 
 ```
 Tạo video tin tức về [chủ đề].
 
-Thêm B-roll title:
+Thêm layer title:
 1. Title hook đầu video (frame 0-150):
    - Title: "Tiêu đề tin nóng"
    - Style: centered
@@ -221,6 +193,7 @@ Thêm B-roll title:
 ## Lưu ý
 
 1. **Vị trí track**: Title Overlays phải nằm SAU Subtitles track trong project.otio để hiển thị trên subtitle
-2. **zIndex**: BrollTitle có zIndex: 100 để đảm bảo hiển thị trên các layer khác
+2. **zIndex**: LayerTitle có zIndex: 100 để đảm bảo hiển thị trên các layer khác
 3. **Font**: Sử dụng font Inter, system-ui làm mặc định
 4. **Responsive**: fontSize sẽ được scale tự động theo style (centered: ×1.2, full-screen: ×1.5)
+5. **Component name**: Trong OTIO metadata, sử dụng `"remotion_component": "LayerTitle"`

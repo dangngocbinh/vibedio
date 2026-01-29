@@ -9,27 +9,30 @@ import {
 } from 'remotion';
 
 // ============ TYPES ============
-export type BrollTitleStyle = 'lower-third' | 'centered' | 'corner-badge' | 'full-screen';
+// LayerTitleStyle: Định nghĩa các kiểu hiển thị title overlay (tương tự như các preset trong video editor)
+export type LayerTitleStyle = 'lower-third' | 'centered' | 'corner-badge' | 'full-screen';
 export type AnimationType = 'fade' | 'slide-up' | 'slide-left' | 'typewriter' | 'scale';
 
-export interface BrollTitleProps {
-  title: string;
-  subtitle?: string;
-  style?: BrollTitleStyle;
-  animation?: AnimationType;
-  backgroundColor?: string;
-  textColor?: string;
-  accentColor?: string;
-  fontSize?: number;
-  subtitleSize?: number;
-  enterDuration?: number;
-  exitDuration?: number;
-  showAccentLine?: boolean;
+// Props cho LayerTitle component - dùng để tạo title overlays trong OTIO timeline
+export interface LayerTitleProps {
+  title: string;              // Nội dung chính (bắt buộc)
+  subtitle?: string;          // Nội dung phụ (tùy chọn)
+  style?: LayerTitleStyle;    // Kiểu hiển thị: lower-third, centered, corner-badge, full-screen
+  animation?: AnimationType;  // Hiệu ứng: fade, slide-up, slide-left, typewriter, scale
+  backgroundColor?: string;   // Màu nền (mặc định: rgba(6, 182, 79, 0.85))
+  textColor?: string;         // Màu chữ chính (mặc định: #eb0000ff)
+  accentColor?: string;       // Màu nhấn (mặc định: #ffae00ff)
+  fontSize?: number;          // Kích thước chữ chính (mặc định: 48)
+  subtitleSize?: number;      // Kích thước chữ phụ (mặc định: 28)
+  enterDuration?: number;     // Thời gian animation vào (frames)
+  exitDuration?: number;      // Thời gian animation ra (frames)
+  showAccentLine?: boolean;   // Hiển thị đường viền accent (mặc định: true)
 }
 
 // ============ STYLE PRESETS ============
-const getStylePreset = (style: BrollTitleStyle): React.CSSProperties => {
-  const presets: Record<BrollTitleStyle, React.CSSProperties> = {
+// Hàm trả về CSS preset cho mỗi kiểu style (tương tự như trong Vue, đây là computed styles)
+const getStylePreset = (style: LayerTitleStyle): React.CSSProperties => {
+  const presets: Record<LayerTitleStyle, React.CSSProperties> = {
     'lower-third': {
       position: 'absolute',
       bottom: 80,
@@ -150,7 +153,9 @@ const useTypewriter = (
 };
 
 // ============ MAIN COMPONENT ============
-export const BrollTitle: React.FC<BrollTitleProps> = ({
+// Component chính LayerTitle - render title overlay với animation
+// (Trong React, FC = Functional Component, tương tự như component trong Vue)
+export const LayerTitle: React.FC<LayerTitleProps> = ({
   title,
   subtitle,
   style = 'lower-third',
@@ -279,4 +284,4 @@ export const BrollTitle: React.FC<BrollTitleProps> = ({
   );
 };
 
-export default BrollTitle;
+export default LayerTitle;

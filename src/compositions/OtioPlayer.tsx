@@ -14,7 +14,8 @@ import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader';
 import { TikTokCaption } from '../components/TikTokCaption';
 import { ImageWithEffect } from '../components/ImageWithEffect';
-import { BrollTitle } from '../components/BrollTitle';
+import { LayerTitle } from '../components/LayerTitle';
+import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
 import { TitleCard } from '../components/TitleCard';
 
 
@@ -423,13 +424,24 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             </TransitionSeries.Sequence>
                         );
                     }
-                    if (item.metadata?.remotion_component === 'BrollTitle') {
+                    if (item.metadata?.remotion_component === 'LayerTitle') {
                         const props = item.metadata.props || {};
                         const durationStruct = item.source_range?.duration;
                         const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
                         return (
                             <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
-                                <BrollTitle {...props} />
+                                <LayerTitle {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+
+                    if (item.metadata?.remotion_component === 'FullscreenTitle') {
+                        const props = item.metadata.props || {};
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 150;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <FullscreenTitle {...props} />
                             </TransitionSeries.Sequence>
                         );
                     }
@@ -562,14 +574,14 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                     );
                 }
 
-                // Handle BrollTitle overlay components
-                if (clip.metadata?.remotion_component === 'BrollTitle') {
+                // Handle LayerTitle overlay components
+                if (clip.metadata?.remotion_component === 'LayerTitle') {
                     const props = clip.metadata.props || {};
                     const durationStruct = clip.source_range?.duration;
                     let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
 
                     if (durationFrames <= 0) {
-                        console.warn(`[OtioPlayer] BrollTitle "${clip.name}" has 0 duration, skipping`);
+                        console.warn(`[OtioPlayer] LayerTitle "${clip.name}" has 0 duration, skipping`);
                         return null;
                     }
 
@@ -579,7 +591,29 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             from={startFrame}
                             durationInFrames={durationFrames}
                         >
-                            <BrollTitle {...props} />
+                            <LayerTitle {...props} />
+                        </Sequence>
+                    );
+                }
+
+                // Handle FullscreenTitle overlay components
+                if (clip.metadata?.remotion_component === 'FullscreenTitle') {
+                    const props = clip.metadata.props || {};
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 150;
+
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] FullscreenTitle "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
+
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <FullscreenTitle {...props} />
                         </Sequence>
                     );
                 }

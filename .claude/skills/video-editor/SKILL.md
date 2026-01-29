@@ -281,6 +281,274 @@ project.otio
 - Effects auto-suggested based on content keywords
 - Transitions auto-suggested based on scene mood
 
+## LAYER TITLE OVERLAYS
+
+### Overview
+
+LayerTitle component cho phép thêm title overlays vào bất kỳ vị trí nào trong timeline. Sử dụng để tạo:
+- **Title hooks** - Thu hút attention ở đầu video
+- **Lower-thirds** - Giới thiệu người nói, địa điểm
+- **Corner badges** - Status indicators (LIVE, HOT, NEW)
+- **Full-screen titles** - Intro/outro, chapter transitions
+
+### Usage in OTIO
+
+Thêm track "Title Overlays" vào timeline:
+
+```json
+{
+    "OTIO_SCHEMA": "Track.1",
+    "name": "Title Overlays",
+    "kind": "Video",
+    "children": [
+        {
+            "OTIO_SCHEMA": "Clip.2",
+            "metadata": {
+                "remotion_component": "LayerTitle",
+                "props": {
+                    "title": "Your Title Text",
+                    "subtitle": "Optional subtitle",
+                    "style": "centered",
+                    "animation": "scale",
+                    "backgroundColor": "#FFD700",
+                    "textColor": "#FF0000",
+                    "fontSize": 64
+                }
+            },
+            "name": "Title Hook",
+            "source_range": {
+                "OTIO_SCHEMA": "TimeRange.1",
+                "duration": { "rate": 30.0, "value": 150.0 },
+                "start_time": { "rate": 30.0, "value": 0.0 }
+            }
+        }
+    ]
+}
+```
+
+### Available Styles
+
+| Style | Position | Use Case |
+|-------|----------|----------|
+| `centered` | Center screen (90% width, 40% height) | Title hooks, chapter titles |
+| `lower-third` | Bottom-left (60% max-width) | Speaker names, locations |
+| `corner-badge` | Top-right (compact) | Status tags (LIVE, HOT) |
+| `full-screen` | Full screen | Intro/outro screens |
+
+### Available Animations
+
+| Animation | Effect | Best For |
+|-----------|--------|----------|
+| `scale` | Zoom 0.8 → 1.0 | centered, full-screen |
+| `slide-up` | Slide from bottom | lower-third |
+| `slide-left` | Slide from right | corner-badge |
+| `fade` | Fade in/out | All styles |
+| `typewriter` | Type character-by-character | Quotes, captions |
+
+### Props Reference
+
+```typescript
+{
+  title: string;              // Required: main text
+  subtitle?: string;          // Optional: secondary text
+  style?: 'centered' | 'lower-third' | 'corner-badge' | 'full-screen';
+  animation?: 'scale' | 'slide-up' | 'slide-left' | 'fade' | 'typewriter';
+  backgroundColor?: string;   // Default: 'rgba(6, 182, 79, 0.85)'
+  textColor?: string;         // Default: '#eb0000ff'
+  accentColor?: string;       // Default: '#ffae00ff'
+  fontSize?: number;          // Default: 48
+  subtitleSize?: number;      // Default: 28
+  showAccentLine?: boolean;   // Default: true
+  enterDuration?: number;     // Frames for enter animation
+  exitDuration?: number;      // Frames for exit animation
+}
+```
+
+### Track Order (Important!)
+
+Place "Title Overlays" track **AFTER** "Subtitles" track to display titles on top:
+
+```
+1. Images (Video)
+2. Subtitles (Video)
+3. Title Overlays (Video)  ← Place AFTER Subtitles
+4. Voice (Audio)
+5. Background Music (Audio)
+```
+
+### Example: Title Hook
+
+```json
+{
+    "metadata": {
+        "remotion_component": "LayerTitle",
+        "props": {
+            "title": "5 SAI LẦM KHI HỌC TIẾNG ANH",
+            "style": "centered",
+            "animation": "scale",
+            "backgroundColor": "#FFD700",
+            "textColor": "#FF0000",
+            "fontSize": 64
+        }
+    },
+    "source_range": {
+        "duration": { "rate": 30, "value": 150 }  // 5 seconds
+    }
+}
+```
+
+### Full Documentation
+
+See [docs/layer-title-guide.md](docs/layer-title-guide.md) for detailed guide with examples.
+
+## FULLSCREEN TITLE
+
+### Overview
+
+FullscreenTitle component tạo title screens chiếm **toàn bộ khung hình** với hình nền đẹp mắt. Sử dụng cho:
+- **Intro/Outro** - Màn hình mở đầu/kết thúc video
+- **Chapter dividers** - Phân đoạn giữa các phần
+- **Quote screens** - Hiển thị quotes nổi bật
+- **Transition screens** - Chuyển cảnh có nội dung
+
+### Usage in OTIO
+
+Thêm clip FullscreenTitle vào track "Title Overlays":
+
+```json
+{
+    "OTIO_SCHEMA": "Clip.2",
+    "metadata": {
+        "remotion_component": "FullscreenTitle",
+        "props": {
+            "title": "TOP 10 SỰ THẬT",
+            "subtitle": "BẠN CHƯA BAO GIỜ BIẾT",
+            "backgroundType": "gradient",
+            "backgroundValue": "sunset",
+            "textStyle": "bold-shadow",
+            "animation": "zoom-fade",
+            "titleSize": 120,
+            "showParticles": true
+        }
+    },
+    "source_range": {
+        "duration": { "rate": 30.0, "value": 150.0 }
+    }
+}
+```
+
+### Background Types
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `solid` | Màu đơn sắc | `#FF5733`, `#1a1a2e` |
+| `gradient` | Gradient presets | `sunset`, `ocean`, `fire`, `neon`, `dark` |
+| `image` | Ảnh nền | `public/images/bg.jpg` |
+| `pattern` | Patterns lặp lại | `dots`, `lines`, `grid` |
+| `video-blur` | Blur video phía dưới | `blur-20` |
+
+### Text Styles
+
+| Style | Effect | Best For |
+|-------|--------|----------|
+| `bold-shadow` | Chữ đậm + bóng đổ mạnh | Default, nổi bật |
+| `glow` | Chữ phát sáng | Gaming, tech, neon |
+| `outline` | Viền chữ không fill | Modern, clean |
+| `3d` | Hiệu ứng 3D layers | Eye-catching, retro |
+| `minimal` | Đơn giản | Professional, elegant |
+| `gradient-text` | Gradient trên chữ | Trendy, colorful |
+
+### Animations
+
+| Animation | Effect | Use Case |
+|-----------|--------|----------|
+| `zoom-fade` | Zoom + fade in | Default, versatile |
+| `slide-up-bounce` | Trượt lên + bounce | Energetic |
+| `reveal-left` | Lộ từ trái | Professional |
+| `blur-in` | Blur → sharp | Cinematic |
+| `typewriter` | Gõ từng chữ | Storytelling |
+| `glitch` | Hiệu ứng nhiễu | Tech, gaming |
+| `split` | Tách rồi nhập | Creative |
+
+### Props Reference
+
+```typescript
+{
+  // Content
+  title: string;              // Required: main title
+  subtitle?: string;          // Optional: subtitle
+
+  // Background
+  backgroundType?: 'solid' | 'gradient' | 'image' | 'pattern' | 'video-blur';
+  backgroundValue?: string;   // Color/preset/path
+  backgroundOverlay?: string; // Overlay color (e.g., 'rgba(0,0,0,0.5)')
+
+  // Text
+  textStyle?: 'bold-shadow' | 'glow' | 'outline' | '3d' | 'minimal' | 'gradient-text';
+  textColor?: string;         // Default: '#ffffff'
+  accentColor?: string;       // Default: '#00d4ff'
+  titleSize?: number;         // Default: 96
+  subtitleSize?: number;      // Default: 36
+  fontFamily?: string;        // Default: 'Inter, Montserrat, system-ui'
+
+  // Position
+  verticalAlign?: 'top' | 'center' | 'bottom';
+  horizontalAlign?: 'left' | 'center' | 'right';
+  padding?: number;           // Default: 60
+
+  // Animation
+  animation?: string;         // See animations table
+  enterDuration?: number;     // Frames for enter
+  exitDuration?: number;      // Frames for exit
+
+  // Effects
+  showParticles?: boolean;    // Default: false
+  showVignette?: boolean;     // Default: true
+  animateBackground?: boolean; // Default: true (subtle rotation/zoom)
+}
+```
+
+### Example: Intro Screen
+
+```json
+{
+    "metadata": {
+        "remotion_component": "FullscreenTitle",
+        "props": {
+            "title": "BÍ MẬT VŨ TRỤ",
+            "subtitle": "KHÁM PHÁ NHỮNG ĐIỀU CHƯA BIẾT",
+            "backgroundType": "gradient",
+            "backgroundValue": "sunset",
+            "textStyle": "bold-shadow",
+            "animation": "zoom-fade",
+            "titleSize": 120,
+            "showParticles": true,
+            "showVignette": true
+        }
+    },
+    "source_range": {
+        "duration": { "rate": 30, "value": 150 }  // 5 seconds
+    }
+}
+```
+
+### Comparison: LayerTitle vs FullscreenTitle
+
+| Feature | LayerTitle | FullscreenTitle |
+|---------|------------|-----------------|
+| Coverage | Partial overlay | Full screen |
+| Background | Solid color only | Gradient, image, pattern |
+| Font size | 48px (default) | 96px (default) |
+| Use case | Overlay on video | Intro, outro, chapters |
+| Text effects | Basic | Advanced (glow, 3D, outline) |
+| Particles | No | Yes |
+| Background animation | No | Yes (subtle rotation/zoom) |
+| zIndex | 100 | 1000 |
+
+### Full Documentation
+
+See [docs/fullscreen-title-guide.md](docs/fullscreen-title-guide.md) for detailed guide with gradient presets, design tips, and examples.
+
 ## INTEGRATION VỚI REMOTION
 
 ### Loading OTIO in Remotion
