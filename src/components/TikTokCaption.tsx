@@ -14,6 +14,7 @@ interface TikTokCaptionProps {
     font?: string;
     highlightColor?: string;
     fontSize?: number;
+    letterSpacing?: string | number;  // Add letterSpacing prop
 }
 
 export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
@@ -25,6 +26,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
     font: directFont,
     highlightColor: directHighlightColor,
     fontSize: directFontSize,
+    letterSpacing: directLetterSpacing,  // Add letterSpacing destructuring
 }) => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
@@ -41,7 +43,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
         fontSize: directFontSize || rawStyle.fontSize || theme.style.fontSize,
         fontWeight: theme.style.fontWeight,
         textTransform: theme.style.textTransform || 'none',
-        letterSpacing: theme.style.letterSpacing || 0,
+        letterSpacing: directLetterSpacing || rawStyle.letterSpacing || theme.style.letterSpacing || 0,
         textColor: rawStyle.color || theme.style.textColor,
         activeColor: directHighlightColor || rawStyle.highlightColor || theme.style.activeColor,
         strokeColor: theme.style.strokeColor || '#000000',
@@ -189,7 +191,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                     justifyContent: 'center',
                     alignItems: 'center',
                     maxWidth: '90%',
-                    gap: '14px',
+                    gap: '16px',
                     ...(effectiveStyle.containerBg && {
                         backgroundColor: effectiveStyle.containerBg,
                         padding: effectiveStyle.containerPadding,
