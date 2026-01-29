@@ -4,7 +4,7 @@
 
 Tạo file OTIO timeline từ outputs của 3 skills upstream:
 - video-script-generator → `script.json`
-- voice-generation → `voice.mp3` + `voice.json`
+- voice-generation → `voice.mp3 hoặc voice.wav` + `voice.json`
 - video-resource-finder → `resources.json`
 
 Output: `project.otio` file render được trong Remotion với OtioPlayer.tsx component.
@@ -22,12 +22,22 @@ public/projects/{project-name}/
 ## SUPPORTED VIDEO TYPES
 
 | Type | Status | Track Structure |
-|------|--------|----------------|
+|------|--------|-------------------|
 | **listicle** | ✅ Implemented | B-Roll + Graphics + Subtitles + Voice + Music |
-| **image-slide** | ✅ **NEW** | Images (với effects) + Subtitles + Voice + Music |
+| **image-slide** | ✅ Implemented | Images (với effects) + Subtitles + Voice + Music |
+| **multi-video-edit** | ✅ **NEW** | Base Videos (embedded audio) + Title Cards + B-roll (smart) + Captions + Music |
 | **facts** | 🚧 Planned | Video + Fact Callouts + Subtitles + Voice + Music |
 | **motivation** | 🚧 Planned | Cinematic + Quotes + Subtitles + Voice + Music |
 | **story** | 🚧 Planned | Narrative + Chapters + Subtitles + Voice + SFX + Music |
+
+### Multi-Video-Edit Type (NEW)
+
+User-provided videos (1 hoặc nhiều MP4 files) được edit với:
+- **Embedded audio** - Sử dụng luôn audio gốc của video (đồng bộ tuyệt đối), không tách riêng
+- **AI content analysis** - Tự động detect hook, intro, sections, outro
+- **Smart B-roll mode** - AI quyết định replace/overlay/skip dựa trên video content
+- **Title cards** - Full screen transitions giữa các sections
+- **Sync-safe captions** - Reference về sourceVideoId, auto-update khi clip move
 
 ### Image-Slide Video Type (NEW)
 
@@ -82,13 +92,13 @@ python .claude/skills/video-editor/cli.py public/projects/my-project -v
 
 ```python
 # ✅ CORRECT - Relative paths
-voice.mp3                           # Same folder as project.otio
-../../public/audio/music.mp3        # Shared public assets
+voice.wav                           # Same folder as project.otio
+../../public/audio/music.wav        # Shared public assets
 https://cdn.pixabay.com/video.mp4   # Remote URLs
 
 # ❌ WRONG - Absolute paths (breaks portability)
-/Users/binhpc/code/automation-video/public/projects/my-project/voice.mp3
-file:///absolute/path/to/voice.mp3
+/Users/binhpc/code/automation-video/public/projects/my-project/voice.wav
+file:///absolute/path/to/voice.wav
 ```
 
 ### Why Relative Paths?

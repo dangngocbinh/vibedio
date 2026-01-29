@@ -13,3 +13,5 @@ projects/
 generated/
 __pycache__/
 .claude/skills/video-editor/core/__pycache__/asset_resolver.cpython-313.pyc
+venv/
+*.pyc

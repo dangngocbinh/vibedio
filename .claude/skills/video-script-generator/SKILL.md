@@ -9,13 +9,304 @@ Tạo kịch bản video faceless hoàn chỉnh dưới dạng JSON, sẵn sàng
 User Request → Analyze → Research (nếu cần) → Generate Script → Quality Check → Output JSON
 ```
 
+## AVAILABLE UTILITIES
+
+### 1. Video Processor (FFmpeg utilities)
+
+**Location**: `utils/video_processor.py`
+
+**CLI Usage**:
+```bash
+# Check FFmpeg/FFprobe installed
+python utils/video_processor.py check
+
+# Get video metadata
+python utils/video_processor.py metadata /path/to/video.mp4
+
+# Extract audio to MP3
+python utils/video_processor.py extract /path/to/video.mp4 output.mp3
+```
+
+**Python API**:
+```python
+from utils.video_processor import VideoProcessor
+
+# Check dependencies
+deps = VideoProcessor.check_dependencies()
+if not deps['all_installed']:
+    print(VideoProcessor.get_installation_instruction())
+
+# Get metadata
+metadata = VideoProcessor.get_video_metadata('/path/to/video.mp4')
+# Returns: {duration, resolution, fps, hasAudio, videoCodec, audioCodec, fileSize}
+
+# Extract audio
+VideoProcessor.extract_audio(
+    video_path='/path/to/video.mp4',
+    output_audio_path='audio/output.mp3',
+    quality=2  # 0-9, lower is better
+)
+```
+
+---
+
+### 2. Multi-Video Generator
+
+**Location**: `utils/multi_video_generator.py`
+
+**Python API**:
+```python
+from utils.multi_video_generator import (
+    generate_multi_video_script,
+    update_script_transcript
+)
+
+# Step 1: Generate initial script (process videos)
+result = generate_multi_video_script(
+    video_paths=['/path/to/video1.mp4', '/path/to/video2.mp4'],
+    project_name='my-project',
+    ratio='9:16'
+)
+# Returns: {scriptPath, projectDir, totalDuration, audioFiles, nextSteps}
+
+# Step 2: Update transcript (after user transcribes)
+script = update_script_transcript(
+    project_dir='public/projects/my-project',
+    transcript_data={
+        "fullText": "...",
+        "timestamps": [{"word": "Xin", "start": 0.1, "end": 0.3}],
+        "provider": "elevenlabs"
+    }
+)
+# Returns: Updated script dict
+
+# Step 3: Find segment by description (optional)
+generator = MultiVideoEditGenerator(project_dir='public/projects/my-project')
+segment = generator.find_segment_by_natural_language(
+    query='đoạn nói về giấc ngủ',
+    transcript_data=script['transcript']
+)
+# Returns: {start: 10.5, end: 25.0, text: '...'}
+```
+
+**Agent Workflow**:
+1. Call `generate_multi_video_script()` when user provides video files
+2. Wait for user to transcribe audio
+3. Call `update_script_transcript()` to add transcript
+4. **AI agent analyzes transcript** and updates `scenes` field manually
+5. Generate timeline via video-editor skill
+
+---
+
+### 3. Script Generator (Core logic)
+
+**Location**: `utils/script_generator.py`
+
+**Purpose**: Core templates và logic để generate script structures
+
+**Python API**:
+```python
+from utils.script_generator import ScriptGenerator
+
+gen = ScriptGenerator()
+
+# Calculate word target for duration
+min_words, max_words = gen.calculate_word_target(
+    duration=60,
+    video_type='listicle'
+)
+# Returns: (140, 160) for 60s listicle
+
+# Generate scene structure with timing
+scenes = gen.generate_structure(
+    video_type='facts',
+    duration=60
+)
+# Returns: [
+#   {id: 'hook', type: 'hook', duration: 5, ...},
+#   {id: 'problem', type: 'main', duration: 15, ...},
+#   ...
+# ]
+
+# Suggest visuals for scene
+visual_suggestion = gen.suggest_visuals(
+    section='hook',
+    content='Bạn ngủ đủ 8 tiếng mà sáng dậy vẫn mệt?'
+)
+# Returns: {type: 'stock', query: 'tired person morning', style: 'zoom-in'}
+
+# Generate hook options
+hooks = gen.generate_hook_options(
+    video_type='listicle',
+    topic='học tiếng Anh',
+    count=3
+)
+# Returns: ['5 sai lầm khi học tiếng Anh', '...', ...]
+
+# Validate script structure
+validation = gen.validate_script(scenes, target_duration=60)
+# Returns: {valid: True/False, issues: [...], warnings: [...]}
+```
+
+**Templates Available**:
+- `facts`: Hook → Problem → Insight → Solution → CTA
+- `listicle`: Hook → Item1-5 → CTA
+- `motivation`: Quote → Story → Lesson → CTA
+- `story`: Spoiler → Setup → Tension → Climax → CTA
+
+---
+
+### 4. JSON Builder
+
+**Location**: `utils/json_builder.py`
+
+**Purpose**: Build final `script.json` theo schema chuẩn
+
+**Python API**:
+```python
+from utils.json_builder import JSONBuilder
+
+builder = JSONBuilder()
+
+# Build complete project JSON
+project = builder.build_project_json(
+    topic='5 cách học tiếng Anh hiệu quả',
+    video_type='listicle',
+    duration=60,
+    scenes=[...],  # List of scene dicts
+    script_text='Full script text...',
+    metadata={
+        'ratio': '9:16',
+        'platform': 'shorts',
+        'targetAudience': 'Người đi làm'
+    },
+    quality_metrics={...}  # Optional, from QualityChecker
+)
+
+# Validate schema
+validation = builder.validate_schema(project)
+# Returns: {valid: True/False, errors: [...]}
+
+# Save to file
+builder.save_to_file(project, 'public/projects/my-video/script.json')
+
+# Or get JSON string
+json_str = builder.to_json_string(project, indent=2)
+```
+
+**Functions**:
+- `build_project_json()` - Tạo full JSON structure
+- `validate_schema()` - Check schema requirements
+- `save_to_file()` - Write to file
+- `to_json_string()` - Convert to formatted string
+
+---
+
+### 5. Quality Checker
+
+**Location**: `utils/quality_checker.py`
+
+**Purpose**: Đánh giá chất lượng script (hook strength, pacing, engagement)
+
+**Python API**:
+```python
+from utils.quality_checker import QualityChecker
+
+checker = QualityChecker()
+
+# Check hook strength (0-10)
+hook_result = checker.calculate_hook_strength(
+    'Bạn ngủ đủ 8 tiếng mà sáng dậy vẫn mệt?'
+)
+# Returns: {
+#   score: 8.0,
+#   rating: 'excellent',
+#   reasons: ['Has question', 'Good length', ...],
+#   suggestions: [...]
+# }
+
+# Check pacing score (0-10)
+pacing_result = checker.calculate_pacing_score(
+    scenes=[...],
+    target_duration=60
+)
+# Returns: {score: 9.0, issues: [], suggestions: []}
+
+# Check word count vs duration
+word_check = checker.check_word_count(
+    text='Full script text...',
+    duration=60,
+    video_type='listicle'
+)
+# Returns: {valid: True, message: 'Word count OK', suggestions: []}
+
+# Full quality check
+quality_report = checker.full_quality_check({
+    'scenes': [...],
+    'metadata': {duration: 60, videoType: 'listicle'},
+    'transcript': {fullText: '...'}
+})
+# Returns: {
+#   hookStrength: 8.5,
+#   pacingScore: 9.0,
+#   wordCountValid: True,
+#   engagementPotential: 'high',
+#   overallRating: 'A',
+#   suggestions: [...]
+# }
+```
+
+**Metrics**:
+- **Hook Strength**: Số liệu, power words, câu hỏi, độ dài
+- **Pacing Score**: Timing từng scene, total duration
+- **Word Count**: Check với speaking rate (2.3-2.6 words/s)
+- **Engagement**: Hook + Pacing + Elements (call-outs, stats, questions)
+
+---
+
+### 6. Script Generator (for topic-based videos)
+
+**Location**: `demo.py`
+
+**CLI Usage**:
+```bash
+# Generate script for topic-based videos
+python demo.py \
+  --topic "5 cách học tiếng Anh hiệu quả" \
+  --type listicle \
+  --duration 60 \
+  --ratio 9:16 \
+  --output public/projects/my-video/script.json
+```
+
+**Python API**:
+```python
+# For AI agent: directly create script dict and write to file
+import json
+from pathlib import Path
+
+script = {
+    "metadata": {...},
+    "scenes": [...],
+    "transcript": {...},
+    # ... full script structure
+}
+
+output_path = Path('public/projects/my-video/script.json')
+output_path.parent.mkdir(parents=True, exist_ok=True)
+
+with open(output_path, 'w', encoding='utf-8') as f:
+    json.dump(script, f, indent=2, ensure_ascii=False)
+```
+
+
 ## INPUT PARAMETERS
 
 User có thể cung cấp:
-- **Topic**: Chủ đề video (bắt buộc)
-- **Video Type**: facts | listicle | motivation | story (mặc định: facts)
-- **Duration**: 30 | 60 | 90 giây (mặc định: 60)
-- **Aspect Ratio**: 9:16 | 16:9 | 1:1 | 4:5 (mặc định: tự suy từ platform, hoặc 9:16)
+- **Topic**: Chủ đề video (bắt buộc) - hoặc **Video Paths** cho multi-video-edit
+- **Video Type**: facts | listicle | motivation | story | image-slide | **multi-video-edit** (mặc định: facts)
+- **Duration**: 30 | 60 | 90 giây (mặc định: 60) - auto-calculated cho multi-video-edit
+- **Aspect Ratio**: 9:16 | 16:9 | 1:1 | 4:5 (mặc định: 9:16)
 - **Target Audience**: Đối tượng xem (optional)
 - **Tone**: professional | casual | energetic | dramatic (mặc định: professional)
 - **Platform**: youtube | tiktok | reels | shorts (mặc định: shorts)
@@ -129,6 +420,57 @@ Skill trả về JSON với cấu trúc sau:
 - "X sai lầm khi [common activity]"
 
 **Word count**: 140-160 từ
+
+### 5. MULTI-VIDEO-EDIT (auto-duration) ✨ **NEW**
+
+**🎯 Mục đích**: Edit nhiều MP4 files thành 1 video hoàn chỉnh với AI analysis
+
+**Workflow**:
+```
+1. User provides video paths
+2. **CONFIRMATION 1**: Agent identifies video order & duration -> User confirms
+3. Extract metadata + audio (FFmpeg)
+4. User transcribes audio
+5. AI analyzes content structure
+   - Identify logical sections
+   - Propose title card placements
+6. **CONFIRMATION 2**: Agent lists proposed Title Cards/Segments -> User confirms
+   - User can override: "Tìm đoạn nói về [topic] để tạo title"
+7. Generate timeline with sync-safe clips
+```
+
+**Interactive Features**:
+- **Video Ordering**: Agent phải liệt kê thứ tự video (Video 1, Video 2...) để user confirm trước khi process.
+- **Segment Search**: User có thể yêu cầu: *"Cắt clip tại đoạn nói về 'giấc ngủ' và hiện title 'Giấc ngủ quan trọng'"* -> Agent dùng `find_segment_by_natural_language` để tìm timestamp chính xác.
+
+**Đặc điểm**:
+- ✅ **Separate video/audio clips** - Không combine
+- ✅ **sourceVideoId references** - Auto-sync khi clip move
+- ✅ **AI content analysis** - Detect hook, intro, sections, outro
+- ✅ **Smart B-roll mode** - Replace/overlay/skip dựa trên context
+- ✅ **Title cards** - Full-screen transitions
+
+**Input**:
+```python
+{
+  "video_paths": ["/path/to/video1.mp4", "/path/to/video2.mp4"],
+  "ratio": "9:16",
+  "platform": "shorts"
+}
+```
+
+**AI sẽ tự động**:
+- Phân tích transcript → sections
+- Generate title cards cho transitions
+- Suggest B-roll placements
+- Map timestamps với sourceVideoId
+
+**Use cases**:
+- User có sẵn video quay (talking head, demo, vlog)
+- Muốn thêm captions, title cards, B-roll
+- Cần edit nhanh nhiều clips thành 1 video
+
+
 
 ### 3. MOTIVATION (60s)
 **Cấu trúc**: Quote (10s) → Story context (20s) → Lesson (20s) → Call to action (10s)
@@ -584,6 +926,60 @@ Output JSON của skill này được design để:
 - ✅ **b-roll-fetcher skill** lấy visual suggestions
 - ✅ **editor skill** modify và re-generate
 
+## ⚠️ CRITICAL RULES
+
+### 1. ALWAYS Use JSONBuilder
+
+**Bắt buộc**: Khi tạo `script.json`, PHẢI dùng `JSONBuilder` class.
+
+**✅ Đúng**:
+```python
+from utils.json_builder import JSONBuilder
+
+builder = JSONBuilder()
+
+# Traditional videos (facts, listicle, etc.)
+script = builder.build_project_json(
+    topic='...',
+    video_type='listicle',
+    duration=60,
+    scenes=[...],
+    script_text='...',
+    metadata={'ratio': '9:16', 'platform': 'shorts'}
+)
+
+# Multi-video-edit
+script = builder.build_project_json(
+    topic='my-edit',
+    video_type='multi-video-edit',
+    source_videos=[...],
+    transcript={...},
+    scenes=[...],
+    metadata={'ratio': '9:16'}
+)
+
+# Save to file
+builder.save_to_file(script, 'public/projects/my-video/script.json')
+```
+
+**❌ Sai** (KHÔNG làm thế này):
+```python
+# KHÔNG tự tạo dict manually
+script = {
+    "metadata": {...},  # ❌ Missing fields, wrong structure
+    "scenes": [...]     # ❌ Không chuẩn schema
+}
+```
+
+**Lý do**:
+- ✅ Đảm bảo schema chuẩn (traditional & multi-video-edit)
+- ✅ Auto-fill các fields cần thiết
+- ✅ Validation trước khi save
+- ✅ Backward compatible với video-editor skill
+- ✅ Consistent với examples
+
+---
+
 ## BEST PRACTICES
 
 ### 1. Hook Writing
@@ -612,3 +1008,66 @@ Output JSON của skill này được design để:
   - Support 4 video types
   - Quality checkers
   - Visual suggestions
+- v1.1 (2026-01-25): Added image-slide type
+  - AI image generation support
+  - Custom image upload
+- v1.2 (2026-01-28): **Added multi-video-edit type** ✨
+  - User video processing (FFmpeg)
+  - AI content analysis
+  - Smart B-roll suggestions
+  - Timeline sync with sourceVideoId
+
+---
+
+## USAGE EXAMPLES
+
+### Multi-Video-Edit Workflow
+
+```python
+# User: "Tôi có 2 video này, edit giúp tôi"
+# AI Agent:
+
+from utils.multi_video_generator import generate_multi_video_script
+
+# Step 1: Process videos
+result = generate_multi_video_script(
+    video_paths=[
+        '/Users/binhpc/Downloads/intro.mp4',
+        '/Users/binhpc/Downloads/content.mp4'
+    ],
+    project_name='my-cooking-video',
+    ratio='9:16'
+)
+
+# Output:
+# {
+#   "scriptPath": "public/projects/my-cooking-video/script.json",
+#   "audioFiles": ["audio/video_1.mp3", "audio/video_2.mp3"],
+#   "totalDuration": 32.8,
+#   "nextSteps": ["Transcribe audio files..."]
+# }
+
+# Step 2: User transcribes audio (external service)
+# transcript_data = {...}
+
+# Step 3: Update transcript
+from utils.multi_video_generator import update_script_transcript
+
+script = update_script_transcript(
+    'public/projects/my-cooking-video',
+    transcript_data
+)
+
+# Step 4: AI analyzes & updates script.json
+# → Sections detected
+# → Title cards generated
+# → B-roll suggestions added
+# → Timeline ready for generation
+```
+
+**Result**: `script.json` với:
+- ✅ `sourceVideos` array
+- ✅ `transcript` với `sourceVideoId` references
+- ✅ `scenes` với `titleCard` và `brollSuggestions`
+- ✅ Ready cho video-editor skill
+

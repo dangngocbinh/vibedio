@@ -9,7 +9,11 @@
     "build:landscape": "remotion render AutoVideoLandscape output-landscape.mp4",
     "build:square": "remotion render AutoVideoSquare output-square.mp4",
     "generate": "ts-node src/cli/generate-video.ts",
-    "upgrade": "remotion upgrade"
+    "upgrade": "remotion upgrade",
+    "setup:all": "node scripts/setup-dependencies.js",
+    "setup:node": "node scripts/setup-dependencies.js --node-only",
+    "setup:python": "node scripts/setup-dependencies.js --python-only",
+    "setup:skills": "node scripts/setup-dependencies.js"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

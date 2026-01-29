@@ -7,12 +7,13 @@
         "start": "node scripts/generate-voice.js"
     },
     "dependencies": {
+        "@google-cloud/text-to-speech": "^5.0.1",
         "axios": "^1.6.0",
         "dotenv": "^16.3.1",
-        "fs-extra": "^11.1.1",
         "elevenlabs-node": "^1.2.0",
-        "openai": "^4.20.1",
-        "@google-cloud/text-to-speech": "^5.0.1",
-        "minimist": "^1.2.8"
+        "form-data": "^4.0.5",
+        "fs-extra": "^11.1.1",
+        "minimist": "^1.2.8",
+        "openai": "^4.20.1"
     }
 }

@@ -11,7 +11,7 @@ This skill allows you to generate high-quality voiceovers from text using multip
 - **Multi-Provider**: Support for ElevenLabs (Emotive), Vbee (Vietnamese), OpenAI (General), and Google (Cloud TTS).
 - **Emotion-Aware**: valid logic to select appropriate voices based on the detailed emotion of the text.
 - **Timestamps**: improving subtitle creation by attempting to fetch word-level timestamps (Alignment) where supported (ElevenLabs, Google).
-- **Timestamp Generation for Existing Voice**: Generate word-level timestamps from any existing audio file using OpenAI Whisper API.
+- **Timestamp Generation for Existing Voice**: Generate word-level timestamps from any existing audio file using **ElevenLabs Scribe v2** (preferred) or **OpenAI Whisper** (fallback).
 
 ## Usage
 
@@ -89,6 +89,13 @@ If `voiceId` is not provided, the Agent (you) or the Script should attempt to se
 
 Nếu bạn đã có voice file từ nguồn khác (thu âm, tải về, hoặc từ provider không hỗ trợ timestamps), bạn có thể tạo timestamps riêng bằng script `generate-timestamps.js`.
 
+**STT Provider Selection** (flag `--provider`):
+| Provider | Model | Accuracy | Notes |
+| :--- | :--- | :--- | :--- |
+| `elevenlabs` | Scribe v2 | Cao nhất, hỗ trợ 90+ ngôn ngữ | Tính phí theo giờ audio |
+| `whisper` | Whisper-1 | Tốt | ~$0.006/phút (~140đ/phút) |
+| `auto` (default) | Tự chọn | - | Ưu tiên ElevenLabs nếu có key, fallback Whisper |
+
 **Use Cases**:
 - ✅ Voice file từ TikTok, YouTube, hoặc nguồn khác
 - ✅ Voice đã thu âm sẵn
@@ -100,31 +107,41 @@ Nếu bạn đã có voice file từ nguồn khác (thu âm, tải về, hoặc 
 node .claude/skills/voice-generation/scripts/generate-timestamps.js \
   --audio "path/to/voice.mp3" \
   --text "Optional: original text for better accuracy" \
+  --provider "auto"  # Options: elevenlabs, whisper, auto (default: auto)
   --outputDir "public/projects/folder"  # Optional: custom output directory
 ```
 
-**Example 1: Generate timestamps for existing voice file**
+**Example 1: Auto-select best provider (ElevenLabs > Whisper)**
 ```bash
 node .claude/skills/voice-generation/scripts/generate-timestamps.js \
   --audio "public/projects/my-video/voice.mp3" \
   --text "Xin chào các bạn, hôm nay tôi sẽ hướng dẫn các bạn..."
 ```
 
-**Example 2: Generate timestamps without original text**
+**Example 2: Force ElevenLabs Scribe v2 (higher accuracy)**
 ```bash
-# Whisper sẽ tự transcribe audio và tạo timestamps
 node .claude/skills/voice-generation/scripts/generate-timestamps.js \
-  --audio "public/projects/my-video/voice.mp3"
+  --audio "public/projects/my-video/voice.mp3" \
+  --provider elevenlabs \
+  --text "Xin chào các bạn"
+```
+
+**Example 3: Force Whisper**
+```bash
+node .claude/skills/voice-generation/scripts/generate-timestamps.js \
+  --audio "public/projects/my-video/voice.mp3" \
+  --provider whisper
 ```
 
 **Output**:
 - Tạo file `voice.json` cùng thư mục với audio file
 - Chứa word-level timestamps và metadata
+- Field `timestamp_source`: `elevenlabs_scribe_v2` hoặc `whisper`
 - Format tương thích với video editor skill
 
 **Requirements**:
-- ⚠️ Cần `OPENAI_API_KEY` trong file `.env`
-- ⚠️ Chi phí: ~$0.006/phút audio (~140đ/phút)
+- ⚠️ Cần `ELEVENLABS_API_KEY` và/hoặc `OPENAI_API_KEY` trong file `.env`
+- ⚠️ Auto mode: ưu tiên ElevenLabs nếu có key (chính xác hơn), fallback Whisper
 - ⚠️ Cần cài `ffprobe` (thường đi kèm với ffmpeg)
 
 ### 6. Utility: List Available Voices

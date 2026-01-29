@@ -10,7 +10,7 @@ interface TikTokCaptionProps {
     // Theme support
     theme?: string;  // Theme name like 'gold-bold', 'clean-minimal', etc.
     // Direct props from OTIO (flat structure)
-    position?: 'top' | 'center' | 'bottom';
+    position?: 'top' | 'center' | 'bottom' | 'bottom-high';
     font?: string;
     highlightColor?: string;
     fontSize?: number;
@@ -53,7 +53,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
         containerBg: theme.style.containerBg,
         containerPadding: theme.style.containerPadding || '8px 16px',
         containerBorderRadius: theme.style.containerBorderRadius || 0,
-        position: directPosition || rawStyle.position || 'center',
+        position: directPosition || rawStyle.position || 'bottom',
     };
 
     // Find currently active words
@@ -77,9 +77,11 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                 return { top: '15%', justifyContent: 'flex-start' };
             case 'center':
                 return { top: '50%', transform: 'translateY(-50%)', justifyContent: 'center' };
+            case 'bottom-high':
+                return { bottom: '20%', justifyContent: 'flex-end' };
             case 'bottom':
             default:
-                return { bottom: '20%', justifyContent: 'flex-end' };
+                return { bottom: '8%', justifyContent: 'flex-end' };
         }
     };
 
@@ -187,7 +189,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                     justifyContent: 'center',
                     alignItems: 'center',
                     maxWidth: '90%',
-                    gap: '8px',
+                    gap: '14px',
                     ...(effectiveStyle.containerBg && {
                         backgroundColor: effectiveStyle.containerBg,
                         padding: effectiveStyle.containerPadding,
@@ -212,7 +214,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                         transform: `scale(${scale}) translateY(${translateY}px)`,
                         opacity,
                         textAlign: 'center',
-                        lineHeight: 1.2,
+                        lineHeight: 1.4,
                         transition: 'color 0.1s ease',
                         // Active background (for red-box style)
                         ...(isActive && effectiveStyle.activeBgColor && {

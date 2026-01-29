@@ -13,31 +13,56 @@ class JSONBuilder:
     
     def build_project_json(
         self,
-        topic: str,
-        video_type: str,
-        duration: int,
-        scenes: List[Dict],
-        script_text: str,
+        topic: str = None,
+        video_type: str = 'facts',
+        duration: int = None,
+        scenes: List[Dict] = None,
+        script_text: str = '',
         metadata: Optional[Dict] = None,
-        quality_metrics: Optional[Dict] = None
+        quality_metrics: Optional[Dict] = None,
+        # NEW: Multi-video-edit specific params
+        source_videos: Optional[List[Dict]] = None,
+        transcript: Optional[Dict] = None
     ) -> Dict:
         """
         Build complete project JSON
+        
+        Supports both:
+        1. Traditional video types (facts, listicle, etc.) - AI-generated content
+        2. Multi-video-edit - User-provided videos with AI analysis
+        
+        For multi-video-edit:
+          - source_videos: List of {id, path, duration, audioPath, hasAudio, metadata}
+          - transcript: {fullText, timestamps, language, provider}
+          - scenes: List with titleCard, brollSuggestions, sourceVideoId
         """
+        metadata_dict = metadata or {}
+        
+        # Multi-video-edit mode
+        if video_type == 'multi-video-edit':
+            return self._build_multi_video_edit_json(
+                topic=topic or metadata_dict.get('projectName', 'untitled'),
+                source_videos=source_videos or [],
+                transcript=transcript or {},
+                scenes=scenes or [],
+                metadata=metadata_dict
+            )
+        
+        # Traditional mode (AI-generated content)
         # Clean project name from topic
         project_name = self._clean_project_name(topic)
         
         # Calculate word count
         word_count = len(script_text.split())
         estimated_duration = self._estimate_duration(word_count, video_type)
-        reading_speed = int(word_count * 60 / duration) if duration > 0 else 0
+        reading_speed = int(word_count * 60 / duration) if duration and duration > 0 else 0
         
         # Build metadata section
         metadata_section = self._build_metadata(
             project_name,
             video_type,
             duration,
-            metadata or {}
+            metadata_dict
         )
         
         # Build script section
@@ -49,10 +74,10 @@ class JSONBuilder:
         }
         
         # Build scenes with visual suggestions
-        scenes_section = self._build_scenes(scenes)
+        scenes_section = self._build_scenes(scenes or [])
         
         # Build voice configuration
-        voice_section = self._build_voice_config(video_type, metadata or {})
+        voice_section = self._build_voice_config(video_type, metadata_dict)
         
         # Build music configuration
         music_section = self._build_music_config(video_type)
@@ -73,6 +98,98 @@ class JSONBuilder:
             'subtitle': subtitle_section,
             'qualityMetrics': quality_section
         }
+    
+    def _build_multi_video_edit_json(
+        self,
+        topic: str,
+        source_videos: List[Dict],
+        transcript: Dict,
+        scenes: List[Dict],
+        metadata: Dict
+    ) -> Dict:
+        """
+        Build JSON for multi-video-edit type
+        
+        Schema includes:
+        - sourceVideos array
+        - transcript with timestamps + sourceVideoId
+        - scenes with titleCard + brollSuggestions
+        - voice = null (use source audio)
+        - music with lower volume
+        """
+        # Calculate total duration from source videos
+        total_duration = sum(v.get('duration', 0) for v in source_videos) if source_videos else None
+        
+        # Build metadata
+        ratio = metadata.get('ratio', '9:16')
+        ratio_dimensions = {
+            "9:16": (1080, 1920),
+            "16:9": (1920, 1080),
+            "1:1": (1080, 1080),
+            "4:5": (1080, 1350)
+        }
+        width, height = ratio_dimensions.get(ratio, (1080, 1920))
+        
+        metadata_section = {
+            'projectName': topic,
+            'videoType': 'multi-video-edit',
+            'duration': total_duration,
+            'ratio': ratio,
+            'width': width,
+            'height': height,
+            'platform': metadata.get('platform', 'shorts'),
+            'targetAudience': metadata.get('targetAudience', ''),
+            'createdAt': datetime.now().isoformat()
+        }
+        
+        # Transcript section
+        transcript_section = {
+            'fullText': transcript.get('fullText', ''),
+            'language': transcript.get('language', 'vi'),
+            'timestamps': transcript.get('timestamps', []),
+            'provider': transcript.get('provider'),
+            'transcribedAt': transcript.get('transcribedAt')
+        }
+        
+        # Scenes (keep as-is, with titleCard and brollSuggestions)
+        scenes_section = scenes
+        
+        # Subtitle config
+        subtitle_section = {
+            'style': 'highlight-word',
+            'position': 'center',
+            'font': 'Montserrat',
+            'highlightColor': '#FFD700'
+        }
+        
+        # Voice = null for multi-video-edit
+        voice_section = {
+            'provider': None,
+            'voiceId': None
+        }
+        
+        # Music with lower volume
+        music_section = {
+            'enabled': True,
+            'query': metadata.get('musicQuery', 'background calm gentle'),
+            'mood': metadata.get('musicMood', 'calm'),
+            'genre': metadata.get('musicGenre', 'ambient'),
+            'volume': 0.08,  # Lower because of source audio
+            'fadeIn': 2.0,
+            'fadeOut': 2.0
+        }
+        
+        # Assemble
+        return {
+            'metadata': metadata_section,
+            'sourceVideos': source_videos,
+            'transcript': transcript_section,
+            'scenes': scenes_section,
+            'subtitle': subtitle_section,
+            'voice': voice_section,
+            'music': music_section
+        }
+
     
     def _clean_project_name(self, topic: str) -> str:
         """Clean topic để làm project name"""
