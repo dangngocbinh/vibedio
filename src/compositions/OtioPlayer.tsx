@@ -15,6 +15,7 @@ import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader
 import { TikTokCaption } from '../components/TikTokCaption';
 import { ImageWithEffect } from '../components/ImageWithEffect';
 import { BrollTitle } from '../components/BrollTitle';
+import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
 
 // Helpers cho Transition
 const FadePresentation: React.FC<any> = ({ children, presentationProgress }) => {
@@ -409,6 +410,16 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             </TransitionSeries.Sequence>
                         );
                     }
+                    if (item.metadata?.remotion_component === 'FullscreenTitle') {
+                        const props = item.metadata.props || {};
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <FullscreenTitle {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
 
                     // Note: TikTokCaption in Video track is skipped here, handled in Subtitle track logic
 
@@ -513,6 +524,28 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             durationInFrames={durationFrames}
                         >
                             <BrollTitle {...props} />
+                        </Sequence>
+                    );
+                }
+
+                // Handle FullscreenTitle overlay components
+                if (clip.metadata?.remotion_component === 'FullscreenTitle') {
+                    const props = clip.metadata.props || {};
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] FullscreenTitle "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
+
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <FullscreenTitle {...props} />
                         </Sequence>
                     );
                 }
