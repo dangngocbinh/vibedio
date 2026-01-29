@@ -3,6 +3,7 @@ const path = require('path');
 
 const PROJECTS_DIR = path.join(__dirname, '../public/projects');
 const OUTPUT_FILE = path.join(__dirname, '../src/generated/projects.json');
+const PUBLIC_OUTPUT_FILE = path.join(__dirname, '../public/projects.json');
 
 function getProjects() {
     if (!fs.existsSync(PROJECTS_DIR)) {
@@ -70,6 +71,7 @@ if (!fs.existsSync(generatedDir)) {
 }
 
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(projects, null, 2));
+fs.writeFileSync(PUBLIC_OUTPUT_FILE, JSON.stringify(projects, null, 2));
 
 console.log(`Generated project list with ${projects.length} projects.`);
 console.log(`Scanned projects from ${PROJECTS_DIR}`);

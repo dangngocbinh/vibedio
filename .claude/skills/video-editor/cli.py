@@ -55,6 +55,13 @@ def import_strategies():
     except ImportError:
         pass
 
+    try:
+        from strategies.multi_video_edit_strategy import MultiVideoEditStrategy
+        STRATEGY_MAP['multi-video-edit'] = MultiVideoEditStrategy
+    except ImportError:
+        pass
+
+
 
 def main():
     """Main CLI entry point."""

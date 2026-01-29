@@ -15,7 +15,8 @@ import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader
 import { TikTokCaption } from '../components/TikTokCaption';
 import { ImageWithEffect } from '../components/ImageWithEffect';
 import { BrollTitle } from '../components/BrollTitle';
-import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
+import { TitleCard } from '../components/TitleCard';
+
 
 // Helpers cho Transition
 const FadePresentation: React.FC<any> = ({ children, presentationProgress }) => {
@@ -174,6 +175,10 @@ const OtioClip: React.FC<{
         return null;
     }
 
+    // [Fix] Calculate startFrom (offset inside the media file)
+    const startTimeStruct = clip.source_range?.start_time;
+    const startFromFrames = startTimeStruct ? toFrames(startTimeStruct, fps) : 0;
+
     // Lấy URL media
     // @ts-ignore
     const mediaRefKey = clip.active_media_reference_key || 'DEFAULT_MEDIA';
@@ -243,13 +248,16 @@ const OtioClip: React.FC<{
                     <Audio
                         src={src!}
                         volume={audioVolume}
+                        startFrom={startFromFrames}
                         onError={(e) => { console.error(`Audio error`, e); setHasError(true); }}
                     />
                 ) : isVideo ? (
                     <Video
                         src={src!}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : 0.2}
+                        volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume}
+                        muted={(clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume) === 0}
+                        startFrom={startFromFrames}
                         onError={(e) => { console.error(`Video error: ${src} `, e); setHasError(true); }}
                     />
                 ) : (
@@ -317,16 +325,31 @@ const AudioShaker: React.FC<{
     );
 };
 
+// Detect overlay component tracks: Video tracks where ALL clips have remotion_component metadata.
+// This covers "Captions", "Title Cards", "Subtitles", and any future overlay tracks.
+const isOverlayComponentTrack = (track: Item): boolean => {
+    if (track.name === 'Title Cards') return false; // Force Title Cards to use TransitionSeries (Sequential)
+    if (track.name === 'Captions') return false; // Force Captions to use TransitionSeries (Sequential)
+
+    const clips = (track.children || []).filter(
+        (item: Item) => !item.OTIO_SCHEMA?.startsWith('Transition') && !item.OTIO_SCHEMA?.startsWith('Gap')
+    );
+    if (clips.length === 0) return false;
+    return clips.every((clip: Item) => clip.metadata?.remotion_component);
+};
+
 const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> = ({ track, fps, projectId }) => {
     const clips = track.children || [];
     const trackKind = track.kind; // 'Video' or 'Audio'
+    // Check if this is an overlay track (Video kind but uses absolute positioning, not TransitionSeries)
+    const isOverlayTrack = track.kind === 'Video' && (
+        isOverlayComponentTrack(track) ||
+        track.name?.includes('Subtitles') ||
+        track.name?.includes('Title Overlays')
+    );
 
-    // Check if this is a Subtitle track (which is technically Video kind but acts as overlay)
-    const isSubtitleTrack = track.kind === 'Video' && track.name?.includes('Subtitles');
-    // Check if this is Title Overlays track
-    const isTitleOverlayTrack = track.kind === 'Video' && track.name?.includes('Title Overlays');
     // Main Video track uses TransitionSeries
-    const isVideoTrack = trackKind === 'Video' && !isSubtitleTrack && !isTitleOverlayTrack;
+    const isVideoTrack = trackKind === 'Video' && !isOverlayTrack;
 
     // Track-level Style
     const trackStyle: React.CSSProperties = track.metadata?.style || {};
@@ -410,18 +433,30 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             </TransitionSeries.Sequence>
                         );
                     }
-                    if (item.metadata?.remotion_component === 'FullscreenTitle') {
+
+                    if (item.metadata?.remotion_component === 'TitleCard') {
                         const props = item.metadata.props || {};
                         const durationStruct = item.source_range?.duration;
-                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 90;
                         return (
                             <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
-                                <FullscreenTitle {...props} />
+                                <TitleCard {...props} />
                             </TransitionSeries.Sequence>
                         );
                     }
 
-                    // Note: TikTokCaption in Video track is skipped here, handled in Subtitle track logic
+                    if (item.metadata?.remotion_component === 'TikTokCaption') {
+                        const props = item.metadata.props || {};
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        // For TransitionSeries, we don't need manual startOffset as frame is relative 0..duration
+                        // and our Python logic creates relative timestamps for segments.
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <TikTokCaption {...props} startOffset={0} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
 
                     const clip = item;
                     const durationStruct = clip.source_range?.duration;
@@ -464,11 +499,12 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
     return (
         <AbsoluteFill>
             {clips.map((clip: Item, clipIndex: number) => {
-                // Calculate Start Frame: Prefer source_range.start_time (global) if available
+                // Calculate Start Frame: Prefer globalTimelineStart metadata, then source_range.start_time
                 let startFrame = 0;
 
-                if (clip.source_range?.start_time) {
-                    // Use explicit start time from OTIO if it looks like a timeline position
+                if (clip.metadata?.globalTimelineStart !== undefined) {
+                    startFrame = Math.round(parseFloat(clip.metadata.globalTimelineStart) * fps);
+                } else if (clip.source_range?.start_time) {
                     startFrame = toFrames(clip.source_range.start_time, fps);
                 } else {
                     // Fallback to accumulation (flawed for gaps but works for simple stacks)
@@ -482,17 +518,15 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
 
                 const startOffsetSeconds = startFrame / fps;
 
-                // Handle Subtitle Components explicitly in this track type
+                // Handle TikTokCaption overlay component
                 if (clip.metadata?.remotion_component === 'TikTokCaption') {
                     const props = clip.metadata.props || {};
                     const durationStruct = clip.source_range?.duration;
                     let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
 
-                    // [Fix] Ensure minimum duration of 1 frame to avoid Remotion error
-                    // This can happen when subtitle words have same start/end timestamp
                     if (durationFrames <= 0) {
                         console.warn(`[OtioPlayer] TikTokCaption "${clip.name}" has 0 duration, skipping`);
-                        return null; // Skip 0-duration subtitles
+                        return null;
                     }
 
                     return (
@@ -506,63 +540,50 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                     );
                 }
 
-                // Handle BrollTitle overlay components
-                if (clip.metadata?.remotion_component === 'BrollTitle') {
+                // Handle TitleCard overlay component
+                if (clip.metadata?.remotion_component === 'TitleCard') {
                     const props = clip.metadata.props || {};
                     const durationStruct = clip.source_range?.duration;
-                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 90;
 
                     if (durationFrames <= 0) {
-                        console.warn(`[OtioPlayer] BrollTitle "${clip.name}" has 0 duration, skipping`);
-                        return null;
-                    }
+                        console.warn(`[OtioPlayer] TitleCard "${clip.name}" has 0 duration, skipping`);
 
-                    return (
-                        <Sequence
-                            key={clip.name || clipIndex}
-                            from={startFrame}
-                            durationInFrames={durationFrames}
-                        >
-                            <BrollTitle {...props} />
-                        </Sequence>
-                    );
-                }
+                        // Handle BrollTitle overlay components
+                        if (clip.metadata?.remotion_component === 'BrollTitle') {
+                            const props = clip.metadata.props || {};
+                            const durationStruct = clip.source_range?.duration;
+                            let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
 
-                // Handle FullscreenTitle overlay components
-                if (clip.metadata?.remotion_component === 'FullscreenTitle') {
-                    const props = clip.metadata.props || {};
-                    const durationStruct = clip.source_range?.duration;
-                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                            if (durationFrames <= 0) {
+                                console.warn(`[OtioPlayer] BrollTitle "${clip.name}" has 0 duration, skipping`);
+                                return null;
+                            }
 
-                    if (durationFrames <= 0) {
-                        console.warn(`[OtioPlayer] FullscreenTitle "${clip.name}" has 0 duration, skipping`);
-                        return null;
-                    }
+                            return (
+                                <Sequence
+                                    key={clip.name || clipIndex}
+                                    from={startFrame}
+                                    durationInFrames={durationFrames}
+                                >
+                                    <TitleCard {...props} />
+                                </Sequence >
+                            );
+                        }
 
-                    return (
-                        <Sequence
-                            key={clip.name || clipIndex}
-                            from={startFrame}
-                            durationInFrames={durationFrames}
-                        >
-                            <FullscreenTitle {...props} />
-                        </Sequence>
-                    );
-                }
-
-                return (
-                    <OtioClip
-                        key={clip.name || clipIndex}
-                        clip={clip}
-                        startFrame={startFrame}
-                        fps={fps}
-                        clipIndex={clipIndex}
-                        trackKind={trackKind}
-                        projectId={projectId}
-                    />
-                );
-            })}
-        </AbsoluteFill>
+                        return (
+                            <OtioClip
+                                key={clip.name || clipIndex}
+                                clip={clip}
+                                startFrame={startFrame}
+                                fps={fps}
+                                clipIndex={clipIndex}
+                                trackKind={trackKind}
+                                projectId={projectId}
+                            />
+                        );
+                    })}
+        </AbsoluteFill >
     );
 }
 
