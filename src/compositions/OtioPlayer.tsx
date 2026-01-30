@@ -14,10 +14,10 @@ import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader';
 import { TikTokCaption } from '../components/captions/TikTokCaption';
 import { ImageWithEffect } from '../components/effects/ImageWithEffect';
-import { LayerTitle } from '../components/LayerTitle';
+import { LayerTitle } from '../components/titles/LayerTitle';
 import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
 import { TitleCard } from '../components/title-cards/TitleCard';
-import { LowerThird } from '../components/LowerThird';
+import { LowerThird } from '../components/titles/LowerThird';
 
 
 // Helpers cho Transition
