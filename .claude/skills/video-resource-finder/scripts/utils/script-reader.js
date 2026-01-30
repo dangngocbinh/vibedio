@@ -72,6 +72,7 @@ class ScriptReader {
         sceneText: scene.text,
         query: query,
         style: style || null,
+        referenceImages: scene.visualSuggestion.referenceImages || scene.visualSuggestion.references || [],
         duration: scene.duration || 5
       };
 

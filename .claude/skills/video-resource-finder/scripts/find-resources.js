@@ -4,6 +4,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '..', '.env') });
 const minimist = require('minimist');
 const path = require('path');
+const fs = require('fs');
 
 // Import modules
 const PexelsClient = require('./api/pexels-client');
@@ -41,7 +42,8 @@ async function main() {
       quality: 'best',          // best | hd | sd | medium
       storage: 'local',         // local | cloud (future)
       concurrency: 3,           // Parallel downloads
-      downloadCount: 1          // Download only first result per scene
+      downloadCount: 1,         // Download only first result per scene
+      batchSize: 0              // 0 = unlimited, otherwise limit number of AI generation requests
     }
   });
 
@@ -60,6 +62,7 @@ async function main() {
     console.log('  --downloadCount      Number of results to download per scene (default: 1)');
     console.log('  --concurrency        Parallel download threads (default: 3)');
     console.log('  --storage            Storage type: local|cloud (default: local)');
+    console.log('  --batchSize          Limit number of new AI generation requests (0 = unlimited)');
     process.exit(1);
   }
 
@@ -70,9 +73,25 @@ async function main() {
   if (args.download && !args.skipDownload) {
     console.log(`   Quality: ${args.quality}, Count per scene: ${args.downloadCount}`);
   }
+  if (args.batchSize > 0) {
+    console.log(`   Batch Size: ${args.batchSize} (AI generation limited)`);
+  }
   console.log('');
 
   try {
+    // Step 0: Load existing resources.json for RESUME capability
+    let existingResources = null;
+    const resourcesPath = path.join(projectDir, 'resources.json');
+    if (fs.existsSync(resourcesPath)) {
+      try {
+        const raw = fs.readFileSync(resourcesPath, 'utf8');
+        existingResources = JSON.parse(raw).resources;
+        console.log('🔄 Found existing resources.json - enabling RESUME mode\n');
+      } catch (err) {
+        console.warn('⚠️  Could not read existing resources.json, starting fresh.\n');
+      }
+    }
+
     // Step 1: Initialize API clients
     console.log('🔧 Initializing API clients...\n');
 
@@ -140,7 +159,9 @@ async function main() {
       resultsPerQuery: args.resultsPerQuery,
       preferredSource: args.preferredSource,
       enableAIGeneration: enableAI,
-      projectDir: projectDir
+      projectDir: projectDir,
+      existingResources: existingResources, // Pass existing resources
+      batchSize: args.batchSize             // Pass batch size
     });
 
     let results = await resourceMatcher.fetchAllResources(queries);

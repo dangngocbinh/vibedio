@@ -77,19 +77,58 @@ class InputLoader:
         Raises:
             ValueError: If required fields are missing
         """
-        required = ['metadata', 'script', 'scenes', 'voice', 'music', 'subtitle']
+        # Strict requirements - must always have these
+        required_base = ['metadata', 'scenes']
 
-        for field in required:
+        # Conditional requirements based on video type
+        video_type = data.get('metadata', {}).get('videoType', 'unknown')
+
+        # All other fields are optional and will be auto-populated with defaults
+        optional_with_defaults = {
+            'script': {'fullText': '', 'wordCount': 0, 'estimatedDuration': 0, 'readingSpeed': 150},
+            'voice': {'provider': None, 'voiceId': None},
+            'music': {'enabled': False, 'query': '', 'mood': 'neutral', 'genre': 'background', 'volume': 0.5, 'fadeIn': 1.0, 'fadeOut': 1.0},
+            'subtitle': {'style': 'default', 'position': 'center', 'font': 'Arial', 'highlightColor': '#FFEB3B'}
+        }
+
+        # Validate base required fields
+        for field in required_base:
             if field not in data:
-                raise ValueError(f"script.json missing required field: {field}")
+                raise ValueError(
+                    f"❌ script.json missing required field: '{field}'\n"
+                    f"   Required fields: {required_base}\n"
+                    f"   See: .claude/skills/video-editor/SCHEMA.md for details"
+                )
+
+        # Auto-populate optional fields with sensible defaults
+        for field, default_value in optional_with_defaults.items():
+            if field not in data:
+                data[field] = default_value
+                print(f"⚠️  Auto-populated missing field '{field}' with defaults")
 
         # Validate metadata
         metadata = data['metadata']
         if 'videoType' not in metadata:
-            raise ValueError("script.json metadata missing 'videoType'")
+            raise ValueError(
+                "❌ script.json metadata missing 'videoType'\n"
+                "   Valid types: facts, listicle, motivation, story, image-slide\n"
+                "   Example: {\"metadata\": {\"videoType\": \"image-slide\"}}"
+            )
 
         if 'duration' not in metadata:
-            raise ValueError("script.json metadata missing 'duration'")
+            raise ValueError(
+                "❌ script.json metadata missing 'duration'\n"
+                "   Must specify total video duration in seconds\n"
+                "   Example: {\"metadata\": {\"duration\": 300}}"
+            )
+
+        # Auto-populate optional metadata fields with sensible defaults
+        if 'width' not in metadata:
+            metadata['width'] = 1920
+        if 'height' not in metadata:
+            metadata['height'] = 1080
+        if 'ratio' not in metadata:
+            metadata['ratio'] = '16:9'
 
         # Validate scenes
         scenes = data['scenes']

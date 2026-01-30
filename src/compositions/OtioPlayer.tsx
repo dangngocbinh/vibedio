@@ -6,17 +6,17 @@ import { fade } from "@remotion/transitions/fade";
 import { wipe } from "@remotion/transitions/wipe";
 import { flip } from "@remotion/transitions/flip";
 import { clockWipe } from "@remotion/transitions/clock-wipe";
-import { OpeningTitle } from '../components/OpeningTitle';
-import { PersistentTitle } from '../components/VietnamVibes/PersistentTitle';
-import { FloatingEffect } from '../components/VietnamVibes/FloatingEffect';
-import { StarParticles } from '../components/StarParticles';
+import { OpeningTitle } from '../components/titles/OpeningTitle';
+import { PersistentTitle } from '../user-components/VietnamVibes/PersistentTitle';
+import { FloatingEffect } from '../user-components/VietnamVibes/FloatingEffect';
+import { StarParticles } from '../components/effects/StarParticles';
 import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader';
-import { TikTokCaption } from '../components/TikTokCaption';
-import { ImageWithEffect } from '../components/ImageWithEffect';
+import { TikTokCaption } from '../components/captions/TikTokCaption';
+import { ImageWithEffect } from '../components/effects/ImageWithEffect';
 import { LayerTitle } from '../components/LayerTitle';
 import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
-import { TitleCard } from '../components/TitleCard';
+import { TitleCard } from '../components/title-cards/TitleCard';
 import { LowerThird } from '../components/LowerThird';
 
 
@@ -138,7 +138,7 @@ const sanitizeUrl = (url?: string, projectId?: string) => {
         if (projectId) {
             // Check if it's already properly prefixed to avoid double-prefixing if logic changes
             if (!url.startsWith(`projects/${projectId}`)) {
-                return `/projects/${projectId}/${url}`;
+                return staticFile(`projects/${projectId}/${url}`);
             }
         }
     }
@@ -449,6 +449,9 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
 
                     if (item.metadata?.remotion_component === 'TitleCard') {
                         const props = item.metadata.props || {};
+                        if (props.backgroundImage) {
+                            props.backgroundImage = sanitizeUrl(props.backgroundImage, projectId);
+                        }
                         const durationStruct = item.source_range?.duration;
                         const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 90;
                         return (
@@ -567,6 +570,9 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                 // Handle TitleCard overlay component
                 if (clip.metadata?.remotion_component === 'TitleCard') {
                     const props = clip.metadata.props || {};
+                    if (props.backgroundImage) {
+                        props.backgroundImage = sanitizeUrl(props.backgroundImage, projectId);
+                    }
                     const durationStruct = clip.source_range?.duration;
                     let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 90;
 

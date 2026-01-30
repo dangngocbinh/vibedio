@@ -14,3 +14,9 @@ generated/
 __pycache__/
 .claude/settings.local.json
 .kiro
+.claude/skills/video-editor/strategies/__pycache__/*
+src/generated/projects.json
+public/projects.json
+public/projects.json
+.claude/skills/video-editor/utils/__pycache__/*
+src/generated/projects.json

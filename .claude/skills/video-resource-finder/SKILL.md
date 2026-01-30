@@ -78,6 +78,15 @@ script.json → Read Scenes → Extract Queries → Call APIs/AI → Download �
 - **`--concurrency`**: Số download song song (default: 3)
 - **`--storage`**: Loại storage: local | cloud (default: local, cloud cho tương lai)
 
+### Execution Options (v1.2)
+- **`--batchSize`**: Giới hạn số lượng AI generation request mới (default: 0 = unlimited).
+  - Dùng để tránh lỗi rate limit của Gemini API.
+  - Ví dụ: `--batchSize 3` sẽ chỉ tạo 3 ảnh AI mới, sau đó dừng.
+- **Resume Capability** (Tự động):
+  - Skill sẽ tự động đọc `resources.json` cũ (nếu có).
+  - Bỏ qua các scene đã có resource để tiết kiệm API quota.
+  - Kết hợp với `--batchSize` để chạy lần lượt (batching).
+
 ### Environment Variables (.env)
 ```bash
 # Stock Resources

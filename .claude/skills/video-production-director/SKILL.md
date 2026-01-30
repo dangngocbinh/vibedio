@@ -87,21 +87,65 @@ python .agent/skills/video-production-director/director.py status --project "ten
 
 ### A. WORKFLOW: TOPIC TO VIDEO (Faceless Automation)
 Dành cho video tin tức, sự thật, listicle... từ con số 0.
-1.  **Import (Optional)**: Nếu user cung cấp logo, intro, hoặc asset cụ thể, hãy gọi `director.py import` trước.
-2.  **Script**: Gọi `video-script-generator`.
-3.  **Voice**: Gọi `voice-generation` (TTS).
-4.  **Resources**: Gọi `video-resource-finder` (Download stock/Generate AI images).
-5.  **Editor**: Gọi `video-editor`.
-6.  **Refresh**: Tự động chạy `generate-project-list.js` để cập nhật `projects.json`.
+
+1.  **Import (Optional)**
+    *   **Check**: User có cung cấp logo, intro, audio cụ thể không?
+    *   **Action**: Nếu có, gọi `director.py import`.
+
+2.  **Script Generation**
+    *   **Check**: Đã có `topic` hoặc yêu cầu nội dung chưa?
+    *   **Load Skill**: Đọc `.claude/skills/video-script-generator/SKILL.md` để nắm rõ input/output.
+    *   **Action**: Chạy skill tạo script (`video-script-generator`).
+    *   **Verify**: Kiểm tra file `script.json` đã được tạo và có nội dung hợp lệ (scenes, dialogue) chưa.
+
+3.  **Voice Generation**
+    *   **Check**: File `script.json` đã có trường `text` hoặc `dialogue` để đọc chưa?
+    *   **Load Skill**: Đọc `.claude/skills/voice-generation/SKILL.md` để biết cách gọi TTS.
+    *   **Action**: Chạy skill tạo giọng đọc (`voice-generation`).
+    *   **Verify**: Kiểm tra file `voice.json` và các file audio trong `resources/audio/`.
+
+4.  **Resource Finding**
+    *   **Check**: File `script.json` đã có các từ khóa tìm kiếm (image_prompt/video_search_query) chưa?
+    *   **Load Skill**: Đọc `.claude/skills/video-resource-finder/SKILL.md` để biết cách tìm ảnh/video.
+    *   **Action**: Chạy skill tìm/tạo ảnh/video (`video-resource-finder`).
+    *   **Verify**: Kiểm tra file `resources.json` và đảm bảo các file media đã lưu vào `resources/`.
+
+5.  **Video Editing**
+    *   **Check**: Đã có đủ `script.json`, `voice.json` (hoặc audio), và `resources.json` chưa?
+    *   **Load Skill**: Đọc `.claude/skills/video-editor/SKILL.md` để biết quy trình render.
+    *   **Action**: Chạy skill dựng phim (`video-editor` - render Video/Update OTIO).
+    *   **Verify**: Kiểm tra file `project.otio` cập nhật mới hoặc file video output.
+
+6.  **Refresh**
+    *   **Action**: Tự động chạy `generate-project-list.js` để cập nhật `projects.json`.
 
 ### B. WORKFLOW: MULTI-VIDEO EDIT (Smart Edit)
 Dành cho user có source video quay sẵn.
-1.  **Import**: Copy video vào `resources/videos/`.
-2.  **Extraction**: Tách audio ra `resources/audio/`, auto-transcribe.
-3.  **Analysis & Confirmation (CRITICAL)**: Agent phân tích transcript, đề xuất `scenes` và thẻ tiêu đề trong `script.json`. **BẮT BUỘC** hiển thị bản thảo và xin xác nhận của người dùng trước khi đi tiếp.
-4.  **Resources**: Tìm B-roll bổ sung hoặc nhạc nền (nếu cần).
-5.  **Editor**: Dựng timeline sau khi người dùng đã duyệt/sửa `script.json`.
-6.  **Refresh**: Tự động chạy `generate-project-list.js` để cập nhật `public/projects.json` giúp Remotion Studio nhận diện dự án mới.
+
+1.  **Import**
+    *   **Check**: File video gốc đã có chưa?
+    *   **Action**: Copy video vào `imports/videos/` hoặc dùng lệnh import.
+
+2.  **Extraction**
+    *   **Check**: Đã tách audio chưa?
+    *   **Action**: Tách audio ra `resources/audio/`, auto-transcribe (nếu chưa có script).
+
+3.  **Analysis & Confirmation (CRITICAL)**
+    *   **Check**: Đã có transcript chưa?
+    *   **Action**: Agent phân tích transcript, đề xuất `scenes` và thẻ tiêu đề trong `script.json`.
+    *   **Confirm**: **BẮT BUỘC** hiển thị bản thảo và xin xác nhận của người dùng trước khi đi tiếp.
+
+4.  **Resources**
+    *   **Load Skill**: Đọc `.claude/skills/video-resource-finder/SKILL.md`.
+    *   **Action**: Tìm B-roll bổ sung hoặc nhạc nền (nếu cần).
+
+5.  **Editor**
+    *   **Check**: Người dùng đã duyệt/sửa `script.json` chưa?
+    *   **Load Skill**: Đọc `.claude/skills/video-editor/SKILL.md`.
+    *   **Action**: Dựng timeline (`video-editor`).
+
+6.  **Refresh**
+    *   **Action**: Tự động chạy `generate-project-list.js` để cập nhật `public/projects.json` giúp Remotion Studio nhận diện dự án mới.
 
 ---
 
