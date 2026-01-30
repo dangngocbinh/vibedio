@@ -47,7 +47,7 @@ The `LayerEffect` component allows you to add modern visual accents and motion g
 ## Built-in Effects
 
 ## Built-in Effects Library
-*(Use `type="color"` to customize)*
+*(Use prop `color` to customize)*
 
 ### Tech & HUD
 - **`neon-circle`**: Classic rotating HUD ring.

@@ -73,10 +73,16 @@ const useEff = (speed = 1) => {
 const NeonCircle: React.FC<{ color: string; speed: number }> = ({ color, speed }) => {
     const { t } = useEff(speed);
     return (
-        <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ transform: `rotate(${t * 2}deg)` }}>
-            <circle cx="50" cy="50" r="45" fill="none" stroke={color} strokeWidth="2" strokeDasharray="10 5" opacity="0.6" />
-            <circle cx="50" cy="50" r="35" fill="none" stroke={color} strokeWidth="1" strokeDasharray="5 5" opacity="0.4" style={{ transform: 'rotate(-45deg)', transformOrigin: 'center' }} />
-            <circle cx="50" cy="50" r="25" fill="none" stroke={color} strokeWidth="4" strokeDasharray="20 20" opacity="0.8" />
+        <svg
+            width="100%" height="100%" viewBox="0 0 100 100"
+            style={{
+                transform: `rotate(${t * 2}deg)`,
+                filter: `drop-shadow(0 0 8px ${color})`
+            }}
+        >
+            <circle cx="50" cy="50" r="45" fill="none" stroke={color} strokeWidth="2" strokeDasharray="10 5" opacity="0.8" />
+            <circle cx="50" cy="50" r="35" fill="none" stroke={color} strokeWidth="1" strokeDasharray="5 5" opacity="0.6" style={{ transform: 'rotate(-45deg)', transformOrigin: 'center' }} />
+            <circle cx="50" cy="50" r="25" fill="none" stroke={color} strokeWidth="4" strokeDasharray="20 20" opacity="0.9" />
         </svg>
     );
 };

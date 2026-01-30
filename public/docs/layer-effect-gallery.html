@@ -183,7 +183,16 @@
         <!-- TECH HUD -->
         <div class="card">
             <div class="preview">
-                <div class="circle-dashed eff-spin"></div>
+                <!-- High Fidelity Neon Circle -->
+                <svg width="80" height="80" viewBox="0 0 100 100" class="eff-spin"
+                    style="filter: drop-shadow(0 0 5px #0ea5e9);">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="10 5"
+                        opacity="0.6" />
+                    <circle cx="50" cy="50" r="35" fill="none" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="5 5"
+                        opacity="0.4" />
+                    <circle cx="50" cy="50" r="25" fill="none" stroke="#0ea5e9" stroke-width="4"
+                        stroke-dasharray="20 20" opacity="0.8" />
+                </svg>
             </div>
             <div class="label"><code>neon-circle</code></div>
         </div>
@@ -213,8 +222,16 @@
         </div>
         <div class="card">
             <div class="preview">
-                <div style="border: 1px solid #0ea5e9; border-radius: 50%; width: 80px; height: 80px; border-top-color: transparent;"
-                    class="eff-spin"></div>
+                <!-- High Fidelity Radar Sweep -->
+                <div
+                    style="width: 80px; height: 80px; border-radius: 50%; border: 1px solid #0ea5e9; position: relative; overflow: hidden;">
+                    <div class="eff-spin"
+                        style="position: absolute; width: 100%; height: 100%; background: conic-gradient(from 0deg, transparent 270deg, #0ea5e9 360deg); opacity: 0.5;">
+                    </div>
+                    <div
+                        style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: #0ea5e9; border-radius: 50%; transform: translate(-50%, -50%);">
+                    </div>
+                </div>
             </div>
             <div class="label"><code>radar-sweep</code></div>
         </div>
