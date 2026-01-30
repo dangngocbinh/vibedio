@@ -4,6 +4,8 @@ import { z } from 'zod';
 
 
 import { OtioPlayer, calculateTotalDuration } from './compositions/OtioPlayer';
+import { TemplatesLauncher } from './compositions/TemplatesLauncher';
+
 // @ts-ignore
 import projectsList from './generated/projects.json';
 import { loadProject } from './utils/project-loader';
@@ -33,7 +35,14 @@ export const RemotionRoot: React.FC = () => {
 
   return (
     <>
-
+      <Composition
+        id="Open-Template-List"
+        component={TemplatesLauncher}
+        durationInFrames={1}
+        fps={30}
+        width={1080}
+        height={600}
+      />
       {/* OtioTimeline - Portrait 9:16 (Default for TikTok/Shorts/Reels) */}
       <Composition
         id="Preview-Portrait"
