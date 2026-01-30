@@ -923,3 +923,184 @@ pip install -r requirements.txt
   - Relative path support
   - Subtitle generation
   - Migration from output/ to public/projects/
+
+- v1.3 (2026-01-30): Sticker Overlays & Animations
+  - **NEW** `Sticker` component for emojis, memes, and images
+  - **NEW** Overlays track support for multiple sticker layers
+  - **NEW** Rich animation library: pop, shake, rotate, elastic, slide
+  - **NEW** Positioning system: presets (center, corners), random, custom coordinates
+  - **UPDATED** `OtioPlayer` to support Sticker rendering
+
+## STICKER OVERLAYS
+
+### Overview
+
+`Sticker` component cho phép thêm các hình ảnh trang trí, memes, emojis, hoặc bất kỳ hình ảnh nào khác lên video dưới dạng overlay. Tính năng này giúp video sinh động, hài hước và giữ sự chú ý của người xem (retention).
+
+### Usage in OTIO
+
+Thêm clip `Sticker` vào track "Title Overlays" hoặc tạo track mới chuyên biệt:
+
+```json
+{
+    "OTIO_SCHEMA": "Clip.2",
+    "metadata": {
+        "remotion_component": "Sticker",
+        "props": {
+            "src": "https://example.com/meme.png", 
+            "style": "bottom-right",
+            "animation": "pop",
+            "width": 300,
+            "enterDuration": 15,
+            "rotation": 10
+        }
+    },
+    "source_range": {
+        "duration": { "rate": 30.0, "value": 90.0 }, // 3 seconds
+        "start_time": { "rate": 30.0, "value": 0.0 }
+    }
+}
+```
+
+### Positioning Styles
+
+| Style | Position | Description |
+|-------|----------|-------------|
+| `center` | Center | Giữa màn hình |
+| `top-left` | Top Left | Góc trên trái (cách lề 50px) |
+| `top-right` | Top Right | Góc trên phải (cách lề 50px) |
+| `bottom-left` | Bottom Left | Góc dưới trái (cách lề 50px) |
+| `bottom-right` | Bottom Right | Góc dưới phải (cách lề 50px) |
+| `random` | Random | Vị trí ngẫu nhiên mỗi lần render |
+| `custom` | Custom | Sử dụng `top`, `left`, `right`, `bottom` props |
+
+### Animations
+
+| Animation | Effect |
+|-----------|--------|
+| `pop` | Bật lên từ nhỏ đến lớn (giống bong bóng) - **Mặc định** |
+| `elastic` | Giống `pop` nhưng có độ nảy đàn hồi mạnh hơn |
+| `shake` | Rung lắc nhẹ (gây chú ý) |
+| `rotate` | Xoay vòng khi xuất hiện |
+| `slide-up` | Trượt từ dưới lên |
+| `slide-down` | Trượt từ trên xuống |
+| `fade` | Hiện dần đơn giản |
+
+### Custom Positioning Example
+
+```json
+{
+    "metadata": {
+        "remotion_component": "Sticker",
+        "props": {
+            "src": "public/stickers/wow-face.png",
+            "style": "custom",
+            "top": "20%",
+            "left": "10%",
+            "width": 400,
+            "animation": "elastic",
+            "rotation": -15
+        }
+    }
+}
+```
+
+### Random Sticker Example (Meme Burst)
+
+Để tạo hiệu ứng nhiều sticker xuất hiện ngẫu nhiên, bạn có thể thêm nhiều clip Sticker chồng lên nhau với `style: "random"`.
+
+```json
+{
+    "metadata": {
+        "remotion_component": "Sticker",
+        "props": {
+            "src": "public/emojis/heart.png",
+            "style": "random",
+            "width": 150,
+            "animation": "pop"
+        }
+    }
+}
+```
+
+## LAYER EFFECTS
+
+### Overview
+
+`LayerEffect` component cung cấp các hiệu ứng thị giác (visual accents) hiện đại như HUD, neon shapes, scanlines... giúp video mang phong cách tech, dynamic hơn mà không cần file video nặng nề.
+
+### Usage in OTIO
+
+```json
+{
+    "metadata": {
+        "remotion_component": "LayerEffect",
+        "props": {
+            "type": "neon-circle",
+            "width": 400,
+            "height": 400,
+            "color": "#00ff00",
+            "speed": 1.5
+        }
+    },
+    "source_range": {
+        "duration": { "rate": 30.0, "value": 150.0 }
+    }
+}
+```
+
+### Supported Effects
+
+| Type | Description |
+|------|-------------|
+| **TECH / HUD** || 
+| `neon-circle` | Vòng tròn HUD xoay |
+| `radar-sweep` | Quét radar xanh |
+| `crosshair` | Tâm ngắm sniper |
+| `target-scope-a` | Ống ngắm chi tiết |
+| `scan-lines` | Hiệu ứng quét dòng |
+| `cyber-frame-corners` | Góc khung hình công nghệ |
+| `loading-dots` | 3 chấm loading |
+| `loading-ring` | Vòng loading đơn giản |
+| `digital-noise` | Nhiễu kỹ thuật số |
+| **GEOMETRIC** ||
+| `rotating-squares` | 2 hình vuông xoay ngược nhau |
+| `concentric-circles` | Các vòng tròn đồng tâm xoay |
+| `techno-triangle` | Tam giác lồng nhau |
+| `dashed-ring` | Vòng tròn nét đứt |
+| `burst` | Nổ hình học |
+| `zigzag-wave` | Sóng zigzag tần số cao |
+| `hex-hive` | Lưới lục giác mờ |
+| `floating-shapes` | Các hình khối trôi nổi |
+| **COMIC** ||
+| `comic-boom` | Chữ BOOM kiểu truyện tranh |
+| `speed-lines-radial` | Tia tốc độ từ tâm (Anime) |
+| `hand-drawn-circle` | Vòng tròn vẽ tay |
+| **MISC** ||
+| `particles` | Hạt bụi bay lên |
+| `sound-wave` | Sóng âm nhạc |
+| `glitch-bars` | Các thanh ngang nhiễu |
+| `arrow-chevron-right` | Mũi tên chỉ hướng |
+| `custom` | Load Lottie/Image từ URL |
+
+### Props Reference
+
+```typescript
+{
+  type?: string;          // 'neon-circle', 'scan-lines', etc.
+  src?: string;           // URL nếu type='custom'
+  color?: string;         // Main color
+  secondaryColor?: string;// Secondary color
+  speed?: number;         // Animation speed
+  width?: number;         // Width
+  height?: number;        // Height
+  top?: string|number;    // Position
+  left?: string|number;   // Position
+  animation?: 'fade'|'scale'|'rotate'|'pulse'; // Entry animation
+}
+```
+
+### Full Documentation
+
+See [docs/layer-effect-guide.md](docs/layer-effect-guide.md).
+

@@ -200,6 +200,32 @@ export const RemotionRoot: React.FC = () => {
           title: 'Fullscreen Title Gallery'
         }}
       />
+
+      <Composition
+        id="Sticker-Gallery"
+        component={HtmlGalleryViewer as any}
+        durationInFrames={1}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          htmlFile: 'docs/sticker-gallery.html',
+          title: 'Sticker Gallery'
+        }}
+      />
+
+      <Composition
+        id="Layer-Effect-Gallery"
+        component={HtmlGalleryViewer as any}
+        durationInFrames={1}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          htmlFile: 'docs/layer-effect-gallery.html',
+          title: 'Layer Effect Gallery'
+        }}
+      />
     </>
   );
 };

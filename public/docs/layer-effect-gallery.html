@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layer Effects Catalog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #38bdf8;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+
+        .preview {
+            height: 160px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .label {
+            padding: 10px;
+            background: #0f172a;
+            text-align: center;
+        }
+
+        code {
+            color: #f472b6;
+            font-size: 0.8rem;
+        }
+
+        /* CSS Animations for Preview */
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0%;
+            }
+
+            100% {
+                top: 100%;
+            }
+        }
+
+        @keyframes flash {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .eff-spin {
+            animation: spin 4s linear infinite;
+        }
+
+        .eff-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Specific Shapes */
+        .circle-dashed {
+            width: 80px;
+            height: 80px;
+            border: 4px dashed #0ea5e9;
+            border-radius: 50%;
+        }
+
+        .square-spin {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #0ea5e9;
+        }
+
+        .lines-h {
+            width: 80%;
+            height: 2px;
+            background: #0ea5e9;
+            box-shadow: 0 10px 0 #0ea5e9, 0 20px 0 #0ea5e9;
+        }
+
+        .crosshair {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .crosshair::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: #0ea5e9;
+        }
+
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 40px;
+            width: 2px;
+            height: 80px;
+            background: #0ea5e9;
+        }
+
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 50px solid #0ea5e9;
+        }
+
+        .dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            animation: flash 1s infinite alternate;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Layer Effects Library (v2.0)</h1>
+
+    <div class="grid">
+        <!-- TECH HUD -->
+        <div class="card">
+            <div class="preview">
+                <div class="circle-dashed eff-spin"></div>
+            </div>
+            <div class="label"><code>neon-circle</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div class="square-spin eff-spin"></div>
+            </div>
+            <div class="label"><code>rotating-squares</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div class="crosshair eff-spin"></div>
+            </div>
+            <div class="label"><code>crosshair</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div class="lines-h eff-pulse"></div>
+            </div>
+            <div class="label"><code>scan-lines</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div class="triangle eff-spin"></div>
+            </div>
+            <div class="label"><code>techno-triangle</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div style="border: 1px solid #0ea5e9; border-radius: 50%; width: 80px; height: 80px; border-top-color: transparent;"
+                    class="eff-spin"></div>
+            </div>
+            <div class="label"><code>radar-sweep</code></div>
+        </div>
+
+        <!-- GEOMETRIC -->
+        <div class="card">
+            <div class="preview">
+                <div style="border: 2px solid #f472b6; width: 50px; height: 50px; transform: rotate(45deg);"
+                    class="eff-pulse"></div>
+            </div>
+            <div class="label"><code>burst</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div class="dots">
+                    <div class="dot"></div>
+                    <div class="dot" style="animation-delay:0.2s"></div>
+                    <div class="dot" style="animation-delay:0.4s"></div>
+                </div>
+            </div>
+            <div class="label"><code>loading-dots</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+            <div class="label"><code>plus-grid</code></div>
+        </div>
+
+        <!-- NEW -->
+        <div class="card">
+            <div class="preview">
+                <div class="circle-dashed" style="border-style: dotted;"></div>
+            </div>
+            <div class="label"><code>dashed-ring</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div style="width: 80px; height: 20px; border: 1px solid #0ea5e9;"></div>
+            </div>
+            <div class="label"><code>cyber-frame</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div class="dots" style="flex-direction: column;">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+            <div class="label"><code>digital-noise</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div style="font-size: 20px; color: #f472b6; font-weight: bold;" class="eff-pulse">BOOM!</div>
+            </div>
+            <div class="label"><code>comic-boom</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div style="border: 2px solid #fff; border-radius: 50%; width: 60px; height: 60px;"></div>
+            </div>
+            <div class="label"><code>hand-drawn-circle</code></div>
+        </div>
+        <div class="card">
+            <div class="preview">
+                <div
+                    style="width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 20px solid #0ea5e9;">
+                </div>
+            </div>
+            <div class="label"><code>arrow-chevron</code></div>
+        </div>
+    </div>
+
+</body>
+
+</html>

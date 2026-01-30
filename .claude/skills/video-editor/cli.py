@@ -114,45 +114,45 @@ Examples:
     # Check if project directory exists
     project_path = Path(args.project_dir)
     if not project_path.exists():
-        print(f"✗ Error: Project directory not found: {args.project_dir}")
+        print(f"Error: Project directory not found: {args.project_dir}")
         return 1
 
     try:
         # Create builder
         builder = OtioTimelineBuilder(args.project_dir, fps=args.fps)
-        print(f"📂 Project: {project_path.name}")
+        print(f"Project: {project_path.name}")
 
         # Load inputs
         builder.load_inputs()
-        print(f"✓ Loaded inputs from {args.project_dir}")
+        print(f"Loaded inputs from {args.project_dir}")
 
         # Determine video type and aspect ratio
         video_type = builder.get_video_type()
         duration = builder.get_duration()
         ratio = builder.get_aspect_ratio()
-        print(f"✓ Video type: {video_type} ({duration}s @ {args.fps}fps, ratio: {ratio})")
+        print(f"Video type: {video_type} ({duration}s @ {args.fps}fps, ratio: {ratio})")
 
         # Validate only mode
         if args.validate_only:
-            print("✓ Validation passed!")
+            print("Validation passed!")
             return 0
 
         # Select strategy
         strategy_class = STRATEGY_MAP.get(video_type)
         if not strategy_class:
             available = ', '.join(STRATEGY_MAP.keys()) if STRATEGY_MAP else 'none'
-            print(f"✗ Error: Unsupported video type '{video_type}'")
+            print(f"Error: Unsupported video type '{video_type}'")
             print(f"   Available types: {available}")
             print(f"   Hint: The strategy for '{video_type}' may not be implemented yet")
             return 1
 
         strategy = strategy_class(fps=args.fps, project_dir=args.project_dir)
-        print(f"✓ Using {strategy.__class__.__name__}")
+        print(f"Using {strategy.__class__.__name__}")
 
         # Build timeline
         timeline = builder.build_timeline(strategy)
         track_count = len(timeline.tracks)
-        print(f"✓ Built timeline with {track_count} track(s)")
+        print(f"Built timeline with {track_count} track(s)")
 
         if args.verbose:
             for i, track in enumerate(timeline.tracks):
@@ -162,30 +162,30 @@ Examples:
         # Save
         output_path = args.output or str(project_path / 'project.otio')
         saved_path = builder.save(output_path)
-        print(f"✓ Saved timeline to: {saved_path}")
+        print(f"Saved timeline to: {saved_path}")
 
         # Success message
-        print("\n🎬 Timeline generation complete!")
+        print("\nTimeline generation complete!")
         print(f"   Next: Load '{Path(saved_path).name}' in Remotion Studio")
 
         return 0
 
     except FileNotFoundError as e:
-        print(f"✗ Error: {str(e)}")
+        print(f"Error: {str(e)}")
         if args.verbose:
             import traceback
             traceback.print_exc()
         return 1
 
     except ValueError as e:
-        print(f"✗ Validation Error: {str(e)}")
+        print(f"Validation Error: {str(e)}")
         if args.verbose:
             import traceback
             traceback.print_exc()
         return 1
 
     except Exception as e:
-        print(f"✗ Error: {str(e)}")
+        print(f"Error: {str(e)}")
         if args.verbose:
             import traceback
             traceback.print_exc()

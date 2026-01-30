@@ -175,13 +175,31 @@ const useAnimation = (
 ) => {
     const exitStart = durationInFrames - exitDuration;
 
-    // Tính opacity: 0 (bắt đầu) -> 1 (hết vào) -> 1 (bắt đầu ra) -> 0 (kết thúc)
-    const opacity = interpolate(
-        frame,
-        [0, enterDuration, exitStart, durationInFrames],
-        [0, 1, 1, 0],
-        { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }
-    );
+    // Tính opacity: 0 (bắt đầu) -> 1 (hết vào) -> 1 (bắt đầu ra) -> 0 (kết thúc) - Safe interpolation
+    let opacity = 1;
+    if (enterDuration > 0 || exitDuration > 0) {
+        const ranges = [0];
+        const values = [0];
+        if (enterDuration > 0) {
+            ranges.push(enterDuration);
+            values.push(1);
+        } else {
+            values[0] = 1;
+        }
+        if (exitDuration > 0) {
+            ranges.push(exitStart);
+            values.push(1);
+            ranges.push(durationInFrames);
+            values.push(0);
+        } else {
+            ranges.push(durationInFrames);
+            values.push(1);
+        }
+
+        if (ranges.length > 1 && ranges[ranges.length - 1] > ranges[0]) {
+            opacity = interpolate(frame, ranges, values, { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
+        }
+    }
 
     let transform = '';
     let filter = '';

@@ -53,6 +53,13 @@ class ListicleStrategy(BaseStrategy):
         subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
         timeline.tracks.append(subtitle_track)
 
+        # Track 3.5: Overlays (Stickers, Titles)
+        overlays_track = self._create_overlays_track(script)
+        if overlays_track and len(overlays_track) > 0:
+            timeline.tracks.append(overlays_track)
+
+
+
         # Track 4: Voice
         voice_track = self._create_voice_track(voice_data, duration)
         timeline.tracks.append(voice_track)
@@ -190,5 +197,69 @@ class ListicleStrategy(BaseStrategy):
 
         track = self.create_audio_track("Background Music")
         track.append(music_clip)
+
+        return track
+
+    def _create_overlays_track(self, script: Dict[str, Any]) -> otio.schema.Track:
+        """
+        Create overlays track for Stickers and LayerTitles.
+
+        Args:
+            script: Parsed script.json
+
+        Returns:
+            OTIO Track with overlay components
+        """
+        overlays = script.get('overlays', [])
+        if not overlays:
+            return None
+
+        track = self.create_video_track("Title Overlays")
+
+        for overlay in overlays:
+            comp_type = overlay.get('type', 'Sticker') # Default to Sticker
+            props = overlay.get('props', {})
+            start_time = overlay.get('startTime', 0)
+            duration = overlay.get('duration', 3)
+            
+            # Map 'type' to Remotion component name
+            component_name = comp_type
+            if comp_type == 'Sticker':
+                component_name = 'Sticker'
+            elif comp_type == 'LayerTitle':
+                component_name = 'LayerTitle'
+            
+            clip = self.create_component_clip(
+                component_name=component_name,
+                duration_sec=duration,
+                props=props,
+                clip_name=f"{component_name}"
+            )
+
+            # Set precise start time
+            # For overlay tracks, we need to set the source_range (which OtioPlayer logic uses for absolute positioning??)
+            # Actually, OtioPlayer logic for overlay tracks uses startFrame derived from... where?
+            # It uses clip.source_range.start_time if present.
+            
+            # We need to ensure start_time is set on source_range of the clip??
+            # No, source_range defines the "window" into the media.
+            # IN OTIO, the position in the timeline is determined by the CLIP'S position in the TRACK.
+            # BUT for overlay tracks (Absolute Positioning logic in OtioPlayer), we need explicit global start time.
+            # OtioPlayer logic:
+            # if (clip.metadata?.globalTimelineStart !== undefined) startFrame = ...
+            # else if (clip.source_range?.start_time) startFrame = ...
+            
+            # The 'source_range.start_time' usually refers to the media start.
+            # USING 'globalTimelineStart' metadata is safer for absolute positioning overlays in our custom player.
+            
+            clip.metadata['globalTimelineStart'] = str(start_time)
+
+            # We also append it to track. 
+            # Since OtioPlayer iterates clips in track, and uses absolute positioning based on metadata, order doesn't technically matter for timing, but matters for z-index?
+            # Actually, if we just append to track, OTIO considers them sequential.
+            # But OtioPlayer's "Overlay Track" logic (via isOverlayTrack) renders them using AbsoluteFill and manual startFrame.
+            # So usage of 'globalTimelineStart' is key here.
+            
+            track.append(clip)
 
         return track

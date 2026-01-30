@@ -19,6 +19,8 @@ import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
 import { TitleCard } from '../components/title-cards/TitleCard';
 import { LowerThird } from '../components/titles/LowerThird';
 import { CallToAction } from '../components/CallToAction/CallToAction';
+import { Sticker } from '../components/titles/Sticker';
+import { LayerEffect } from '../components/effects/LayerEffect';
 
 
 // Helpers cho Transition
@@ -228,6 +230,36 @@ const OtioClip: React.FC<{
         audioVolume = baseVolume * fadeMultiplier;
     }
 
+    // Opacity (fade in/out cho tất cả) - Safe interpolation
+    let opacity = 1;
+    const enterDuration = clip.metadata?.fade_in_duration ? parseFloat(clip.metadata.fade_in_duration) * fps : 0;
+    const exitDuration = clip.metadata?.fade_out_duration ? parseFloat(clip.metadata.fade_out_duration) * fps : 0;
+    const exitStart = durationFrames - exitDuration;
+
+    if (enterDuration > 0 || exitDuration > 0) {
+        const ranges = [0];
+        const values = [0];
+        if (enterDuration > 0) {
+            ranges.push(enterDuration);
+            values.push(1);
+        } else {
+            values[0] = 1;
+        }
+        if (exitDuration > 0) {
+            ranges.push(exitStart);
+            values.push(1);
+            ranges.push(durationFrames);
+            values.push(0);
+        } else {
+            ranges.push(durationFrames);
+            values.push(1);
+        }
+
+        if (ranges.length > 1 && ranges[ranges.length - 1] > ranges[0]) {
+            opacity = interpolate(frame, ranges, values, { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
+        }
+    }
+
     // Style Metadata Handling
     const customStyle: React.CSSProperties = clip.metadata?.style || {};
 
@@ -341,21 +373,25 @@ const isOverlayComponentTrack = (track: Item): boolean => {
     return clips.every((clip: Item) => clip.metadata?.remotion_component);
 };
 
-const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> = ({ track, fps, projectId }) => {
+const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string, trackIndex: number }> = ({ track, fps, projectId, trackIndex }) => {
     const clips = track.children || [];
     const trackKind = track.kind; // 'Video' or 'Audio'
     // Check if this is an overlay track (Video kind but uses absolute positioning, not TransitionSeries)
     const isOverlayTrack = track.kind === 'Video' && (
         isOverlayComponentTrack(track) ||
         track.name?.includes('Subtitles') ||
-        track.name?.includes('Title Overlays')
+        track.name?.includes('Title Overlays') ||
+        track.name?.includes('LayerEffects')
     );
 
     // Main Video track uses TransitionSeries
     const isVideoTrack = trackKind === 'Video' && !isOverlayTrack;
 
-    // Track-level Style
-    const trackStyle: React.CSSProperties = track.metadata?.style || {};
+    // Track-level Style: Ensure physical stacking for overlay tracks
+    const trackStyle: React.CSSProperties = {
+        ...(track.metadata?.style || {}),
+        zIndex: trackIndex * 100
+    };
 
     // Audio Reactivity (only relevant for Video tracks)
     const audioReactive = track.metadata?.audioReactive;
@@ -480,6 +516,34 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                         return (
                             <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
                                 <CallToAction {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+
+                    if (item.metadata?.remotion_component === 'Sticker') {
+                        const props = item.metadata.props || {};
+                        if (props.src) {
+                            props.src = sanitizeUrl(props.src, projectId);
+                        }
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <Sticker {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+
+                    if (item.metadata?.remotion_component === 'LayerEffect') {
+                        const props = item.metadata.props || {};
+                        if (props.src) {
+                            props.src = sanitizeUrl(props.src, projectId);
+                        }
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <LayerEffect {...props} />
                             </TransitionSeries.Sequence>
                         );
                     }
@@ -692,6 +756,60 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                     );
                 }
 
+                // Handle Sticker overlay components
+                if (clip.metadata?.remotion_component === 'Sticker') {
+                    const props = clip.metadata.props || {};
+                    if (props.src) {
+                        props.src = sanitizeUrl(props.src, projectId);
+                    }
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] Sticker "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
+
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <Sticker {...props} />
+                        </Sequence>
+                    );
+                }
+
+                // Handle LayerEffect overlay components
+                if (clip.metadata?.remotion_component === 'LayerEffect') {
+                    const props = clip.metadata.props || {};
+                    if (props.src) {
+                        props.src = sanitizeUrl(props.src, projectId);
+                    }
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] LayerEffect "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
+
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <LayerEffect {...props} />
+                        </Sequence>
+                    );
+                }
+
+                if (clip.OTIO_SCHEMA?.startsWith('Gap')) {
+                    return null;
+                }
+
                 // Default clip rendering
                 return (
                     <OtioClip
@@ -777,7 +895,7 @@ export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimelin
     return (
         <AbsoluteFill style={{ backgroundColor: '#000' }}>
             {tracks.map((track: Item, trackIndex: number) => (
-                <TrackRenderer key={track.name || trackIndex} track={track} fps={fps} projectId={projectId} />
+                <TrackRenderer key={track.name || trackIndex} track={track} fps={fps} projectId={projectId} trackIndex={trackIndex} />
             ))}
         </AbsoluteFill>
     );
