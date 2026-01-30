@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 
 import { OtioPlayer, calculateTotalDuration } from './compositions/OtioPlayer';
-import { TemplatesLauncher } from './compositions/TemplatesLauncher';
+import { HtmlGalleryViewer } from './compositions/HtmlGalleryViewer';
 
 // @ts-ignore
 import projectsList from './generated/projects.json';
@@ -35,14 +35,6 @@ export const RemotionRoot: React.FC = () => {
 
   return (
     <>
-      <Composition
-        id="Open-Template-List"
-        component={TemplatesLauncher}
-        durationInFrames={1}
-        fps={30}
-        width={1080}
-        height={600}
-      />
       {/* OtioTimeline - Portrait 9:16 (Default for TikTok/Shorts/Reels) */}
       <Composition
         id="Preview-Portrait"
@@ -169,6 +161,32 @@ export const RemotionRoot: React.FC = () => {
       />
 
 
+      {/* Gallery Previews (Direct Render) */}
+      <Composition
+        id="Lower-Third-Gallery"
+        component={HtmlGalleryViewer as any}
+        durationInFrames={1}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          htmlFile: 'templates.html',
+          title: 'Lower Third Gallery'
+        }}
+      />
+
+      <Composition
+        id="Fullscreen-Title-Gallery"
+        component={HtmlGalleryViewer as any}
+        durationInFrames={1}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          htmlFile: 'docs/fullscreen-title-gallery.html',
+          title: 'Fullscreen Title Gallery'
+        }}
+      />
     </>
   );
 };

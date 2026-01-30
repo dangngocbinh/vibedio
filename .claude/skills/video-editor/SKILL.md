@@ -477,6 +477,11 @@ Thêm clip FullscreenTitle vào track "Title Overlays":
 }
 ```
 
+### Available Templates (NEW)
+
+Now supports named templates like `cinematic-intro`, `tech-hub`, `neon-night`, `breaking-news-full` etc. to instantly apply professional designs.
+See full list in [docs/fullscreen-title-guide.md](docs/fullscreen-title-guide.md).
+
 ### Background Types
 
 | Type | Description | Example Values |

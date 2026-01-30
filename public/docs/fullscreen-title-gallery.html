@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullscreen Title Templates Gallery</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Montserrat:wght@700&family=Press+Start+2P&family=Caveat:wght@700&family=Playfair+Display:ital,wght@1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --accent: #3b82f6;
+            --primary: #3498db;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        header h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .category-section {
+            margin-bottom: 80px;
+        }
+
+        .category-title {
+            font-size: 2rem;
+            color: #60a5fa;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+            gap: 30px;
+        }
+
+        .template-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .template-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- PREVIEW CANVAS --- */
+        .preview-area {
+            height: 280px;
+            /* Taller for fullscreen feel */
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            /* Default gradient background */
+            background: linear-gradient(45deg, #2c3e50, #000);
+        }
+
+        .info-area {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1e293b;
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .info-area h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #f1f5f9;
+        }
+
+        .template-id {
+            background: #334155;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .info-area p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* --- TEMPLATE STYLES --- */
+
+        .cinematic-intro {
+            text-align: center;
+            color: #fff;
+        }
+
+        .cinematic-intro h1 {
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .cinematic-intro .pres {
+            letter-spacing: 5px;
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .cinematic-intro .line {
+            width: 50px;
+            height: 1px;
+            background: #fff;
+            margin: 15px auto;
+        }
+
+        .tech-hub {
+            font-family: monospace;
+            color: #00ff00;
+            text-align: left;
+            width: 80%;
+        }
+
+        .tech-hub-box {
+            border-left: 3px solid #00ff00;
+            padding-left: 15px;
+        }
+
+        .tech-hub h1 {
+            font-size: 24px;
+            margin: 0;
+            text-shadow: 1px 1px 0 #003300;
+        }
+
+        .tech-hub p {
+            font-size: 12px;
+            color: #00cc00;
+            margin-top: 5px;
+        }
+
+        .minimal-chapter {
+            text-align: center;
+            color: #000;
+            background: #fff;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .minimal-chapter h1 {
+            font-size: 40px;
+            margin: 0;
+            font-weight: 900;
+            letter-spacing: -2px;
+        }
+
+        .minimal-chapter p {
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 10px;
+            color: #555;
+        }
+
+        .bold-statement {
+            text-align: center;
+            color: #fff;
+        }
+
+        .bold-badge {
+            background: #fff;
+            color: #000;
+            padding: 5px 15px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .bold-statement h1 {
+            font-size: 40px;
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 0.9;
+            margin: 0;
+        }
+
+        .bold-statement p {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffeb3b;
+            margin-top: 10px;
+        }
+
+        .neon-night {
+            text-align: center;
+        }
+
+        .neon-night h1 {
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 5px #f0f, 0 0 10px #f0f, 0 0 20px #f0f;
+            border: 2px solid #f0f;
+            padding: 10px 40px;
+            box-shadow: 0 0 10px #f0f, inset 0 0 10px #f0f;
+            margin: 0;
+        }
+
+        .neon-night p {
+            font-size: 14px;
+            color: #0ff;
+            text-shadow: 0 0 5px #0ff;
+            margin-top: 20px;
+            letter-spacing: 3px;
+        }
+
+        .gradient-dream {
+            text-align: center;
+        }
+
+        .gradient-dream h1 {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(to right, #ff9a9e, #fecfef, #99f2c8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .gradient-dream p {
+            color: #fff;
+            font-size: 16px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .retro-pop {
+            transform: rotate(-5deg);
+            text-align: center;
+        }
+
+        .retro-pop-main {
+            background: #ff0;
+            border: 4px solid #000;
+            padding: 10px 30px;
+            box-shadow: 10px 10px 0 #000;
+        }
+
+        .retro-pop h1 {
+            font-size: 28px;
+            color: #000;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .retro-pop-sub {
+            background: #f0f;
+            border: 3px solid #000;
+            padding: 5px 15px;
+            display: inline-block;
+            margin-top: 10px;
+            transform: rotate(8deg) translateX(15px);
+        }
+
+        .retro-pop p {
+            font-size: 14px;
+            color: #fff;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .breaking-news-full {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .breaking-bar {
+            height: 100px;
+            background: #c0392b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .breaking-news-full h1 {
+            font-size: 32px;
+            color: #fff;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .breaking-sub {
+            background: #fff;
+            padding: 10px 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .breaking-sub p {
+            font-size: 16px;
+            color: #c0392b;
+            font-weight: bold;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .quote-hero {
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .quote-mark {
+            font-size: 80px;
+            color: #3498db;
+            line-height: 0.5;
+            font-family: serif;
+        }
+
+        .quote-hero h1 {
+            font-size: 24px;
+            font-style: italic;
+            font-family: serif;
+            color: #fff;
+            margin: 20px 0;
+        }
+
+        .quote-hero p {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .split-screen {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .split-left {
+            flex: 1;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 20px;
+        }
+
+        .split-right {
+            flex: 1;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            padding-left: 20px;
+        }
+
+        .split-left h1 {
+            color: #000;
+            font-size: 28px;
+            margin: 0;
+            text-align: right;
+        }
+
+        .split-right p {
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Fullscreen Title Gallery</h1>
+        <p>10 Premium Fullscreen Templates for Intros, Chapters & Outros</p>
+    </header>
+
+    <div id="gallery-container">
+        <!-- Categories will be generated here -->
+    </div>
+
+    <script>
+        const groups = [
+            {
+                name: "Cinematic & Minimal",
+                templates: [
+                    { id: "cinematic-intro", name: "Cinematic Intro", desc: "Classic film intro with letter spacing.", bg: "#000", html: "<div class='cinematic-intro'><div class='pres'>PRESENTS</div><h1>THE UNIVERSE</h1><div class='line'></div><p>A REMOTION FILM</p></div>" },
+                    { id: "minimal-chapter", name: "Minimal Chapter", desc: "Clean white background with bold typography.", bg: "#fff", html: "<div class='minimal-chapter'><h1>CHAPTER ONE</h1><p>THE BEGINNING</p></div>" },
+                    { id: "quote-hero", name: "Quote Hero", desc: "Elegant layout for important quotes.", bg: "#1a1a1a", html: "<div class='quote-hero'><div class='quote-mark'>\"</div><h1>Design is intelligence made visible.</h1><p>— Alina Wheeler</p></div>" }
+                ]
+            },
+            {
+                name: "Modern & Bold",
+                templates: [
+                    { id: "bold-statement", name: "Bold Statement", desc: "High impact uppercase text.", bg: "#ff5722", html: "<div class='bold-statement'><div class='bold-badge'>WARNING</div><h1>DON'T MISS OUT</h1><p>LAST CHANCE TO JOIN</p></div>" },
+                    { id: "breaking-news-full", name: "Breaking News", desc: "Full screen news alert style.", bg: "#333", html: "<div class='breaking-news-full'><div class='breaking-bar'><h1>THÔNG BÁO KHẨN</h1></div><div class='breaking-sub'><p>BÃO SỐ 3 ĐÃ ĐỔ BỘ</p></div></div>" },
+                    { id: "split-screen", name: "Split Screen", desc: "Two-tone split layout.", bg: "transparent", html: "<div class='split-screen'><div class='split-left'><h1>BEFORE</h1></div><div class='split-right'><p>AFTER</p></div></div>" }
+                ]
+            },
+            {
+                name: "Creative & Tech",
+                templates: [
+                    { id: "tech-hub", name: "Tech Hub", desc: "Hacker/Coding terminal interface.", bg: "#000", html: "<div class='tech-hub'><div class='tech-hub-box'><div>&gt; BOOTING_CORE</div><h1>ACCESS_GRANTED</h1><p>// WELCOME_ADMIN</p></div></div>" },
+                    { id: "neon-night", name: "Neon Night", desc: "Cyberpunk neon glow aesthetics.", bg: "#111", html: "<div class='neon-night'><h1>NIGHT CITY</h1><p>2077 VIBES</p></div>" },
+                    { id: "gradient-dream", name: "Gradient Dream", desc: "Soft pastel gradients for aesthetic vlogs.", bg: "#222", html: "<div class='gradient-dream'><h1>Dreamscape</h1><p>Relaxing Music</p></div>" },
+                    { id: "retro-pop", name: "Retro Pop", desc: "90s geometric pop art.", bg: "#673ab7", html: "<div class='retro-pop'><div class='retro-pop-main'><h1>POW!!</h1></div><div class='retro-pop-sub'><p>AMAZING</p></div></div>" }
+                ]
+            }
+        ];
+
+        const container = document.getElementById('gallery-container');
+
+        groups.forEach(group => {
+            const section = document.createElement('div');
+            section.className = 'category-section';
+
+            const title = document.createElement('h2');
+            title.className = 'category-title';
+            title.innerText = group.name;
+            section.appendChild(title);
+
+            const gallery = document.createElement('div');
+            gallery.className = 'gallery';
+
+            group.templates.forEach(t => {
+                const card = document.createElement('div');
+                card.className = 'template-card';
+
+                const preview = document.createElement('div');
+                preview.className = 'preview-area';
+                if (t.bg) preview.style.background = t.bg;
+                preview.innerHTML = t.html;
+
+                const info = document.createElement('div');
+                info.className = 'info-area';
+                info.innerHTML = `
+                    <div class="info-header">
+                        <h3>${t.name}</h3>
+                        <span class="template-id">${t.id}</span>
+                    </div>
+                    <p>${t.desc}</p>
+                `;
+
+                card.appendChild(preview);
+                card.appendChild(info);
+                gallery.appendChild(card);
+            });
+
+            section.appendChild(gallery);
+            container.appendChild(section);
+        });
+    </script>
+</body>
+
+</html>

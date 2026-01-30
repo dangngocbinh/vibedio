@@ -19,10 +19,17 @@ export type AnimationType = 'zoom-fade' | 'slide-up-bounce' | 'reveal-left' | 'b
 export type VerticalAlign = 'top' | 'center' | 'bottom';
 export type HorizontalAlign = 'left' | 'center' | 'right';
 
+export type FullscreenTemplate =
+    | 'default' // Uses manual props
+    | 'cinematic-intro' | 'tech-hub' | 'minimal-chapter' | 'bold-statement'
+    | 'neon-night' | 'gradient-dream' | 'retro-pop' | 'breaking-news-full'
+    | 'quote-hero' | 'split-screen';
+
 export interface FullscreenTitleProps {
     // Nội dung
     title: string;
     subtitle?: string;
+    template?: FullscreenTemplate; // New prop
 
     // Hình nền
     backgroundType?: BackgroundType;
@@ -321,6 +328,7 @@ const Vignette: React.FC = () => (
 export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
     title,
     subtitle,
+    template = 'default', // Default to manual props
     backgroundType = 'gradient',
     backgroundValue = 'dark',
     backgroundOverlay,
@@ -338,7 +346,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
     exitDuration: exitDurationProp,
     showParticles = false,
     showVignette = true,
-    animateBackground = true, // Mặc định bật chuyển động nền
+    animateBackground = true,
 }) => {
     const frame = useCurrentFrame();
     const { fps, durationInFrames, width } = useVideoConfig();
@@ -410,10 +418,173 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
         padding: scaledPadding,
     };
 
-    // 8. Lấy styles cho Text
+    // 8. Lấy styles cho Text (Default mode)
     const titleStyles = getTextStyles(textStyle, textColor, accentColor, scaledTitleSize);
 
-    // Phần return tương ứng với <template> trong Vue
+    // 9. Template Renderer (Override default layout if template is chosen)
+    const renderContent = () => {
+        if (template === 'default') {
+            return (
+                <div
+                    style={{
+                        opacity,
+                        transform,
+                        filter: filter || undefined,
+                        maxWidth: '94%',
+                        ...alignmentStyles as any, // Layout styles
+                    }}
+                >
+                    <h1 style={{ ...titleStyles, fontFamily }}>
+                        {displayTitle}
+                        {isTypewriter && displayTitle.length < title.length && (
+                            <span style={{ opacity: frame % 15 < 8 ? 1 : 0 }}>|</span>
+                        )}
+                    </h1>
+                    {subtitle && (
+                        <p
+                            style={{
+                                color: accentColor,
+                                fontSize: scaledSubtitleSize,
+                                fontWeight: 600,
+                                marginTop: scaledSubtitleSize * 0.5,
+                                marginBottom: 0,
+                                fontFamily,
+                                letterSpacing: '0.05em',
+                                textTransform: 'uppercase',
+                                opacity: isTypewriter && displaySubtitle === '' ? 0 : 0.9,
+                            }}
+                        >
+                            {displaySubtitle || subtitle}
+                        </p>
+                    )}
+                </div>
+            );
+        }
+
+        // --- NAMED TEMPLATES ---
+
+        switch (template) {
+            case 'cinematic-intro':
+                return (
+                    <div style={{ opacity, transform: `scale(${interpolate(frame, [0, durationInFrames], [1, 1.1])})`, textAlign: 'center', color: '#fff' }}>
+                        <div style={{ letterSpacing: '10px', fontSize: scaledSubtitleSize * 0.8, color: '#aaa', marginBottom: 20 }}>PRESENTS</div>
+                        <h1 style={{ fontSize: scaledTitleSize * 1.2, fontWeight: 300, letterSpacing: '20px', textTransform: 'uppercase', margin: 0, textShadow: '0 0 20px rgba(255,255,255,0.5)' }}>{displayTitle}</h1>
+                        <div style={{ width: 100, height: 2, background: '#fff', margin: '30px auto' }} />
+                        <p style={{ fontSize: scaledSubtitleSize, color: '#ccc', letterSpacing: '5px' }}>{subtitle}</p>
+                    </div>
+                );
+
+            case 'tech-hub':
+                return (
+                    <div style={{ opacity, fontFamily: 'monospace', color: '#00ff00', textAlign: 'left', paddingLeft: 100 }}>
+                        <div style={{ borderLeft: '5px solid #00ff00', paddingLeft: 30 }}>
+                            <div style={{ fontSize: 20, marginBottom: 10 }}>&gt; SYSTEM_BOOT_SEQUENCE</div>
+                            <h1 style={{ fontSize: scaledTitleSize, margin: 0, textShadow: '2px 2px 0 #003300' }}>{displayTitle}_</h1>
+                            <p style={{ fontSize: scaledSubtitleSize, color: '#00cc00', marginTop: 10 }}>// {subtitle}</p>
+                        </div>
+                    </div>
+                );
+
+            case 'minimal-chapter':
+                return (
+                    <div style={{ opacity, transform: `translateY(${interpolate(frame, [0, 30], [50, 0], { extrapolateRight: 'clamp' })}px)`, textAlign: 'center', color: '#000' }}>
+                        <h1 style={{ fontSize: scaledTitleSize * 2, margin: 0, fontWeight: 900, letterSpacing: '-5px' }}>{title.split(' ')[0]}</h1>
+                        <h1 style={{ fontSize: scaledTitleSize, margin: 0, fontWeight: 300 }}>{title.split(' ').slice(1).join(' ')}</h1>
+                        {subtitle && <p style={{ fontSize: scaledSubtitleSize, fontStyle: 'italic', marginTop: 20, color: '#555' }}>— {subtitle} —</p>}
+                    </div>
+                );
+
+            case 'bold-statement':
+                return (
+                    <div style={{ opacity, textAlign: 'center', color: '#fff', transform: `scale(${interpolate(frame, [0, durationInFrames], [0.95, 1])})` }}>
+                        <div style={{ background: '#fff', color: '#000', padding: '10px 30px', display: 'inline-block', fontWeight: 'bold', fontSize: 20, marginBottom: 20 }}>ATTENTION</div>
+                        <h1 style={{ fontSize: scaledTitleSize * 1.3, fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.9, margin: 0 }}>{displayTitle}</h1>
+                        <p style={{ fontSize: scaledSubtitleSize, fontWeight: 700, color: '#ffeb3b', marginTop: 20 }}>{subtitle}</p>
+                    </div>
+                );
+
+            case 'neon-night':
+                return (
+                    <div style={{ opacity, textAlign: 'center', color: '#fff' }}>
+                        <h1 style={{
+                            fontSize: scaledTitleSize,
+                            fontWeight: 900,
+                            color: '#fff',
+                            textShadow: '0 0 10px #f0f, 0 0 20px #f0f, 0 0 40px #f0f',
+                            border: '4px solid #f0f',
+                            padding: '20px 60px',
+                            boxShadow: '0 0 20px #f0f, inset 0 0 20px #f0f',
+                            margin: 0
+                        }}>{displayTitle}</h1>
+                        <p style={{ fontSize: scaledSubtitleSize, color: '#0ff', textShadow: '0 0 10px #0ff', marginTop: 30, letterSpacing: 5 }}>{subtitle}</p>
+                    </div>
+                );
+
+            case 'gradient-dream':
+                return (
+                    <div style={{ opacity, textAlign: 'center' }}>
+                        <h1 style={{
+                            fontSize: scaledTitleSize * 1.2,
+                            fontWeight: 900,
+                            background: 'linear-gradient(to right, #ff9a9e, #fecfef, #99f2c8)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            margin: 0,
+                            paddingBottom: 20 // avoid clip
+                        }}>{displayTitle}</h1>
+                        <p style={{ color: '#fff', fontSize: scaledSubtitleSize, opacity: 0.8 }}>{subtitle}</p>
+                    </div>
+                );
+
+            case 'retro-pop':
+                return (
+                    <div style={{ opacity, transform: `rotate(-5deg)`, textAlign: 'center' }}>
+                        <div style={{ background: '#ff0', border: '8px solid #000', padding: '20px 50px', boxShadow: '20px 20px 0 #000' }}>
+                            <h1 style={{ fontSize: scaledTitleSize, color: '#000', fontWeight: 900, margin: 0 }}>{displayTitle}</h1>
+                        </div>
+                        <div style={{ background: '#f0f', border: '5px solid #000', padding: '10px 30px', display: 'inline-block', marginTop: 20, transform: 'rotate(8deg) translateX(30px)' }}>
+                            <p style={{ fontSize: scaledSubtitleSize, color: '#fff', fontWeight: 'bold', margin: 0 }}>{subtitle}</p>
+                        </div>
+                    </div>
+                );
+
+            case 'breaking-news-full':
+                return (
+                    <div style={{ opacity, width: '100%' }}>
+                        <div style={{ height: 200, background: '#c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                            <h1 style={{ fontSize: scaledTitleSize, color: '#fff', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>{displayTitle}</h1>
+                        </div>
+                        <div style={{ background: '#fff', padding: '20px 0', textAlign: 'center', width: '100%' }}>
+                            <p style={{ fontSize: scaledSubtitleSize, color: '#c0392b', fontWeight: 'bold', margin: 0, letterSpacing: 2 }}>{subtitle}</p>
+                        </div>
+                    </div>
+                );
+
+            case 'quote-hero':
+                return (
+                    <div style={{ opacity, textAlign: 'center', maxWidth: '80%' }}>
+                        <div style={{ fontSize: 150, color: accentColor, lineHeight: 0.5, fontFamily: 'serif' }}>"</div>
+                        <h1 style={{ fontSize: scaledTitleSize * 0.8, fontStyle: 'italic', fontFamily: 'serif', color: '#fff', margin: '30px 0' }}>{displayTitle}</h1>
+                        <p style={{ fontSize: scaledSubtitleSize, color: accentColor, fontWeight: 'bold' }}>— {subtitle}</p>
+                    </div>
+                );
+
+            case 'split-screen':
+                return (
+                    <div style={{ opacity, display: 'flex', width: '100%', height: '100%' }}>
+                        <div style={{ flex: 1, background: textColor, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 40 }}>
+                            <h1 style={{ color: backgroundValue === 'dark' ? '#000' : backgroundValue, fontSize: scaledTitleSize, margin: 0, textAlign: 'right' }}>{displayTitle}</h1>
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', paddingLeft: 40 }}>
+                            <p style={{ color: textColor, fontSize: scaledSubtitleSize, fontWeight: 'bold', width: '60%' }}>{subtitle}</p>
+                        </div>
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
     return (
         <AbsoluteFill style={{ zIndex: 1000 }}>
             {/* Lớp Hình nền (Background Layer) */}
@@ -444,48 +615,17 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
             {showParticles && <Particles color={accentColor} />}
 
             {/* Lớp nội dung chính (Content Layer) */}
-            <AbsoluteFill style={alignmentStyles}>
-                <div
-                    style={{
-                        opacity,
-                        transform,
-                        filter: filter || undefined,
-                        maxWidth: '94%',
-                    }}
-                >
-                    {/* Tiêu đề chính */}
-                    <h1
-                        style={{
-                            ...titleStyles,
-                            fontFamily,
-                        }}
-                    >
-                        {displayTitle}
-                        {/* Con trỏ nhấp nháy cho typewriter */}
-                        {isTypewriter && displayTitle.length < title.length && (
-                            <span style={{ opacity: frame % 15 < 8 ? 1 : 0 }}>|</span>
-                        )}
-                    </h1>
-
-                    {/* Phụ đề (nếu có) */}
-                    {subtitle && (
-                        <p
-                            style={{
-                                color: accentColor,
-                                fontSize: scaledSubtitleSize,
-                                fontWeight: 600,
-                                marginTop: scaledSubtitleSize * 0.5,
-                                marginBottom: 0,
-                                fontFamily,
-                                letterSpacing: '0.05em',
-                                textTransform: 'uppercase',
-                                opacity: isTypewriter && displaySubtitle === '' ? 0 : 0.9,
-                            }}
-                        >
-                            {displaySubtitle || subtitle}
-                        </p>
-                    )}
-                </div>
+            {/* Lớp nội dung chính (Content Layer) */}
+            <AbsoluteFill style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: verticalAlign === 'top' ? 'flex-start' : verticalAlign === 'bottom' ? 'flex-end' : 'center',
+                alignItems: horizontalAlign === 'left' ? 'flex-start' : horizontalAlign === 'right' ? 'flex-end' : 'center',
+                padding: scaledPadding,
+                width: '100%',
+                height: '100%'
+            }}>
+                {renderContent()}
             </AbsoluteFill>
         </AbsoluteFill>
     );

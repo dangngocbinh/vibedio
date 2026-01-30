@@ -4,6 +4,8 @@
 
 `FullscreenTitle` là component Remotion dùng để tạo các slide tiêu đề chiếm toàn bộ khung hình. Đây là công cụ mạnh mẽ để làm Intro, Outro, Chapter Dividers hoặc các Quote nổi bật với hiệu ứng hình ảnh cao cấp.
 
+💡 **Xem trước hình ảnh tất cả các mẫu tại đây:** [Fullscreen Title Gallery Preview (HTML)](fullscreen-title-gallery.html)
+
 ## Cách sử dụng trong Prompt
 
 Để sử dụng Fullscreen Title, bạn có thể yêu cầu AI thêm vào `project.otio` bằng các lệnh như:
@@ -58,7 +60,7 @@ Component được khai báo trong track "Title Overlays" (hoặc track tương 
             "backgroundValue": "sunset",
             "textStyle": "bold-shadow",
             "animation": "zoom-fade",
-            "showParticles": true,
+            "template": "cinematic-intro",
             "titleSize": 120
         }
     },
@@ -77,7 +79,8 @@ Component được khai báo trong track "Title Overlays" (hoặc track tương 
 |------|--------------|----------|-------|
 | `title` | string | (Bắt buộc) | Nội dung tiêu đề chính |
 | `subtitle` | string | - | Nội dung phụ đề bên dưới |
-| `backgroundType` | `solid`, `gradient`, `image`, `pattern`, `video-blur` | `gradient` | Loại hình nền |
+| `template` | FullscreenTemplate | `default` | Chọn mẫu thiết kế sẵn (xem bên dưới) |
+| `backgroundType` | `solid`, `gradient`, `image`, `pattern`, `video-blur` | `gradient` | Loại hình nền (dùng cho mode default) |
 | `backgroundValue` | string | `dark` | Giá trị màu/preset/đường dẫn ảnh |
 | `backgroundOverlay` | string | - | Overlay màu (vd: 'rgba(0,0,0,0.5)') |
 | `textStyle` | `bold-shadow`, `glow`, `outline`, `3d`, `minimal`, `gradient-text` | `bold-shadow` | Kiểu hiển thị chữ |
@@ -96,7 +99,23 @@ Component được khai báo trong track "Title Overlays" (hoặc track tương 
 | `enterDuration` | number | fps * 0.6 | Số frames cho animation vào |
 | `exitDuration` | number | fps * 0.4 | Số frames cho animation ra |
 
-## Danh sách Preset Hình nền
+## Danh sách Templates (Mới)
+Sử dụng `template` prop để kích hoạt các thiết kế chuyên nghiệp này. Khi dùng template, các props về text style có thể bị ghi đè để đảm bảo đúng thiết kế.
+
+| Template ID | Mô tả | Phong cách |
+|-------------|-------|------------|
+| `cinematic-intro` | Chữ mảnh, spacing rộng, có dòng kẻ | Phim điện ảnh, Intro sang trọng |
+| `tech-hub` | Font monospace, màu xanh lá matrix | Công nghệ, Coding tutorial |
+| `minimal-chapter` | Nền trắng, chữ đen đậm, tối giản | Vlog, Chapter divider |
+| `bold-statement` | Chữ in hoa cực lớn, có badge cảnh báo | Thông báo quan trọng, Sale |
+| `neon-night` | Hiệu ứng đèn neon rực rỡ, viền sáng | Gaming, Nightlife, Cyberpunk |
+| `gradient-dream` | Text gradient pastel nhẹ nhàng | Vlog chill, Beauty, Fashion |
+| `retro-pop` | Phong cách Pop Art 90s, màu tương phản | Vui nhộn, Năng động |
+| `breaking-news-full` | Giao diện bản tin thời sự toàn màn hình | Tin tức, Sự kiện nóng |
+| `quote-hero` | Dấu ngoặc kép lớn, font serif nghiêng | Trích dẫn câu nói hay |
+| `split-screen` | Màn hình chia đôi 2 màu tương phản | So sánh Before/After, Đối lập |
+
+## Danh sách Preset Hình nền (Cho Default Mode)
 
 ### 1. Gradients (`backgroundType: "gradient"`)
 - `sunset`: Cam → Hồng → Tím (Hoàng hôn)
