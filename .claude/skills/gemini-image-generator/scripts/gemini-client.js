@@ -11,7 +11,7 @@ class GeminiClient {
     this.requestCount = 0;
     // Use gemini-2.0-flash-exp-image-generation for native image generation (Nano Banana)
     // This is the latest model with best image generation quality
-    
+
     this.model = 'gemini-3-pro-image-preview';
   }
 
@@ -26,10 +26,14 @@ class GeminiClient {
     const {
       aspectRatio = '16:9',
       outputDir = null,
-      filename = null
+      filename = null,
+      referenceImages = []
     } = options;
 
     console.log(`[GeminiClient] 🍌 Nano Banana generating: "${prompt.substring(0, 50)}..."`);
+    if (referenceImages && referenceImages.length > 0) {
+      console.log(`[GeminiClient] 📸 Using ${referenceImages.length} reference images`);
+    }
 
     try {
       const response = await fetch(
@@ -41,9 +45,10 @@ class GeminiClient {
           },
           body: JSON.stringify({
             contents: [{
-              parts: [{
-                text: `Generate image: ${prompt}. Aspect ratio: ${aspectRatio}. High quality, professional.`
-              }]
+              parts: [
+                { text: `Generate image: ${prompt}. Aspect ratio: ${aspectRatio}. High quality, professional.` },
+                ...(await this._prepareReferenceImages(referenceImages))
+              ]
             }],
             generationConfig: {
               responseModalities: ['IMAGE', 'TEXT'],
@@ -236,6 +241,56 @@ class GeminiClient {
 
     const queryLower = query.toLowerCase();
     return aiPreferredKeywords.some(keyword => queryLower.includes(keyword));
+  }
+  /**
+   * Prepare reference images for API request
+   * @param {Array<string>} references - Array of paths or URLs
+   * @returns {Promise<Array>} Array of parts for API
+   */
+  async _prepareReferenceImages(references) {
+    if (!references || !Array.isArray(references) || references.length === 0) {
+      return [];
+    }
+
+    const parts = [];
+
+    for (const ref of references) {
+      try {
+        let base64Data = null;
+        let mimeType = null;
+
+        if (ref.startsWith('http')) {
+          // URLs are currently not supported for direct transmission in this implementation
+          // You would need to fetch the URL and convert to base64
+          // For now, we skip URLs to avoid complexity, or implement basic fetch
+          console.warn(`[GeminiClient] Remote URL references not fully supported yet, skipping: ${ref}`);
+          continue;
+        } else {
+          // Local file
+          const exists = await fs.pathExists(ref);
+          if (exists) {
+            const buffer = await fs.readFile(ref);
+            base64Data = buffer.toString('base64');
+            const ext = path.extname(ref).toLowerCase();
+            mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
+
+            parts.push({
+              inlineData: {
+                mimeType,
+                data: base64Data
+              }
+            });
+            console.log(`[GeminiClient] Added reference image: ${path.basename(ref)}`);
+          } else {
+            console.warn(`[GeminiClient] Reference image not found: ${ref}`);
+          }
+        }
+      } catch (error) {
+        console.warn(`[GeminiClient] Error processing reference image ${ref}:`, error.message);
+      }
+    }
+
+    return parts;
   }
 }
 

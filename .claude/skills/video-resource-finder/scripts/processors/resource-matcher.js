@@ -13,6 +13,8 @@ class ResourceMatcher {
     this.preferredSource = options.preferredSource || 'pexels';
     this.enableAIGeneration = options.enableAIGeneration !== false;
     this.projectDir = options.projectDir || null;
+    this.existingResources = options.existingResources || null;
+    this.batchSize = options.batchSize || 0;
     // Initialize Pixabay Scraper from options
     this.pixabayScraper = options.pixabayScraper || null;
   }
@@ -35,11 +37,21 @@ class ResourceMatcher {
       errors: []
     };
 
+    // Helper to find existing resource
+    const findExisting = (sceneId, category) => {
+      if (!this.existingResources || !this.existingResources[category]) return null;
+      return this.existingResources[category].find(r => r.sceneId === sceneId);
+    };
+
     // Process pinned resources FIRST (user-provided local files or URLs)
     if (queries.pinned && queries.pinned.length > 0) {
       console.log(`\n--- Processing ${queries.pinned.length} Pinned Resources ---`);
       for (const pinnedQuery of queries.pinned) {
         try {
+          // Pinned resources are usually local/specific, so we re-process them to ensure file existence
+          // But if we want to skip processing if already in resources.json?
+          // Pinned resources might have changed on disk, so safer to re-process or check existence.
+          // Let's re-process pinned for now as they are fast (local checks).
           const pinnedResult = await this.processPinnedResource(pinnedQuery);
           results.pinnedResources.push(pinnedResult);
         } catch (error) {
@@ -57,6 +69,13 @@ class ResourceMatcher {
     if (queries.videos.length > 0) {
       console.log(`\n--- Fetching ${queries.videos.length} Video Queries ---`);
       for (const videoQuery of queries.videos) {
+        const existing = findExisting(videoQuery.sceneId, 'videos');
+        if (existing) {
+          console.log(`[Resume] Using existing video results for "${videoQuery.sceneId}"`);
+          results.videos.push(existing);
+          continue;
+        }
+
         const videoResults = await this.fetchVideo(videoQuery);
         results.videos.push(videoResults);
       }
@@ -66,6 +85,13 @@ class ResourceMatcher {
     if (queries.images.length > 0) {
       console.log(`\n--- Fetching ${queries.images.length} Image Queries ---`);
       for (const imageQuery of queries.images) {
+        const existing = findExisting(imageQuery.sceneId, 'images');
+        if (existing) {
+          console.log(`[Resume] Using existing image results for "${imageQuery.sceneId}"`);
+          results.images.push(existing);
+          continue;
+        }
+
         const imageResults = await this.fetchImage(imageQuery);
         results.images.push(imageResults);
       }
@@ -74,9 +100,35 @@ class ResourceMatcher {
     // Fetch AI-generated images
     if (queries.aiImages && queries.aiImages.length > 0) {
       console.log(`\n--- Generating ${queries.aiImages.length} AI Images ---`);
+      let aiRequests = 0;
+
       for (const aiQuery of queries.aiImages) {
+        // Check if we have ALREADY generated this or if it is PINNED
+        const existingGenerated = findExisting(aiQuery.sceneId, 'generatedImages');
+        const existingPinned = findExisting(aiQuery.sceneId, 'pinnedResources');
+
+        if (existingGenerated) {
+          console.log(`[Resume] Using existing AI image for "${aiQuery.sceneId}"`);
+          results.generatedImages.push(existingGenerated);
+          continue;
+        }
+
+        if (existingPinned) {
+          console.log(`[Resume] Scene "${aiQuery.sceneId}" has a Pinned Resource. Skipping AI generation.`);
+          // Add to results.pinnedResources so it is preserved in output resources.json
+          results.pinnedResources.push(existingPinned);
+          continue;
+        }
+
+        // Check Batch Limit
+        if (this.batchSize > 0 && aiRequests >= this.batchSize) {
+          console.log(`[Batch] Limit reached (${this.batchSize}). Skipping generation for "${aiQuery.sceneId}"`);
+          continue;
+        }
+
         const aiResults = await this.generateAIImage(aiQuery);
         results.generatedImages.push(aiResults);
+        aiRequests++;
       }
     }
 
@@ -84,6 +136,12 @@ class ResourceMatcher {
     if (queries.music.length > 0) {
       console.log(`\n--- Fetching ${queries.music.length} Music Queries ---`);
       for (const musicQuery of queries.music) {
+        // Music uses 'mood' or 'query' not sceneId usually, but let's check structure
+        // SKILL.md says resources.music has array of objects.
+        // We can just check if queries.music is already satisfied?
+        // Music query is usually singular (background music).
+        // Let's re-fetch music to be safe unless we implement smart matching by query text.
+        // Music requests are low cost (3 queries usually).
         const musicResults = await this.fetchMusic(musicQuery);
         results.music.push(musicResults);
       }
@@ -93,6 +151,7 @@ class ResourceMatcher {
     if (queries.soundEffects.length > 0) {
       console.log(`\n--- Fetching ${queries.soundEffects.length} Sound Effect Queries ---`);
       for (const sfxQuery of queries.soundEffects) {
+        // SFX relies on type/query.
         const sfxResults = await this.fetchSoundEffect(sfxQuery);
         results.soundEffects.push(sfxResults);
       }
@@ -347,7 +406,7 @@ class ResourceMatcher {
    * @returns {Promise<Object>} Generated image result
    */
   async generateAIImage(queryObj) {
-    const { sceneId, sceneText, query, style, type = 'ai-generated' } = queryObj;
+    const { sceneId, sceneText, query, style, referenceImages = [], type = 'ai-generated' } = queryObj;
 
     if (!this.geminiClient) {
       console.warn(`[ResourceMatcher] Gemini client not available for AI generation`);
@@ -371,7 +430,8 @@ class ResourceMatcher {
       const result = await this.geminiClient.generateImage(enhancedPrompt, {
         aspectRatio: '16:9',
         outputDir: this.projectDir,
-        filename: `${sceneId}_ai.png`
+        filename: `${sceneId}_ai.png`,
+        referenceImages: this._resolveReferenceImages(referenceImages)
       });
 
       if (!result.success) {
@@ -717,6 +777,31 @@ class ResourceMatcher {
       if (lowerUrl.includes('audio') || lowerUrl.includes('.mp3')) return 'music';
       return 'unknown';
     }
+  }
+
+  /**
+   * Resolve reference images to absolute paths
+   * @param {Array<string>} references - Array of paths or URLs
+   * @returns {Array<string>} Absolute paths or URLs
+   */
+  _resolveReferenceImages(references) {
+    if (!references || !Array.isArray(references)) return [];
+
+    return references.map(ref => {
+      // If it's a URL, return as is
+      if (ref.startsWith('http')) return ref;
+
+      // If absolute path, return as is (but verify existence later)
+      if (path.isAbsolute(ref)) return ref;
+
+      // If starts with ~, expand home dir
+      if (ref.startsWith('~')) {
+        return path.resolve(os.homedir(), ref.slice(2));
+      }
+
+      // Otherwise, resolve relative to projectDir
+      return path.resolve(this.projectDir || '.', ref);
+    });
   }
 }
 

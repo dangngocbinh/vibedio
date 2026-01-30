@@ -79,8 +79,8 @@ export const CAPTION_THEMES: Record<string, CaptionTheme> = {
         keywords: ['attention', 'news', 'facts', 'shocking', 'vietnamese', 'bold', 'drama'],
         style: {
             fontFamily: 'Montserrat, Impact, sans-serif',
-            fontSize: 72,
-            fontWeight: 900,
+            fontSize: 58,
+            fontWeight: 800,
             textTransform: 'uppercase',
             letterSpacing: 2,
             textColor: '#FFD700',

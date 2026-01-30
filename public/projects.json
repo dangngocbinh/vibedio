@@ -1,18 +1,41 @@
 [
   {
-    "id": "duong-vuot-bien-can-gio-vung-tau",
-    "name": "duong-vuot-bien-can-gio-vung-tau",
-    "path": "projects/duong-vuot-bien-can-gio-vung-tau",
+    "id": "cho-anh-trong-con-mua",
+    "name": "cho-anh-trong-con-mua",
+    "path": "projects/cho-anh-trong-con-mua",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
-    "modifiedAt": "2026-01-28T18:00:00.000Z",
-    "timestamp": 1769270400000
+    "ratio": "16:9",
+    "modifiedAt": "2026-01-29T09:23:53.332Z",
+    "timestamp": 1769678633332
   },
   {
-    "id": "5-sai-lam-hoc-tieng-anh",
-    "name": "5-sai-lam-hoc-tieng-anh",
-    "path": "projects/5-sai-lam-hoc-tieng-anh",
+    "id": "cho-anh-trong-con-mua.backup-20260129-151423",
+    "name": "cho-anh-trong-con-mua.backup-20260129-151423",
+    "path": "projects/cho-anh-trong-con-mua.backup-20260129-151423",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "ratio": "16:9",
+    "modifiedAt": "2026-01-29T08:14:23.643Z",
+    "timestamp": 1769674463643
+  },
+  {
+    "id": "test-reference",
+    "name": "test-reference",
+    "path": "projects/test-reference",
+    "hasScript": true,
+    "hasOtio": false,
+    "otioFile": null,
+    "ratio": null,
+    "modifiedAt": "2026-01-29T07:15:34.160Z",
+    "timestamp": 1769670934160
+  },
+  {
+    "id": "bai-tap-edit-1",
+    "name": "bai-tap-edit-1",
+    "path": "projects/bai-tap-edit-1",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",

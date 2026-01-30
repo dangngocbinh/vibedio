@@ -136,7 +136,7 @@ const sanitizeUrl = (url?: string, projectId?: string) => {
         if (projectId) {
             // Check if it's already properly prefixed to avoid double-prefixing if logic changes
             if (!url.startsWith(`projects/${projectId}`)) {
-                return `/projects/${projectId}/${url}`;
+                return staticFile(`projects/${projectId}/${url}`);
             }
         }
     }
@@ -436,11 +436,73 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
 
                     if (item.metadata?.remotion_component === 'TitleCard') {
                         const props = item.metadata.props || {};
+                        if (props.backgroundImage) {
+                            props.backgroundImage = sanitizeUrl(props.backgroundImage, projectId);
+                        }
                         const durationStruct = item.source_range?.duration;
                         const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 90;
                         return (
                             <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
                                 <TitleCard {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+
+                    if (item.metadata?.remotion_component === 'ImagePlaceholder') {
+                        const props = item.metadata.props || {};
+                        const message = props.message || 'Image Missing';
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <AbsoluteFill style={{
+                                    backgroundColor: '#222',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    border: '4px dashed #555'
+                                }}>
+                                    <div style={{
+                                        color: '#888',
+                                        fontSize: 32,
+                                        fontFamily: 'monospace',
+                                        padding: 40,
+                                        textAlign: 'center',
+                                        maxWidth: '80%'
+                                    }}>
+                                        ⚠️ {message}
+                                    </div>
+                                </AbsoluteFill>
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+
+                    // Text Overlay (for title cards with text content)
+                    if (item.metadata?.text_content || item.metadata?.overlayType === 'title') {
+                        const textContent = item.metadata.text_content || item.metadata.textContent || '';
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <AbsoluteFill style={{
+                                    backgroundColor: '#000000',
+                                    justifyContent: 'center',
+                                    alignItems: 'center'
+                                }}>
+                                    <div style={{
+                                        fontSize: '72px',
+                                        fontWeight: 'bold',
+                                        color: '#FFFFFF',
+                                        textAlign: 'center',
+                                        fontFamily: 'Georgia, serif',
+                                        textShadow: '0 2px 10px rgba(0,0,0,0.7)',
+                                        padding: '40px',
+                                        lineHeight: '1.4',
+                                        letterSpacing: '2px'
+                                    }}>
+                                        {textContent}
+                                    </div>
+                                </AbsoluteFill>
                             </TransitionSeries.Sequence>
                         );
                     }
@@ -543,46 +605,40 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                 // Handle TitleCard overlay component
                 if (clip.metadata?.remotion_component === 'TitleCard') {
                     const props = clip.metadata.props || {};
+                    if (props.backgroundImage) {
+                        props.backgroundImage = sanitizeUrl(props.backgroundImage, projectId);
+                    }
                     const durationStruct = clip.source_range?.duration;
                     let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 90;
 
                     if (durationFrames <= 0) {
                         console.warn(`[OtioPlayer] TitleCard "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
 
-                        // Handle BrollTitle overlay components
-                        if (clip.metadata?.remotion_component === 'BrollTitle') {
-                            const props = clip.metadata.props || {};
-                            const durationStruct = clip.source_range?.duration;
-                            let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <TitleCard {...props} />
+                        </Sequence>
+                    );
+                }
 
-                            if (durationFrames <= 0) {
-                                console.warn(`[OtioPlayer] BrollTitle "${clip.name}" has 0 duration, skipping`);
-                                return null;
-                            }
-
-                            return (
-                                <Sequence
-                                    key={clip.name || clipIndex}
-                                    from={startFrame}
-                                    durationInFrames={durationFrames}
-                                >
-                                    <TitleCard {...props} />
-                                </Sequence >
-                            );
-                        }
-
-                        return (
-                            <OtioClip
-                                key={clip.name || clipIndex}
-                                clip={clip}
-                                startFrame={startFrame}
-                                fps={fps}
-                                clipIndex={clipIndex}
-                                trackKind={trackKind}
-                                projectId={projectId}
-                            />
-                        );
-                    })}
+                return (
+                    <OtioClip
+                        key={clip.name || clipIndex}
+                        clip={clip}
+                        startFrame={startFrame}
+                        fps={fps}
+                        clipIndex={clipIndex}
+                        trackKind={trackKind}
+                        projectId={projectId}
+                    />
+                );
+            })}
         </AbsoluteFill >
     );
 }

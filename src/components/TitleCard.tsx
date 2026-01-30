@@ -1,11 +1,12 @@
 import React from 'react';
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, spring } from 'remotion';
+import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, spring, Img } from 'remotion';
 
 export interface TitleCardProps {
     text: string;
     style?: 'minimal' | 'bold' | 'cinematic';
     position?: 'overlay' | 'top' | 'center' | 'bottom';
     sceneType?: string;
+    backgroundImage?: string;
 }
 
 const STYLE_CONFIGS = {
@@ -51,6 +52,7 @@ export const TitleCard: React.FC<TitleCardProps> = ({
     style = 'minimal',
     position = 'overlay',
     sceneType,
+    backgroundImage,
 }) => {
     const frame = useCurrentFrame();
     const { fps, durationInFrames } = useVideoConfig();
@@ -58,7 +60,6 @@ export const TitleCard: React.FC<TitleCardProps> = ({
     const config = STYLE_CONFIGS[style] || STYLE_CONFIGS.minimal;
     const positionStyle = getPositionStyle(position);
 
-    // Fade in/out
     const fadeInEnd = Math.min(15, durationInFrames / 4);
     const fadeOutStart = Math.max(durationInFrames - 15, durationInFrames * 0.75);
 
@@ -69,7 +70,6 @@ export const TitleCard: React.FC<TitleCardProps> = ({
         { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
     );
 
-    // Slide up entrance with spring
     const slideUp = spring({
         frame,
         fps,
@@ -77,7 +77,6 @@ export const TitleCard: React.FC<TitleCardProps> = ({
     });
     const translateY = interpolate(slideUp, [0, 1], [40, 0]);
 
-    // Underline width animation (delayed slightly)
     const underlineProgress = spring({
         frame: Math.max(0, frame - 8),
         fps,
@@ -85,51 +84,72 @@ export const TitleCard: React.FC<TitleCardProps> = ({
     });
     const underlineWidth = interpolate(underlineProgress, [0, 1], [0, 100]);
 
+    // Background Image Zoom Effect (Slow Ken Burns)
+    const scale = interpolate(frame, [0, durationInFrames], [1, 1.1]);
+
     return (
-        <AbsoluteFill
-            style={{
-                ...positionStyle,
-                alignItems: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                opacity,
-            }}
-        >
-            <div
+        <AbsoluteFill style={{ opacity }}>
+            {backgroundImage && (
+                <AbsoluteFill>
+                    <Img
+                        src={backgroundImage}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transform: `scale(${scale})`
+                        }}
+                    />
+                    {/* Dark Overlay for text readability */}
+                    <AbsoluteFill style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} />
+                </AbsoluteFill>
+            )}
+
+            <AbsoluteFill
                 style={{
-                    transform: `translateY(${translateY}px)`,
-                    backgroundColor: config.backgroundColor,
-                    padding: '24px 48px',
-                    borderRadius: 8,
+                    ...positionStyle,
+                    alignItems: 'center',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 12,
                 }}
             >
                 <div
                     style={{
-                        color: config.textColor,
-                        fontSize: config.fontSize,
-                        fontWeight: config.fontWeight,
-                        fontFamily: 'Inter, Montserrat, sans-serif',
-                        letterSpacing: 2,
-                        textAlign: 'center',
-                        textTransform: 'uppercase',
+                        transform: `translateY(${translateY}px)`,
+                        backgroundColor: config.backgroundColor,
+                        padding: '24px 48px',
+                        borderRadius: 8,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 12,
+                        backdropFilter: backgroundImage ? 'blur(10px)' : undefined,
                     }}
                 >
-                    {text}
+                    <div
+                        style={{
+                            color: config.textColor,
+                            fontSize: config.fontSize,
+                            fontWeight: config.fontWeight,
+                            fontFamily: 'Inter, Montserrat, sans-serif',
+                            letterSpacing: 2,
+                            textAlign: 'center',
+                            textTransform: 'uppercase',
+                        }}
+                    >
+                        {text}
+                    </div>
+                    <div
+                        style={{
+                            height: 3,
+                            width: `${underlineWidth}%`,
+                            backgroundColor: config.underlineColor,
+                            borderRadius: 2,
+                            opacity: 0.8,
+                        }}
+                    />
                 </div>
-                <div
-                    style={{
-                        height: 3,
-                        width: `${underlineWidth}%`,
-                        backgroundColor: config.underlineColor,
-                        borderRadius: 2,
-                        opacity: 0.8,
-                    }}
-                />
-            </div>
+            </AbsoluteFill>
         </AbsoluteFill>
     );
 };

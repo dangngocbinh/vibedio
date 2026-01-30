@@ -2,6 +2,12 @@ import React from 'react';
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, spring } from 'remotion';
 import { CaptionWord, CaptionStyle } from '../types';
 import { CAPTION_THEMES, CaptionTheme, getTheme } from './caption-themes';
+import * as Montserrat from '@remotion/google-fonts/Montserrat';
+
+Montserrat.loadFont('normal', {
+    weights: ['400', '600', '800'],
+    subsets: ['latin', 'latin-ext', 'vietnamese'],
+});
 
 interface TikTokCaptionProps {
     words: CaptionWord[];
@@ -39,7 +45,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
     const rawStyle = (typeof style === 'object' ? style : {}) as any || {};
 
     const effectiveStyle = {
-        fontFamily: directFont || rawStyle.fontFamily || theme.style.fontFamily,
+        fontFamily: directFont || rawStyle.fontFamily || "Montserrat", // Use imported Titan One font as default
         fontSize: directFontSize || rawStyle.fontSize || theme.style.fontSize,
         fontWeight: theme.style.fontWeight,
         textTransform: theme.style.textTransform || 'none',
@@ -66,6 +72,24 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
 
     if (activeWordIndex === -1 && words.length > 0) {
         return null;
+    }
+
+    // Heuristic: If the active word is unusually long (> 1.5s) and short text,
+    // it likely includes leading silence. Don't show it immediately.
+    if (activeWordIndex !== -1) {
+        const activeWord = words[activeWordIndex];
+        const duration = activeWord.end - activeWord.start;
+        // Logic: if duration is long (>1.5s), only show in the last 1.5s
+        // Exception: if the word itself is long (many chars), allowing 0.1s per char
+        const estimatedReadingTime = activeWord.word.length * 0.1;
+        const threshold = Math.max(1.5, estimatedReadingTime);
+
+        if (duration > threshold) {
+            const effectiveStart = activeWord.end - threshold;
+            if (currentTime < effectiveStart) {
+                return null;
+            }
+        }
     }
 
     // Get context words around the active word
@@ -190,8 +214,10 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                     flexWrap: 'wrap',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    maxWidth: '90%',
+                    width: '80%', // Fixed width to prevent jumping
+                    maxWidth: '1000px',
                     gap: '16px',
+                    textAlign: 'center', // Ensure center alignment
                     ...(effectiveStyle.containerBg && {
                         backgroundColor: effectiveStyle.containerBg,
                         padding: effectiveStyle.containerPadding,
@@ -199,6 +225,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                     }),
                 }}
             >
+                {/* Always render a fixed number of lines/words to keep layout stable */}
                 {displayWords.map((word, index) => {
                     const wordIndex = startIndex + index;
                     const isActive = wordIndex === activeWordIndex;
@@ -217,7 +244,11 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                         opacity,
                         textAlign: 'center',
                         lineHeight: 1.4,
-                        transition: 'color 0.1s ease',
+                        transition: 'color 0.15s ease-out', // Smoother color transition
+                        whiteSpace: 'nowrap', // Prevent single words from breaking
+                        // Fix layout jitter by ensuring words have stable collection
+                        display: 'inline-block',
+
                         // Active background (for red-box style)
                         ...(isActive && effectiveStyle.activeBgColor && {
                             backgroundColor: effectiveStyle.activeBgColor,

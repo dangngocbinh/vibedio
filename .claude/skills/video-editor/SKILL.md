@@ -47,12 +47,52 @@ Dành cho video tạo từ ảnh AI (Gemini) hoặc stock images với:
 - **AI auto-suggest transitions** - Crossfade, Cut, Dissolve dựa trên mood
 - **TikTok highlight captions** - Word-by-word highlight
 
+## INPUT FILES SCHEMA
+
+### What's Required?
+
+The skill now **auto-populates missing fields** with sensible defaults. You only need:
+
+**Minimum required in `script.json`:**
+```json
+{
+  "metadata": {
+    "projectName": "my-project",
+    "videoType": "image-slide",
+    "duration": 300
+  },
+  "scenes": [
+    {"id": "scene_1", "text": "Scene 1", "duration": 10, "startTime": 0, "endTime": 10}
+  ]
+}
+```
+
+**Everything else** (voice, music, subtitle, script metadata) will be auto-created with defaults.
+
+### Full Field Reference
+
+See **`SCHEMA.md`** for complete documentation:
+- All required fields (metadata, scenes)
+- All optional fields with auto-generated defaults
+- Validation rules and examples
+
+### Auto-Populated Fields
+
+If these fields are missing, they're created automatically:
+- `script` → empty narration metadata
+- `voice` → null provider (pre-recorded)
+- `music` → disabled by default
+- `subtitle` → default styling (Arial, center, yellow)
+- `metadata.width/height/ratio` → 1920x1080, 16:9
+
+**Benefit**: Minimal configuration for simple projects ✅
+
 ## USAGE
 
 ### Basic Usage
 
 ```bash
-python .claude/skills/video-editor/cli.py public/projects/5-sai-lam-hoc-tieng-anh
+python3 .claude/skills/video-editor/cli.py public/projects/5-sai-lam-hoc-tieng-anh
 ```
 
 Output:

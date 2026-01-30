@@ -25,12 +25,30 @@ class GeminiClient {
     const {
       aspectRatio = '16:9',
       outputDir = null,
-      filename = null
+      filename = null,
+      referenceImage = null // New option for reference image path
     } = options;
 
     console.log(`[GeminiClient] 🍌 Nano Banana generating: "${prompt.substring(0, 50)}..."`);
 
     try {
+      let finalPrompt = prompt;
+
+      // PROCESSS REFERENCE IMAGE IF PROVIDED
+      if (referenceImage && fs.existsSync(referenceImage)) {
+        console.log(`[GeminiClient] 👁️ Analyzing reference image: ${referenceImage}`);
+        try {
+          const characterDescription = await this.analyzeReferenceImage(referenceImage, "Describe the character in this image in extreme detail, focusing on facial features, hairstyle, clothing, and body type. Do not describe the background or style, only the physical appearance of the person.");
+          if (characterDescription) {
+            console.log(`[GeminiClient] 👤 Character analysis complete. Integrating into prompt...`);
+            // Construct a new prompt that explicitly instructs the model to use these features
+            finalPrompt = `Character Reference: ${characterDescription}. \n\nScene Description: ${prompt}`;
+          }
+        } catch (err) {
+          console.warn(`[GeminiClient] ⚠️ Failed to analyze reference image, proceeding with text prompt only: ${err.message}`);
+        }
+      }
+
       const response = await fetch(
         `${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
         {
@@ -41,7 +59,7 @@ class GeminiClient {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `Generate image: ${prompt}. Aspect ratio: ${aspectRatio}. High quality, professional.`
+                text: `Generate image: ${finalPrompt}. Aspect ratio: ${aspectRatio}. High quality, professional.`
               }]
             }],
             generationConfig: {
@@ -78,7 +96,7 @@ class GeminiClient {
 
       return {
         success: true,
-        prompt,
+        prompt: finalPrompt, // Return the actual prompt used
         imageData: imageData.base64,
         mimeType: imageData.mimeType,
         savedPath,
@@ -93,6 +111,42 @@ class GeminiClient {
         error: error.message,
         source: 'gemini-nano-banana'
       };
+    }
+  }
+
+  /**
+   * Analyze reference image to extract character visual details
+   * Uses Gemini 1.5 Flash for multimodal analysis
+   */
+  async analyzeReferenceImage(imagePath, promptText) {
+    try {
+      const model = 'gemini-1.5-flash'; // Use 1.5 Flash for vision
+      const imageBase64 = fs.readFileSync(imagePath).toString('base64');
+
+      const response = await fetch(
+        `${this.baseUrl}/models/${model}:generateContent?key=${this.apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: promptText },
+                { inline_data: { mime_type: "image/png", data: imageBase64 } }
+              ]
+            }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      if (data.candidates && data.candidates[0].content) {
+        return data.candidates[0].content.parts[0].text;
+      }
+      return null;
+    } catch (error) {
+      console.error("[GeminiClient] Vision analysis error:", error);
+      throw error;
     }
   }
 

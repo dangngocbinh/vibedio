@@ -19,13 +19,14 @@ async function main() {
 
   // Parse command line arguments
   const args = minimist(process.argv.slice(2), {
-    string: ['prompt', 'outputDir', 'filename', 'aspectRatio', 'inputFile', 'style'],
+    string: ['prompt', 'outputDir', 'filename', 'aspectRatio', 'inputFile', 'style', 'referenceImage'],
     boolean: ['help'],
     alias: {
       p: 'prompt',
       o: 'outputDir',
       f: 'filename',
       i: 'inputFile',
+      r: 'referenceImage',
       h: 'help'
     },
     default: {
@@ -46,6 +47,7 @@ async function main() {
     console.log('  -i, --inputFile    JSON file with multiple prompts');
     console.log('  --aspectRatio      Aspect ratio: 16:9, 9:16, 1:1, 4:3 (default: 16:9)');
     console.log('  --style            Style to apply to all prompts');
+    console.log('  -r, --referenceImage Path to reference image');
     console.log('  -h, --help         Show this help');
     console.log('\nExamples:');
     console.log('  node scripts/generate.js -p "A sunset over mountains" -o ./output');
@@ -106,10 +108,15 @@ async function generateSingleImage(client, args) {
     prompt = `${args.prompt}. Style: ${args.style}`;
   }
 
+  if (args.referenceImage) {
+    console.log(`Reference Image: ${args.referenceImage}`);
+  }
+
   const result = await client.generateImage(prompt, {
     aspectRatio: args.aspectRatio,
     outputDir: args.outputDir,
-    filename: args.filename
+    filename: args.filename,
+    referenceImages: args.referenceImage ? [args.referenceImage] : []
   });
 
   if (!result.success) {
