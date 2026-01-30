@@ -1,5 +1,16 @@
 [
   {
+    "id": "noi-long-con-xa-que",
+    "name": "noi-long-con-xa-que",
+    "path": "projects/noi-long-con-xa-que",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "ratio": "9:16",
+    "modifiedAt": "2026-01-30T01:45:53.517Z",
+    "timestamp": 1769737553517
+  },
+  {
     "id": "duong-vuot-bien-can-gio-vung-tau",
     "name": "duong-vuot-bien-can-gio-vung-tau",
     "path": "projects/duong-vuot-bien-can-gio-vung-tau",

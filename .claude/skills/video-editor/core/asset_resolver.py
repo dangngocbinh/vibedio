@@ -100,8 +100,9 @@ class AssetResolver:
             abs_path = path_or_url[7:]  # Remove file://
             return self._make_relative(abs_path)
 
-        # Absolute paths starting with /
-        if path_or_url.startswith('/'):
+        # Absolute paths starting with / (Unix) or Drive Letter (Windows)
+        import re
+        if path_or_url.startswith('/') or re.match(r'^[a-zA-Z]:\\', path_or_url):
             return self._make_relative(path_or_url)
 
         # Already relative - keep as-is
@@ -117,29 +118,29 @@ class AssetResolver:
         Returns:
             Relative path from project directory
         """
-        abs_path_obj = Path(abs_path)
+        # Normalize paths for Windows comparison (casing and separators)
+        abs_path_norm = os.path.normpath(abs_path)
+        project_dir_norm = os.path.normpath(str(self.project_dir))
+        
+        # Check if abs_path is inside project_dir
+        if abs_path_norm.lower().startswith(project_dir_norm.lower()):
+            rel_path = os.path.relpath(abs_path_norm, project_dir_norm)
+            return rel_path.replace('\\', '/')
 
-        # If path is inside project directory, return relative to project
-        try:
-            rel_to_project = abs_path_obj.relative_to(self.project_dir)
-            return str(rel_to_project)
-        except ValueError:
-            pass
+        # Handle 'public' folder assets
+        # project_dir is e.g. D:\path\to\app\public\projects\my-project
+        # app_root should be D:\path\to\app
+        app_root = self.project_dir.parent.parent.parent
+        app_root_norm = os.path.normpath(str(app_root))
 
-        # If path is in public folder, return relative from project to public
-        if '/public/' in abs_path or '\\public\\' in abs_path:
-            # Find public folder relative to project
-            try:
-                # Assume public is at project_root/public
-                public_path = self.project_root / 'public'
-                rel_to_public = abs_path_obj.relative_to(public_path)
-                # From projects/{name}/ to public/ is ../../public/
-                return f"../../public/{rel_to_public}"
-            except ValueError:
-                pass
+        if abs_path_norm.lower().startswith(app_root_norm.lower()):
+            rel_to_root = os.path.relpath(abs_path_norm, app_root_norm)
+            # Find the distance from project_dir to app_root (should be 3 levels: projects/{name} -> projects -> public -> root)
+            # So the relative path from project_dir to root is ../../../
+            return "../../../" + rel_to_root.replace('\\', '/')
 
-        # Fallback: just use basename if in same project
-        return abs_path_obj.name
+        # Fallback: just use basename
+        return os.path.basename(abs_path_norm)
 
     def resolve_music_from_resources(self, resources: Dict[str, Any]) -> Optional[str]:
         """

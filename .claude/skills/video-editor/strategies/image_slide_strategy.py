@@ -11,6 +11,7 @@ import opentimelineio as otio
 
 from strategies.base_strategy import BaseStrategy
 from templates.subtitle_generator import SubtitleGenerator
+from templates.title_generator import TitleGenerator
 from utils.voice_timing_sync import VoiceTimingSync, VoiceTiming
 from utils.effect_suggester import EffectSuggester, EffectSuggestion, TransitionSuggestion
 
@@ -95,14 +96,20 @@ class ImageSlideStrategy(BaseStrategy):
         
         timeline.tracks.append(image_track)
 
-        # Track 2: Subtitles (TikTok highlight style)
+        # Track 2: Custom Titles (FullscreenTitle, LayerTitle)
+        title_gen = TitleGenerator(self.fps)
+        titles_track = title_gen.generate_track(script)
+        if len(titles_track) > 0:
+            timeline.tracks.append(titles_track)
+
+        # Track 3: Subtitles (TikTok highlight style)
         subtitle_gen = SubtitleGenerator(self.fps)
         subtitle_track = subtitle_gen.generate_track(
             voice_data, script, max_words_per_phrase=5
         )
         timeline.tracks.append(subtitle_track)
 
-        # Track 3: Voice
+        # Track 4: Voice
         voice_track = self._create_voice_track(voice_data, total_duration)
         timeline.tracks.append(voice_track)
 

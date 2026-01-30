@@ -549,6 +549,49 @@ Thêm clip FullscreenTitle vào track "Title Overlays":
 
 See [docs/fullscreen-title-guide.md](docs/fullscreen-title-guide.md) for detailed guide with gradient presets, design tips, and examples.
 
+## LOWER THIRD TEMPLATES
+
+### Overview
+
+`LowerThird` component cung cấp **40 mẫu** tiêu đề ở phần dưới màn hình (lower-thirds) được thiết kế chuyên nghiệp và đa dạng phù hợp cho nhiều loại video:
+- **Speaker ID** - Giới thiệu tên và chức danh người đang nói
+- **Social Media** - Hiển thị YouTube, Instagram, TikTok handles
+- **Broadcast/News** - Mẫu tin tức, thể thao, Breaking News
+- **Special Effects** - Gaming Glitch, Cyberpunk, Hologram, Liquid
+- **Elegant** - Luxury Gold, Wedding, Elegant Serif
+- **Context Info** - Tech Grid, Industrial Steel, Blueprint
+
+### Available Templates
+
+| Group | Templates |
+|-------|-----------|
+| **Modern & Basic** | `modern-skew`, `minimal-bold`, `playful-round`, `corporate-clean` |
+| **Elegant & Luxury**| `elegant-serif`, `luxury-gold`, `wedding-floral`, `glass-modern` |
+| **Broadcast & News**| `breaking-news`, `classic-tv`, `sports-ticker`, `documentary-sidebar` |
+| **Social Media** | `social-youtube`, `social-insta`, `ribbon-tag` |
+| **Creative Arts** | `hand-drawn`, `brush-stroke`, `ink-bleed`, `origami`, `comic-pop` |
+| **Tech & Futuristic**| `tech-grid`, `cyberpunk-hud`, `hologram`, `blueprint`, `industrial-steel` |
+| **Dynamic Effects** | `split-reveal`, `gradient-wave`, `neon-glow`, `gaming-glitch`, `liquid-motion`, `confetti`, `border-animate`, `shadow-stack`, `floating-bubbles`, `stencil-cut` |
+| **Nature & Theme** | `nature-eco`, `space-cosmos`, `chalkboard`, `quote-box` |
+
+### Usage in OTIO
+
+```json
+{
+    "remotion_component": "LowerThird",
+    "props": {
+        "title": "DƯƠNG VƯỢT BIỂN",
+        "subtitle": "Kỹ Sư Xây Dựng",
+        "template": "modern-skew",
+        "primaryColor": "#3498db"
+    }
+}
+```
+
+### Full Documentation
+
+See [docs/lower-third-guide.md](docs/lower-third-guide.md) for details on all templates and props.
+
 ## INTEGRATION VỚI REMOTION
 
 ### Loading OTIO in Remotion

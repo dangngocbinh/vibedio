@@ -17,6 +17,7 @@ import { ImageWithEffect } from '../components/ImageWithEffect';
 import { LayerTitle } from '../components/LayerTitle';
 import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
 import { TitleCard } from '../components/TitleCard';
+import { LowerThird } from '../components/LowerThird';
 
 
 // Helpers cho Transition
@@ -457,6 +458,17 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                         );
                     }
 
+                    if (item.metadata?.remotion_component === 'LowerThird') {
+                        const props = item.metadata.props || {};
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <LowerThird {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+
                     if (item.metadata?.remotion_component === 'TikTokCaption') {
                         const props = item.metadata.props || {};
                         const durationStruct = item.source_range?.duration;
@@ -614,6 +626,28 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             durationInFrames={durationFrames}
                         >
                             <FullscreenTitle {...props} />
+                        </Sequence>
+                    );
+                }
+
+                // Handle LowerThird overlay components
+                if (clip.metadata?.remotion_component === 'LowerThird') {
+                    const props = clip.metadata.props || {};
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] LowerThird "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
+
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <LowerThird {...props} />
                         </Sequence>
                     );
                 }

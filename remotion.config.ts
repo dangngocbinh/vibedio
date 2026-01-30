@@ -4,6 +4,7 @@ Config.setVideoImageFormat('jpeg');
 Config.setOverwriteOutput(true);
 Config.setCodec('h264');
 Config.setExperimentalClientSideRenderingEnabled(true);
+Config.setMaxTimelineTracks(500);
 
 Config.overrideWebpackConfig((currentConfiguration) => {
     return {
