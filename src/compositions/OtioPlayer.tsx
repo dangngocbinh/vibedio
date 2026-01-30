@@ -18,6 +18,7 @@ import { LayerTitle } from '../components/titles/LayerTitle';
 import { FullscreenTitle } from '../components/FullscreenTitle/FullscreenTitle';
 import { TitleCard } from '../components/title-cards/TitleCard';
 import { LowerThird } from '../components/titles/LowerThird';
+import { CallToAction } from '../components/CallToAction/CallToAction';
 
 
 // Helpers cho Transition
@@ -472,6 +473,17 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                         );
                     }
 
+                    if (item.metadata?.remotion_component === 'CallToAction') {
+                        const props = item.metadata.props || {};
+                        const durationStruct = item.source_range?.duration;
+                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+                        return (
+                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
+                                <CallToAction {...props} />
+                            </TransitionSeries.Sequence>
+                        );
+                    }
+
                     if (item.metadata?.remotion_component === 'TikTokCaption') {
                         const props = item.metadata.props || {};
                         const durationStruct = item.source_range?.duration;
@@ -654,6 +666,28 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string }> 
                             durationInFrames={durationFrames}
                         >
                             <LowerThird {...props} />
+                        </Sequence>
+                    );
+                }
+
+                // Handle CallToAction overlay components
+                if (clip.metadata?.remotion_component === 'CallToAction') {
+                    const props = clip.metadata.props || {};
+                    const durationStruct = clip.source_range?.duration;
+                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
+
+                    if (durationFrames <= 0) {
+                        console.warn(`[OtioPlayer] CallToAction "${clip.name}" has 0 duration, skipping`);
+                        return null;
+                    }
+
+                    return (
+                        <Sequence
+                            key={clip.name || clipIndex}
+                            from={startFrame}
+                            durationInFrames={durationFrames}
+                        >
+                            <CallToAction {...props} />
                         </Sequence>
                     );
                 }

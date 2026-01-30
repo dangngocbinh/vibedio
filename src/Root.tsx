@@ -170,8 +170,21 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
         defaultProps={{
-          htmlFile: 'templates.html',
+          htmlFile: 'docs/lower-third-gallery.html',
           title: 'Lower Third Gallery'
+        }}
+      />
+
+      <Composition
+        id="Call-To-Action-Gallery"
+        component={HtmlGalleryViewer as any}
+        durationInFrames={1}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          htmlFile: 'docs/call-to-action-gallery.html',
+          title: 'Call To Action Gallery'
         }}
       />
 

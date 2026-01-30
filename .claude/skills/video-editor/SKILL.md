@@ -479,7 +479,7 @@ Thêm clip FullscreenTitle vào track "Title Overlays":
 
 ### Available Templates (NEW)
 
-Now supports named templates like `cinematic-intro`, `tech-hub`, `neon-night`, `breaking-news-full` etc. to instantly apply professional designs.
+Now supports **40 named templates** like `cinematic-intro`, `tech-hub`, `neon-night`, `breaking-news-full`, `space-odyssey`, `luxury-gold` etc. to instantly apply professional designs.
 See full list in [docs/fullscreen-title-guide.md](docs/fullscreen-title-guide.md).
 
 ### Background Types
@@ -636,6 +636,47 @@ See [docs/fullscreen-title-guide.md](docs/fullscreen-title-guide.md) for detaile
 ### Full Documentation
 
 See [docs/lower-third-guide.md](docs/lower-third-guide.md) for details on all templates and props.
+
+## CALL TO ACTION TEMPLATES
+
+### Overview
+
+`CallToAction` component cung cấp **120 mẫu** nút bấm, thông báo, social media handles để tăng tương tác người xem (Subscribe, Follow, Buy Now, Click Link).
+
+### Available Groups
+
+| Group | Description |
+|-------|-------------|
+| **Social Media** | YouTube, Instagram, TikTok, Facebook, Twitter, Discord, Patreon |
+| **Commercial** | App Store, Google Play, Shop Now, Discount, QR Code |
+| **Generic** | Buttons (Blue, Gradient, 3D, Outline) |
+| **Effects** | Neon, Glitch, Pixel, Glassmorphism, Hand-drawn |
+| **Interactive** | Mouse Click, Finger Tap, Live Badge |
+| **E-commerce** | Flash Sale, Add to Cart, BOGO, Promo Code, Pre-order |
+| **Tech & SaaS** | Free Trial, Download, AI Feature, Cloud Sync, API Key |
+| **Health** | Book Appointment, Telehealth, Organic, Workout, Nutrition |
+| **Education** | Enroll Now, eBook, Webinar, Certificate, Quiz |
+| **Finance** | Crypto, Stocks, Invest, Secure Pay, Wallet |
+| **Real Estate** | Open House, Sold, Virtual Tour, Mortgage, Agent |
+| **Travel** | Book Flight, Hotel, Passport, Luggage, Explore |
+| **Food** | Delivery, Menu, Chef Choice, Vegan, Combo |
+
+### Usage in OTIO
+
+```json
+{
+    "remotion_component": "CallToAction",
+    "props": {
+        "template": "classic-youtube",
+        "title": "SUBSCRIBE",
+        "subtitle": "1M Subs"
+    }
+}
+```
+
+### Full Documentation
+
+See [docs/call-to-action-guide.md](docs/call-to-action-guide.md).
 
 ## INTEGRATION VỚI REMOTION
 

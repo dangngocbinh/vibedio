@@ -114,6 +114,36 @@ Sử dụng `template` prop để kích hoạt các thiết kế chuyên nghiệ
 | `breaking-news-full` | Giao diện bản tin thời sự toàn màn hình | Tin tức, Sự kiện nóng |
 | `quote-hero` | Dấu ngoặc kép lớn, font serif nghiêng | Trích dẫn câu nói hay |
 | `split-screen` | Màn hình chia đôi 2 màu tương phản | So sánh Before/After, Đối lập |
+| `space-odyssey` | Chữ cực mảnh, spacing cực rộng, hiệu ứng vũ trụ | Intro phim viễn tưởng, không gian |
+| `luxury-gold` | Chữ vàng kim gradient sang trọng | Thời trang cao cấp, Event quý tộc |
+| `nature-vibes` | Font serif nghiêng, màu sắc thiên nhiên | Vlog du lịch, môi trường, organic |
+| `cyberpunk-glitch` | Chữ nghiêng, đổ bóng màu cyan/magenta | Tech, Gaming, Future City |
+| `vintage-film` | Phong cách phim cũ, tông màu sepia | Hoài niệm, lịch sử, retro |
+| `liquid-motion` | Chữ lớn, tương phản cực cao trên nền lỏng | Nghệ thuật hiện đại, music video |
+| `magazine-cover` | Layout bìa tạp chí, chữ đè chữ | Fashion, Lifestyle, Phóng sự |
+| `industrial-steel` | Tông màu kim loại, viền sắc cạnh | Xây dựng, công nghiệp, cơ khí |
+| `ink-wash` | Phong cách tranh thủy mặc, loang mực | Văn hóa, nghệ thuật truyền thống |
+| `floating-bubbles` | Chữ mỏng trên nền các hạt bokeh | Mơ mộng, nhẹ nhàng, cinematic |
+| `gaming-stream` | Có badge "LIVE NOW", viền sáng rực | Streamer, Esports, Gaming video |
+| `architect-blueprint` | Đường kẻ lưới kỹ thuật, font monospace | Kiến trúc, thiết kế, quy hoạch |
+| `comic-kaboom` | Chữ nằm trong khung thoại pop art | Vui nhộn, truyện tranh, hành động |
+| `holographic-lens` | Màu sắc lăng kính, hiệu ứng chiếu 3D | Sci-fi, công nghệ tương lai |
+| `abstract-waves` | Chữ chuyển động nhẹ nhàng như sóng | Trình diễn nghệ thuật, intro mượt |
+| `midnight-mystery` | Chữ ẩn hiện trong bóng tối, bí ẩn | Phim trinh thám, kinh dị, bí mật |
+| `paper-cutout` | Hiệu ứng lớp cắt giấy, đổ bóng sâu | Craft, handmade, vlog trẻ em |
+| `brush-stroke` | Chữ trên nền vết cọ quét sơn | Nghệ thuật, tự do, Creative |
+| `strobe-light` | Hiệu ứng nhấp nháy mạnh, năng lượng cao | Music, Party, High energy |
+| `sunset-serenity` | Tông màu hoàng hôn ấm áp, thanh bình | Storytelling, cảm xúc, healing |
+| `urban-graffiti` | Phong cách vẽ tường đường phố | Hip-hop, Street life, Youth culture |
+| `frozen-pixel` | Viền băng xanh lạnh, phong cách pixel | Game retro, mùa đông, công nghệ |
+| `royal-velvet` | Tông vàng/tím sang trọng hoàng gia | Tài liệu lịch sử, đồ trang sức |
+| `eco-green` | Khung hữu cơ, tông màu xanh lá | Môi trường, lối sống xanh, sạch |
+| `data-stream` | Chữ chạy như dòng dữ liệu matrix | Hacking, Big Data, Security |
+| `pop-shock` | Màu vàng/hồng đối lập mạnh | Sale, Shocking news, Viral content |
+| `shadow-play` | Bóng đổ dài từ chữ lớn | Tối giản, nghệ thuật đổ bóng |
+| `geometric-grid` | Khung hình học cân đối | Toán học, logic, chính xác |
+| `watercolor-bleed` | Màu nước loang mờ ảo | Mỹ thuật, lãng mạn, tinh tế |
+| `glassmorphism-pro` | Kính mờ siêu thực, bo góc mịn | App showcase, UI/UX, Premium tech |
 
 ## Danh sách Preset Hình nền (Cho Default Mode)
 
