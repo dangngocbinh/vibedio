@@ -6,16 +6,16 @@ import { fade } from "@remotion/transitions/fade";
 import { wipe } from "@remotion/transitions/wipe";
 import { flip } from "@remotion/transitions/flip";
 import { clockWipe } from "@remotion/transitions/clock-wipe";
-import { OpeningTitle } from '../components/OpeningTitle';
-import { PersistentTitle } from '../components/VietnamVibes/PersistentTitle';
-import { FloatingEffect } from '../components/VietnamVibes/FloatingEffect';
-import { StarParticles } from '../components/StarParticles';
+import { OpeningTitle } from '../components/titles/OpeningTitle';
+import { PersistentTitle } from '../user-components/VietnamVibes/PersistentTitle';
+import { FloatingEffect } from '../user-components/VietnamVibes/FloatingEffect';
+import { StarParticles } from '../components/effects/StarParticles';
 import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import { fetchProjects, loadProject, ProjectItem } from '../utils/project-loader';
-import { TikTokCaption } from '../components/TikTokCaption';
-import { ImageWithEffect } from '../components/ImageWithEffect';
-import { BrollTitle } from '../components/BrollTitle';
-import { TitleCard } from '../components/TitleCard';
+import { TikTokCaption } from '../components/captions/TikTokCaption';
+import { ImageWithEffect } from '../components/effects/ImageWithEffect';
+import { BrollTitle } from '../components/titles/BrollTitle';
+import { TitleCard } from '../components/title-cards/TitleCard';
 
 
 // Helpers cho Transition

@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-import { AnimationType } from '../types';
+import { MediaAsset, AnimationType } from '../../types';
 
 interface AnimatedImageProps {
   src: string;
@@ -37,13 +38,13 @@ export const AnimatedImage: React.FC<AnimatedImageProps> = ({
       case 'pan-left': {
         const translateX = interpolate(progress, [0, 1], [0, -intensity * 100]);
         const scale = 1 + intensity * 0.5; // Slight zoom to avoid edges
-        return `translateX(${translateX}%) scale(${scale})`;
+        return `translateX(${translateX} %) scale(${scale})`;
       }
 
       case 'pan-right': {
         const translateX = interpolate(progress, [0, 1], [0, intensity * 100]);
         const scale = 1 + intensity * 0.5;
-        return `translateX(${translateX}%) scale(${scale})`;
+        return `translateX(${translateX} %) scale(${scale})`;
       }
 
       case 'ken-burns': {
@@ -51,7 +52,7 @@ export const AnimatedImage: React.FC<AnimatedImageProps> = ({
         const scale = interpolate(progress, [0, 1], [1, 1 + intensity]);
         const translateX = interpolate(progress, [0, 1], [0, intensity * 50]);
         const translateY = interpolate(progress, [0, 1], [0, -intensity * 30]);
-        return `scale(${scale}) translate(${translateX}%, ${translateY}%)`;
+        return `scale(${scale}) translate(${translateX} %, ${translateY} %)`;
       }
 
       default:
