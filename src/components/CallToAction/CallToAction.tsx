@@ -54,6 +54,7 @@ export interface CallToActionProps {
     secondaryColor?: string; // Accent/Background color
     textColor?: string;     // Text color
     fontSize?: number;
+    fontFamily?: string;    // Font family (e.g., 'Inter', 'Roboto')
 }
 
 // ============ COMPONENT ============
@@ -65,9 +66,22 @@ export const CallToAction: React.FC<CallToActionProps> = ({
     secondaryColor = '#ffffff',
     textColor = '#000000',
     fontSize = 32,
+    fontFamily,
 }) => {
     const frame = useCurrentFrame();
     const { durationInFrames } = useVideoConfig();
+
+    React.useEffect(() => {
+        if (fontFamily) {
+            const link = document.createElement('link');
+            link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@400;700;900&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+            return () => {
+                document.head.removeChild(link);
+            };
+        }
+    }, [fontFamily]);
 
     // Standard Entrance/Exit
     const entrance = interpolate(frame, [0, 20], [0, 1], {
@@ -926,6 +940,7 @@ export const CallToAction: React.FC<CallToActionProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             zIndex: 1000,
+            fontFamily,
         }}>
             {renderTemplate()}
         </AbsoluteFill>

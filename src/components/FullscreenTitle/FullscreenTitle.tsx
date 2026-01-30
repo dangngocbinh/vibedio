@@ -93,7 +93,8 @@ const getTextStyles = (
     style: TextStyle,
     textColor: string,
     accentColor: string,
-    size: number
+    size: number,
+    fontFamily?: string
 ): React.CSSProperties => {
     const baseStyle: React.CSSProperties = {
         color: textColor,
@@ -102,6 +103,7 @@ const getTextStyles = (
         margin: 0,
         lineHeight: 1.1,
         letterSpacing: '-0.02em',
+        fontFamily: fontFamily || 'Inter, Montserrat, system-ui, sans-serif',
     };
 
     switch (style) {
@@ -359,6 +361,18 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
     const frame = useCurrentFrame();
     const { fps, durationInFrames, width } = useVideoConfig();
 
+    React.useEffect(() => {
+        if (fontFamily && !fontFamily.includes(',') && !fontFamily.includes('system-ui')) {
+            const link = document.createElement('link');
+            link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@400;700;900&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+            return () => {
+                document.head.removeChild(link);
+            };
+        }
+    }, [fontFamily]);
+
     // 1. Tính toán Responsive (Tương tự computed property trong Vue)
     const scaleFactor = width / 1920; // Giả sử thiết kế gốc là 1080p
     const scaledTitleSize = titleSize * scaleFactor;
@@ -427,7 +441,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
     };
 
     // 8. Lấy styles cho Text (Default mode)
-    const titleStyles = getTextStyles(textStyle, textColor, accentColor, scaledTitleSize);
+    const titleStyles = getTextStyles(textStyle, textColor, accentColor, scaledTitleSize, fontFamily);
 
     // 9. Template Renderer (Override default layout if template is chosen)
     const renderContent = () => {
@@ -442,7 +456,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
                         ...alignmentStyles as any, // Layout styles
                     }}
                 >
-                    <h1 style={{ ...titleStyles, fontFamily }}>
+                    <h1 style={titleStyles}>
                         {displayTitle}
                         {isTypewriter && displayTitle.length < title.length && (
                             <span style={{ opacity: frame % 15 < 8 ? 1 : 0 }}>|</span>
@@ -474,7 +488,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
         switch (template) {
             case 'cinematic-intro':
                 return (
-                    <div style={{ opacity, transform: `scale(${interpolate(frame, [0, durationInFrames], [1, 1.1])})`, textAlign: 'center', color: '#fff' }}>
+                    <div style={{ opacity, transform: `scale(${interpolate(frame, [0, durationInFrames], [1, 1.1])})`, textAlign: 'center', color: '#fff', fontFamily }}>
                         <div style={{ letterSpacing: '10px', fontSize: scaledSubtitleSize * 0.8, color: '#aaa', marginBottom: 20 }}>PRESENTS</div>
                         <h1 style={{ fontSize: scaledTitleSize * 1.2, fontWeight: 300, letterSpacing: '20px', textTransform: 'uppercase', margin: 0, textShadow: '0 0 20px rgba(255,255,255,0.5)' }}>{displayTitle}</h1>
                         <div style={{ width: 100, height: 2, background: '#fff', margin: '30px auto' }} />
@@ -484,7 +498,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
 
             case 'tech-hub':
                 return (
-                    <div style={{ opacity, fontFamily: 'monospace', color: '#00ff00', textAlign: 'left', paddingLeft: 100 }}>
+                    <div style={{ opacity, fontFamily: fontFamily || 'monospace', color: '#00ff00', textAlign: 'left', paddingLeft: 100 }}>
                         <div style={{ borderLeft: '5px solid #00ff00', paddingLeft: 30 }}>
                             <div style={{ fontSize: 20, marginBottom: 10 }}>&gt; SYSTEM_BOOT_SEQUENCE</div>
                             <h1 style={{ fontSize: scaledTitleSize, margin: 0, textShadow: '2px 2px 0 #003300' }}>{displayTitle}_</h1>
@@ -874,7 +888,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
         }
     };
     return (
-        <AbsoluteFill style={{ zIndex: 1000 }}>
+        <AbsoluteFill style={{ zIndex: 1000, fontFamily }}>
             {/* Lớp Hình nền (Background Layer) */}
             <AbsoluteFill style={{
                 ...backgroundStyles,

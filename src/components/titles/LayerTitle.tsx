@@ -25,8 +25,9 @@ export interface LayerTitleProps {
   fontSize?: number;          // Kích thước chữ chính (mặc định: 48)
   subtitleSize?: number;      // Kích thước chữ phụ (mặc định: 28)
   enterDuration?: number;     // Thời gian animation vào (frames)
-  exitDuration?: number;      // Thời gian animation ra (frames)
+  exitDuration?: number;     // Thời gian animation ra (frames)
   showAccentLine?: boolean;   // Hiển thị đường viền accent (mặc định: true)
+  fontFamily?: string;        // Google Font name
 }
 
 // ============ STYLE PRESETS ============
@@ -168,9 +169,22 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
   enterDuration: enterDurationProp,
   exitDuration: exitDurationProp,
   showAccentLine = true,
+  fontFamily,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+
+  React.useEffect(() => {
+    if (fontFamily && !fontFamily.includes(',') && !fontFamily.includes('system-ui')) {
+      const link = document.createElement('link');
+      link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@400;700;900&display=swap`;
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+      return () => {
+        document.head.removeChild(link);
+      };
+    }
+  }, [fontFamily]);
 
   // Default durations based on fps
   const enterDuration = enterDurationProp ?? Math.round(fps * 0.4);
@@ -253,7 +267,7 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
               fontSize: style === 'full-screen' ? fontSize * 1.5 : style === 'centered' ? fontSize * 1.2 : fontSize,
               fontWeight: 900,
               margin: 0,
-              fontFamily: 'Inter, system-ui, sans-serif',
+              fontFamily: fontFamily || 'Inter, system-ui, sans-serif',
               letterSpacing: style === 'full-screen' ? '0.02em' : undefined,
               lineHeight: 1.3,
               textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
@@ -271,7 +285,7 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
                 fontSize: style === 'full-screen' ? subtitleSize * 1.3 : subtitleSize,
                 fontWeight: 500,
                 margin: '8px 0 0',
-                fontFamily: 'Inter, system-ui, sans-serif',
+                fontFamily: fontFamily || 'Inter, system-ui, sans-serif',
                 opacity: animation === 'typewriter' && displaySubtitle === '' ? 0 : 1,
               }}
             >

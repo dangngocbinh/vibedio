@@ -28,6 +28,7 @@ export interface LowerThirdProps {
     secondaryColor?: string;
     textColor?: string;
     fontSize?: number;
+    fontFamily?: string;
 }
 
 // ============ COMPONENT ============
@@ -39,9 +40,22 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
     secondaryColor = '#ffffff',
     textColor = '#2c3e50',
     fontSize = 42,
+    fontFamily,
 }) => {
     const frame = useCurrentFrame();
     const { fps, durationInFrames } = useVideoConfig();
+
+    React.useEffect(() => {
+        if (fontFamily) {
+            const link = document.createElement('link');
+            link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@400;700;900&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+            return () => {
+                document.head.removeChild(link);
+            };
+        }
+    }, [fontFamily]);
 
     const entrance = interpolate(frame, [0, 15], [0, 1], {
         extrapolateRight: 'clamp',
@@ -56,25 +70,26 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
     const opacity = entrance * exit;
 
     const renderTemplate = () => {
+        const commonStyle = fontFamily ? { fontFamily } : {};
         switch (template) {
             // --- ORIGINAL 10 ---
             case 'modern-skew':
                 return (
-                    <div style={{ position: 'absolute', bottom: 100, left: 80, opacity, transform: `translateX(${interpolate(entrance, [0, 1], [-50, 0])}px)` }}>
+                    <div style={{ position: 'absolute', bottom: 100, left: 80, opacity, transform: `translateX(${interpolate(entrance, [0, 1], [-50, 0])}px)`, ...commonStyle }}>
                         <div style={{ backgroundColor: secondaryColor, padding: '10px 40px 10px 20px', display: 'inline-block', transform: 'skewX(-15deg)', boxShadow: '10px 10px 30px rgba(0,0,0,0.1)' }}>
-                            <h1 style={{ margin: 0, fontSize, fontWeight: 900, color: textColor, transform: 'skewX(15deg)', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase' }}>{title}</h1>
+                            <h1 style={{ margin: 0, fontSize, fontWeight: 900, color: textColor, transform: 'skewX(15deg)', fontFamily: fontFamily || 'Inter, sans-serif', textTransform: 'uppercase' }}>{title}</h1>
                         </div>
                         <br />
                         {subtitle && (
                             <div style={{ backgroundColor: primaryColor, padding: '5px 30px 5px 15px', display: 'inline-block', marginTop: 5, transform: 'skewX(-15deg) translateX(20px)', width: 'fit-content' }}>
-                                <p style={{ margin: 0, fontSize: fontSize * 0.6, color: '#fff', fontWeight: 600, transform: 'skewX(15deg)', fontFamily: 'Inter, sans-serif' }}>{subtitle}</p>
+                                <p style={{ margin: 0, fontSize: fontSize * 0.6, color: '#fff', fontWeight: 600, transform: 'skewX(15deg)', fontFamily: fontFamily || 'Inter, sans-serif' }}>{subtitle}</p>
                             </div>
                         )}
                     </div>
                 );
             case 'glass-modern':
                 return (
-                    <div style={{ position: 'absolute', bottom: 100, left: 80, opacity, backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0, 0, 0, 0.4)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 12, padding: '20px 40px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', transform: `scale(${interpolate(entrance, [0, 1], [0.9, 1])})` }}>
+                    <div style={{ position: 'absolute', bottom: 100, left: 80, opacity, backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0, 0, 0, 0.4)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 12, padding: '20px 40px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', transform: `scale(${interpolate(entrance, [0, 1], [0.9, 1])})`, ...commonStyle }}>
                         <h1 style={{ margin: 0, fontSize, color: '#fff', fontWeight: 700 }}>{title}</h1>
                         {subtitle && <p style={{ margin: '5px 0 0', fontSize: fontSize * 0.6, color: 'rgba(255,255,255,0.9)' }}>{subtitle}</p>}
                     </div>
@@ -440,7 +455,7 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
     };
 
     return (
-        <AbsoluteFill style={{ pointerEvents: 'none', zIndex: 100 }}>
+        <AbsoluteFill style={{ pointerEvents: 'none', zIndex: 100, fontFamily }}>
             {renderTemplate()}
         </AbsoluteFill>
     );

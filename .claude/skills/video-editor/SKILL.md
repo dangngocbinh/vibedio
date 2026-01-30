@@ -401,6 +401,7 @@ Thêm track "Title Overlays" vào timeline:
   showAccentLine?: boolean;   // Default: true
   enterDuration?: number;     // Frames for enter animation
   exitDuration?: number;      // Frames for exit animation
+  fontFamily?: string;        // Optional: Google Font name
 }
 ```
 
@@ -628,7 +629,8 @@ See [docs/fullscreen-title-guide.md](docs/fullscreen-title-guide.md) for detaile
         "title": "DƯƠNG VƯỢT BIỂN",
         "subtitle": "Kỹ Sư Xây Dựng",
         "template": "modern-skew",
-        "primaryColor": "#3498db"
+        "primaryColor": "#3498db",
+        "fontFamily": "Inter" // Optional: Google Font name
     }
 }
 ```
@@ -669,10 +671,18 @@ See [docs/lower-third-guide.md](docs/lower-third-guide.md) for details on all te
     "props": {
         "template": "classic-youtube",
         "title": "SUBSCRIBE",
-        "subtitle": "1M Subs"
+        "subtitle": "1M Subs",
+        "fontFamily": "Anton" // Optional: Specify any Google Font name
     }
 }
 ```
+
+### Font Usage
+Component tự động load Google Fonts từ tên được cung cấp trong `fontFamily`.
+Ví dụ:
+- `fontFamily: "Roboto"` -> Loads Roboto
+- `fontFamily: "Open Sans"` -> Loads Open Sans
+- `fontFamily: "Press Start 2P"` -> Loads Press Start 2P (Retro gaming font)
 
 ### Full Documentation
 
