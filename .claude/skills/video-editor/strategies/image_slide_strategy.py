@@ -110,7 +110,27 @@ class ImageSlideStrategy(BaseStrategy):
             timeline.tracks.append(titles_track)
 
         # Track 3: Voice
-        voice_track = self._create_voice_track(voice_data, total_duration)
+        voice_track = self.create_audio_track("Voice")
+        
+        # [FIX] Calculate voice offset if initial scenes are titles/no-voice
+        voice_offset = 0.0
+        for scene in scenes:
+            timing = scene_timings.get(scene.get('id', ''))
+            # If scene has no voice words matched and is a title or has no text, it adds to offset
+            if timing and timing.word_count == 0:
+                voice_offset += timing.duration
+            else:
+                # Stop as soon as we find a scene with voice content
+                break
+        
+        if voice_offset > 0:
+            gap = otio.schema.Gap(source_range=self.timing.create_time_range(0, voice_offset))
+            voice_track.append(gap)
+            
+        voice_clip = self.create_voice_clip(voice_data, total_duration)
+        # Shift voice clip in OtioPlayer
+        voice_clip.metadata['globalTimelineStart'] = str(voice_offset)
+        voice_track.append(voice_clip)
         timeline.tracks.append(voice_track)
 
         # Track 4: Background Music (optional)
@@ -124,35 +144,14 @@ class ImageSlideStrategy(BaseStrategy):
         subtitle_track = subtitle_gen.generate_track(
             voice_data, script, max_words_per_phrase=5
         )
+        
+        # Add Gap for sequential consistency in TransitionSeries mode
+        if voice_offset > 0:
+            gap = otio.schema.Gap(source_range=self.timing.create_time_range(0, voice_offset))
+            subtitle_track.insert(0, gap)
+            
         timeline.tracks.append(subtitle_track)
-        subtitle_gen = SubtitleGenerator(self.fps)
-        subtitle_track = subtitle_gen.generate_track(
-            voice_data, script, max_words_per_phrase=5
-        )
-        timeline.tracks.append(subtitle_track)
 
-        # Track 2: Custom Titles (FullscreenTitle, LayerTitle)
-        title_gen = TitleGenerator(self.fps)
-        titles_track = title_gen.generate_track(script)
-        if len(titles_track) > 0:
-            timeline.tracks.append(titles_track)
-
-        # Track 3: Voice
-        voice_track = self._create_voice_track(voice_data, total_duration)
-        timeline.tracks.append(voice_track)
-
-        # Track 4: Background Music (optional)
-        music_config = script.get('music', {})
-        music_track = self._create_music_track(resources, total_duration, music_config)
-        if music_track:
-            timeline.tracks.append(music_track)
-
-        # Track 5: Subtitles (TikTok highlight style) - LAST
-        subtitle_gen = SubtitleGenerator(self.fps)
-        subtitle_track = subtitle_gen.generate_track(
-            voice_data, script, max_words_per_phrase=5
-        )
-        timeline.tracks.append(subtitle_track)
     def _create_image_track_synced(
         self,
         scenes: List[Dict[str, Any]],
@@ -259,6 +258,15 @@ class ImageSlideStrategy(BaseStrategy):
                 image_url = f"generated/{scene_id}.png"
 
         if not image_url:
+            # Check if this is a title scene
+            if scene.get('type') == 'title':
+                return self.create_component_clip(
+                    component_name=scene.get('title_type', 'FullscreenTitle'),
+                    duration_sec=duration,
+                    props=scene.get('props', {}),
+                    clip_name=f"{scene_id} Title"
+                )
+            
             # Create placeholder clip
             return self._create_placeholder_clip(scene_id, duration, effect)
 

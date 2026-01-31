@@ -33,7 +33,7 @@ export interface LayerTitleProps {
 // ============ STYLE PRESETS ============
 // Hàm trả về CSS preset cho mỗi kiểu style (tương tự như trong Vue, đây là computed styles)
 const getStylePreset = (style: LayerTitleStyle): React.CSSProperties => {
-  const presets: Record<LayerTitleStyle, React.CSSProperties> = {
+  const presets: Record<string, React.CSSProperties> = {
     'lower-third': {
       position: 'absolute',
       bottom: 80,
@@ -65,7 +65,7 @@ const getStylePreset = (style: LayerTitleStyle): React.CSSProperties => {
       justifyContent: 'center',
     },
   };
-  return presets[style];
+  return presets[style] || presets['centered'];
 };
 
 // ============ ANIMATION HELPERS ============

@@ -58,28 +58,25 @@ class AssetResolver:
         # Try downloadUrls if local file missing or not downloaded
         if "downloadUrls" in resource:
             urls = resource["downloadUrls"]
-            if "hd" in urls and urls["hd"]:
-                return urls["hd"]
-            if "sd" in urls and urls["sd"]:
-                return urls["sd"]
-            if "4k" in urls and urls["4k"]:
-                return urls["4k"]
-            if "original" in urls and urls["original"]:
-                return urls["original"]
-            if "large" in urls and urls["large"]:
-                return urls["large"]
-            if "medium" in urls and urls["medium"]:
-                return urls["medium"]
+            # Check all quality levels
+            for quality in ["hd", "sd", "4k", "original", "large", "medium"]:
+                if quality in urls and urls[quality]:
+                    return urls[quality]
 
         # Fallback to single downloadUrl
         if "downloadUrl" in resource and resource["downloadUrl"]:
             return resource["downloadUrl"]
 
-        # Last resort: view page URL (warning: might not be playable)
+        # [REFINED] Only fallback to page URL if it's not a restricted/unplayable one (like Pexels page)
         if "url" in resource and resource["url"]:
-            return resource["url"]
+            url = resource["url"]
+            # Skip Pexels/Pixabay view pages as they don't work in Remotion for direct playback
+            if "pexels.com/video/" in url or "pixabay.com/videos/" in url:
+                pass 
+            else:
+                return url
 
-        raise ValueError(f"No valid URL found in resource: {resource}")
+        return "" # Return empty instead of raising error to allow the caller to try next result
 
     def sanitize_for_otio(self, path_or_url: str) -> str:
         """
@@ -239,8 +236,17 @@ class AssetResolver:
         for video_entry in videos:
             if video_entry.get("sceneId") == scene_id:
                 results = video_entry.get("results", [])
-                if results and len(results) > 0:
-                    return self.resolve_resource_url(results[0])
+                
+                # FIRST PASS: Look for any result with a localPath (downloaded)
+                for result in results:
+                    if result.get("localPath"):
+                        return self.sanitize_for_otio(result["localPath"])
+                
+                # SECOND PASS: Look for any result with a playable downloadUrl
+                for result in results:
+                    url = self.resolve_resource_url(result)
+                    if url and not (url.startswith('http') and "pexels.com/video/" in url):
+                        return url
 
         return None
 
@@ -271,7 +277,16 @@ class AssetResolver:
         for image_entry in all_images:
             if image_entry.get("sceneId") == scene_id:
                 results = image_entry.get("results", [])
-                if results and len(results) > 0:
-                    return self.resolve_resource_url(results[0])
+                
+                # FIRST PASS: Look for local file
+                for result in results:
+                    if result.get("localPath"):
+                        return self.sanitize_for_otio(result["localPath"])
+                
+                # SECOND PASS: Look for playable URL
+                for result in results:
+                    url = self.resolve_resource_url(result)
+                    if url:
+                        return url
 
         return None

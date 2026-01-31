@@ -15,6 +15,36 @@ Thay vào đó, hãy nói chuyện với Vibe Dio, và em sẽ tự động đi�
 
 ---
 
+## 🛠️ SETUP MÔI TRƯỜNG LẦN ĐẦU
+
+### Detect Setup Request
+
+**Khi user nói về:**
+- "Setup môi trường", "cài đặt lần đầu", "chuẩn bị môi trường"
+- "Cài dependencies", "install packages", "thiếu thư viện"
+- "Máy mới", "lần đầu chạy", "setup project"
+- "Lỗi thiếu ffmpeg", "không có python", "chưa cài npm"
+
+**→ HƯỚNG DẪN user đọc:**
+
+👉 **`.claude/skills/SETUP_NEW_MACHINE.md`**
+
+File này chứa:
+- ⚡ Auto setup script (1 lệnh duy nhất)
+- 📋 Manual setup từng bước
+- 🔑 API keys configuration
+- 🚨 Troubleshooting common issues
+- ✅ Verification checklist
+
+**Quick start cho user:**
+```bash
+python3 .claude/skills/environment-setup/setup.py --all
+```
+
+**Lưu ý:** Setup chỉ chạy lần đầu hoặc khi thay đổi môi trường. Không cần chạy lại mỗi lần tạo video.
+
+---
+
 ## 🎯 MỤC ĐÍCH
 
 Skill này là **Single Entry Point** (Điểm truy cập duy nhất) cho quy trình sản xuất video.
@@ -47,15 +77,124 @@ public/projects/{project-name}/
 
 ---
 
+## 🐍 PYTHON EXECUTION (QUAN TRỌNG!)
+
+**TẤT CẢ các Python CLI trong project này đều sử dụng Python 3.**
+
+### Cách chạy (3 options)
+
+**Option 1: Sử dụng `python3` (Khuyến nghị ⭐)**
+```bash
+python3 .claude/skills/video-production-director/director.py [args...]
+```
+
+**Option 2: Direct execution (nếu script đã executable)**
+```bash
+./.claude/skills/video-production-director/director.py [args...]
+```
+
+**Option 3: Sử dụng helper script**
+```bash
+./.claude/skills/python-runner.sh .claude/skills/video-production-director/director.py [args...]
+```
+
+### ⚠️ LƯU Ý
+
+- **KHÔNG dùng** `python` (không có số 3) - có thể gọi Python 2.x trên một số hệ thống
+- Tất cả CLI scripts đã có shebang `#!/usr/bin/env python3`
+- Tất cả CLI scripts đã được chmod +x (executable)
+- Helper script `python-runner.sh` tự động detect đúng interpreter
+
+---
+
 ## 🛠️ CÁCH SỬ DỤNG (CHO AI AGENT)
 
 Khi người dùng yêu cầu tạo video, hãy làm theo các bước sau:
+
+### 0. Xác định Aspect Ratio (QUAN TRỌNG!) 📐
+
+**LUÔN LUÔN** phải xác định aspect ratio trước khi bắt đầu sản xuất video.
+
+#### Aspect Ratios được hỗ trợ:
+
+| Ratio | Dimensions | Platform | Keyword Detection |
+|-------|------------|----------|-------------------|
+| **9:16** | 1080x1920 | TikTok, Shorts, Reels | "tiktok", "shorts", "reels", "dọc", "vertical" |
+| **16:9** | 1920x1080 | YouTube, Facebook | "youtube", "ngang", "horizontal" |
+| **1:1** | 1080x1080 | Instagram Feed | "instagram", "vuông", "square" |
+| **4:5** | 1080x1350 | Instagram Portrait | "instagram portrait", "4:5" |
+
+#### Bước 1: Detect từ user input
+
+Sử dụng reasoning để detect keywords:
+
+**Examples**:
+- "Tạo video TikTok" → Detect "TikTok" → **9:16** ✅
+- "Video dọc Shorts" → Detect "Shorts" + "dọc" → **9:16** ✅
+- "Video ngang YouTube" → Detect "YouTube" + "ngang" → **16:9** ✅
+- "Video Instagram" → Detect "Instagram" → **1:1** (default feed) ✅
+- "Tạo một video" → No keywords → **ASK USER** ⚠️
+
+#### Bước 2: Confirm với user nếu không rõ
+
+Nếu không detect được keywords hoặc ambiguous, **BẮT BUỘC** hỏi user qua AskUserQuestion:
+
+```
+AskUserQuestion(
+    question="Anh/chị muốn tạo video theo format nào?",
+    header="Video Format",
+    options=[
+        {
+            "label": "9:16 - TikTok/Shorts/Reels (Dọc)",
+            "description": "Video dọc cho TikTok, YouTube Shorts, Instagram Reels. Kích thước: 1080x1920"
+        },
+        {
+            "label": "16:9 - YouTube/Facebook (Ngang)",
+            "description": "Video ngang cho YouTube, Facebook, Website. Kích thước: 1920x1080"
+        },
+        {
+            "label": "1:1 - Instagram Feed (Vuông)",
+            "description": "Video vuông cho Instagram, Facebook Feed. Kích thước: 1080x1080"
+        },
+        {
+            "label": "4:5 - Instagram Portrait",
+            "description": "Video 4:5 cho Instagram Feed Portrait. Kích thước: 1080x1350"
+        }
+    ]
+)
+```
+
+#### Bước 3: Pass ratio to downstream skills
+
+Sau khi xác định ratio, pass nó cho các skills:
+
+```bash
+# video-script-generator
+python3 cli.py --project "my-video" --topic "..." --ratio "9:16"
+
+# Ratio được lưu trong script.json
+{
+  "metadata": {
+    "ratio": "9:16",
+    "width": 1080,
+    "height": 1920
+  }
+}
+```
+
+**⚠️ LƯU Ý QUAN TRỌNG**:
+- **KHÔNG BAO GIỜ** assume default ratio nếu user không nói rõ
+- Aspect ratio ảnh hưởng: content design, resource orientation, platform optimization
+- Nếu user mention nhiều platforms khác ratio (TikTok + YouTube) → Hỏi platform chính
+- Ratio được propagate qua: script.json → video-editor → OtioPlayer
+
+---
 
 ### 1. Khởi tạo & Import
 Nếu người dùng cung cấp file (video gốc, ảnh, tài liệu), hãy gọi Director để import.
 
 ```bash
-python .agent/skills/video-production-director/director.py import \
+python3 .agent/skills/video-production-director/director.py import \
   --project "ten-du-an" \
   --files "/path/to/file1.mp4" "/path/to/file2.jpg"
 ```
@@ -67,7 +206,7 @@ python .agent/skills/video-production-director/director.py import \
 Để chạy một quy trình (hoặc tiếp tục quy trình dở dang):
 
 ```bash
-python .agent/skills/video-production-director/director.py produce \
+python3 .agent/skills/video-production-director/director.py produce \
   --project "ten-du-an" \
   --workflow "auto" 
 ```
@@ -78,7 +217,7 @@ python .agent/skills/video-production-director/director.py produce \
 ### 3. Kiểm tra trạng thái
 
 ```bash
-python .agent/skills/video-production-director/director.py status --project "ten-du-an"
+python3 .agent/skills/video-production-director/director.py status --project "ten-du-an"
 ```
 
 ---
@@ -146,6 +285,129 @@ Dành cho user có source video quay sẵn.
 
 6.  **Refresh**
     *   **Action**: Tự động chạy `generate-project-list.js` để cập nhật `public/projects.json` giúp Remotion Studio nhận diện dự án mới.
+
+---
+
+## ⚡ DELEGATION RULES: QUICK EDIT vs FULL REBUILD
+
+**Video Production Director** phải quyết định khi nào delegate sang **otio-quick-editor** thay vì rebuild toàn bộ video.
+
+### Khi nào dùng OTIO QUICK EDITOR? ⚡
+
+**Điều kiện BẮT BUỘC**:
+✅ Project đã có file `project.otio` (video đã build ít nhất 1 lần)
+✅ Chỉ cần chỉnh sửa overlays/effects, KHÔNG thay đổi nội dung chính
+
+**Use Cases** (delegate to otio-quick-editor):
+1. **Thêm title overlay** ở thời điểm cụ thể
+   - Example: "Thêm chữ 'Subscribe Now!' ở giây 3 trong 4 giây"
+   - Command: `otio-quick-editor add-title --project "demo" --text "Subscribe Now!" --at-second 3 --duration 4`
+
+2. **Thêm sticker/emoji**
+   - Example: "Thêm emoji 🔥 ở giây 10"
+   - Command: `otio-quick-editor add-sticker --project "demo" --emoji "🔥" --at-second 10 --duration 2 --animation "pop"`
+
+3. **Thêm layer effect**
+   - Example: "Thêm hiệu ứng neon ở giây 15"
+   - Command: `otio-quick-editor add-effect --project "demo" --effect-type "neon-circles" --at-second 15 --duration 5`
+
+4. **Xóa/inspect overlay clips**
+   - Example: "Xóa title ở track Overlays"
+   - Command: `otio-quick-editor list-clips --project "demo" --track "Overlays"`
+
+**Tốc độ**: ~1-2 giây (KHÔNG cần rebuild)
+
+---
+
+### Khi nào dùng FULL REBUILD? 🏗️
+
+**Use Cases** (gọi video-editor skill):
+1. **Thay đổi nội dung chính**:
+   - Sửa script.json (text, scenes, dialogue)
+   - Thay đổi voice.json (giọng đọc, emotion)
+   - Thay đổi resources.json (video/image clips)
+
+2. **Video chưa được build lần đầu**:
+   - Project mới tạo, chưa có `project.otio`
+   - Workflow topic-to-video hoặc multi-video-edit từ đầu
+
+3. **Thay đổi cấu trúc timeline**:
+   - Thêm/xóa scenes
+   - Thay đổi thứ tự clips
+   - Thay đổi aspect ratio
+
+**Tốc độ**: ~10-30 giây (rebuild toàn bộ)
+
+---
+
+### Decision Tree (Cho AI Agent)
+
+```
+User yêu cầu chỉnh sửa video
+    │
+    ├─ Project.otio đã tồn tại?
+    │   │
+    │   NO ──> ⛔ KHÔNG thể dùng quick-editor
+    │   │       └─> Phải rebuild (video-editor)
+    │   │
+    │   YES ─> Kiểm tra loại chỉnh sửa
+    │           │
+    │           ├─ Chỉ thêm/sửa overlays (title, sticker, effect)?
+    │           │   └─> ✅ Delegate to otio-quick-editor
+    │           │
+    │           └─ Sửa nội dung chính (script, voice, resources)?
+    │               └─> ⛔ Phải rebuild (video-editor)
+```
+
+---
+
+### Example Conversations
+
+**✅ DELEGATE to otio-quick-editor**:
+```
+User: "Thêm chữ 'Like & Subscribe' ở giây 5"
+Director: [Check project.otio exists]
+         → Yes → This is overlay addition
+         → Delegate to otio-quick-editor
+         → Run: otio-quick-editor add-title ...
+```
+
+**⛔ KHÔNG delegate, phải rebuild**:
+```
+User: "Sửa đoạn script ở scene 2"
+Director: [Check request type]
+         → This modifies script.json (core content)
+         → Must rebuild
+         → Run: video-editor skill
+```
+
+```
+User: "Thêm emoji 🎉 ở giây 12"
+Director: [Check project.otio exists]
+         → File not found
+         → Must build first before quick-edit
+         → Run: video-editor skill
+```
+
+---
+
+## 📚 COMPONENTS REFERENCE
+
+**QUAN TRỌNG**: Khi làm việc với overlays (titles, stickers, effects), luôn tham khảo:
+👉 **`.claude/skills/COMPONENTS_REFERENCE.md`**
+
+Tài liệu này chứa:
+- 5 main components: LayerTitle, Sticker, LayerEffect, LowerThird, OpeningTitle
+- 160+ sticker templates (Lottie + static)
+- 50+ effect types (tech, geometric, comic, nature)
+- 40+ lower third templates
+- Full props reference & examples
+
+**Use Cases:**
+- Cần thêm title overlay → Xem **LayerTitle** section
+- Cần emoji/sticker → Xem **Sticker** templates
+- Cần visual effect → Xem **LayerEffect** types
+- Cần broadcast-style lower third → Xem **LowerThird** templates
 
 ---
 

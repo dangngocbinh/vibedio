@@ -1,3 +1,7 @@
+---
+name: video-editor
+description: Tạo và chỉnh sửa file OTIO timeline từ script, voice và resources chuẩn format và best pratice. Hỗ trợ nhiều loại video (listicle, image-slide) và tự động xử lý assets.
+---
 # VIDEO EDITOR SKILL
 
 ## MỤC ĐÍCH
@@ -18,6 +22,28 @@ public/projects/{project-name}/
 ├── resources.json   (input)
 └── project.otio     (OUTPUT - skill này tạo ra)
 ```
+
+---
+
+## 🐍 PYTHON EXECUTION
+
+**Luôn sử dụng `python3` để chạy CLI này.**
+
+### Cách chạy
+```bash
+# ✅ ĐÚNG - Sử dụng python3
+python3 .claude/skills/video-editor/cli.py [args...]
+
+# ✅ ĐÚNG - Direct execution
+./.claude/skills/video-editor/cli.py [args...]
+
+# ❌ SAI - Không dùng 'python' (có thể gọi Python 2.x)
+python .claude/skills/video-editor/cli.py [args...]
+```
+
+**Lý do**: Script này yêu cầu Python 3.x và đã có shebang `#!/usr/bin/env python3`.
+
+---
 
 ## SUPPORTED VIDEO TYPES
 
@@ -46,6 +72,39 @@ Dành cho video tạo từ ảnh AI (Gemini) hoặc stock images với:
 - **AI auto-suggest effects** - Zoom, Ken Burns, Slide dựa trên content
 - **AI auto-suggest transitions** - Crossfade, Cut, Dissolve dựa trên mood
 - **TikTok highlight captions** - Word-by-word highlight
+
+## 📚 COMPONENTS REFERENCE (Overlays & Effects)
+
+Khi tạo OTIO timeline với overlays (titles, stickers, effects), **BẮT BUỘC** tham khảo:
+👉 **`.claude/skills/COMPONENTS_REFERENCE.md`**
+
+**Thông tin quan trọng:**
+- **5 main components**: LayerTitle, Sticker, LayerEffect, LowerThird, OpeningTitle
+- **160+ sticker templates**: lottie-fire, lottie-thumbs-up, heart-red, etc.
+- **50+ effect types**: neon-circle, scan-lines, particles, etc.
+- **40+ lower third templates**: breaking-news, social-youtube, gaming-glitch, etc.
+- **Full props reference** với examples
+
+**Integration trong OTIO:**
+```python
+# Example: Thêm LayerTitle vào Overlays track
+overlay_clip = otio.schema.Clip(
+    name="LayerTitle",
+    metadata={
+        "component": "LayerTitle",
+        "props": {
+            "title": "Breaking News",
+            "style": "lower-third",
+            "animation": "slide-up",
+            "textColor": "#00ff00"
+        }
+    },
+    source_range=otio.opentime.TimeRange(...)
+)
+overlay_track.append(overlay_clip)
+```
+
+---
 
 ## INPUT FILES SCHEMA
 
@@ -112,16 +171,16 @@ Output:
 
 ```bash
 # Custom FPS
-python .claude/skills/video-editor/cli.py public/projects/my-project --fps 60
+python3 .claude/skills/video-editor/cli.py public/projects/my-project --fps 60
 
 # Custom output path
-python .claude/skills/video-editor/cli.py public/projects/my-project -o custom.otio
+python3 .claude/skills/video-editor/cli.py public/projects/my-project -o custom.otio
 
 # Validate inputs only (no generation)
-python .claude/skills/video-editor/cli.py public/projects/my-project --validate-only
+python3 .claude/skills/video-editor/cli.py public/projects/my-project --validate-only
 
 # Verbose mode
-python .claude/skills/video-editor/cli.py public/projects/my-project -v
+python3 .claude/skills/video-editor/cli.py public/projects/my-project -v
 ```
 
 ## CRITICAL FEATURE: RELATIVE PATHS
@@ -877,7 +936,7 @@ node .claude/skills/video-resource-finder/scripts/find-resources.js \
   --projectDir public/projects/my-project  # → resources.json
 
 # 4. Generate timeline (THIS SKILL)
-python .claude/skills/video-editor/cli.py public/projects/my-project  # → project.otio
+python3 .claude/skills/video-editor/cli.py public/projects/my-project  # → project.otio
 
 # 5. Render video
 npm run render -- MyVideo  # → final.mp4
@@ -976,7 +1035,7 @@ The Timeline Inspector helps you understand your project's timeline - which trac
 ### 1. View Timeline Summary
 
 ```bash
-python generators/cli.py inspect --project public/projects/my-video/project.otio
+python3 generators/cli.py inspect --project public/projects/my-video/project.otio
 ```
 
 **Output:**

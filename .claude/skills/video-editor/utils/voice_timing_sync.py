@@ -145,25 +145,47 @@ class VoiceTimingSync:
         if not scene_words:
             return None
 
-        # Find first word of scene in timestamps (starting from search_start_idx)
-        first_word = scene_words[0]
-        last_word = scene_words[-1]
+        # [FIX] Try to find ANY of the first 3 words to be more robust
+        # and limit search window to avoid jumping too far (e.g. 50 words)
+        MAX_SEARCH_WINDOW = 50
+        first_idx = None
+        words_to_try = scene_words[:3]
+        
+        for i, word in enumerate(words_to_try):
+            idx = self._find_word_index(
+                word, 
+                timestamps, 
+                start_from=search_start_idx,
+                limit=MAX_SEARCH_WINDOW
+            )
+            if idx is not None:
+                # Adjust start index back based on which word we found
+                first_idx = max(search_start_idx, idx - i)
+                break
 
-        first_idx = self._find_word_index(first_word, timestamps, start_from=search_start_idx)
         if first_idx is None:
-            return None
-
-        # Find last word starting from first word position
-        last_idx = self._find_word_index(
-            last_word, timestamps,
-            start_from=first_idx,
-            search_forward=True
-        )
-
-        if last_idx is None:
-            # Try to estimate by counting expected words
+            # If still not found, search without limit but this is a fallback
+            first_idx = self._find_word_index(scene_words[0], timestamps, start_from=search_start_idx)
+            
+        if first_idx is None:
+            # Total failure - back to search_start_idx and estimate
+            first_idx = min(search_start_idx, len(timestamps) - 1)
             expected_word_count = len(scene_words)
             last_idx = min(first_idx + expected_word_count - 1, len(timestamps) - 1)
+        else:
+            # Find last word starting from first word position
+            last_word = scene_words[-1]
+            last_idx = self._find_word_index(
+                last_word, timestamps,
+                start_from=first_idx,
+                limit=max(MAX_SEARCH_WINDOW, len(scene_words) * 2),
+                search_forward=True
+            )
+
+            if last_idx is None:
+                # Try to estimate by counting expected words
+                expected_word_count = len(scene_words)
+                last_idx = min(first_idx + expected_word_count - 1, len(timestamps) - 1)
 
         # Get timing from timestamps
         start_time = timestamps[first_idx]['start']
@@ -172,8 +194,8 @@ class VoiceTimingSync:
         return VoiceTiming(
             start=start_time,
             end=end_time,
-            duration=end_time - start_time,
-            word_count=last_idx - first_idx + 1
+            duration=max(0.1, end_time - start_time),
+            word_count=max(1, last_idx - first_idx + 1)
         ), last_idx
 
     def _normalize_text(self, text: str) -> List[str]:
@@ -200,6 +222,7 @@ class VoiceTimingSync:
         word: str,
         timestamps: List[Dict[str, Any]],
         start_from: int = 0,
+        limit: Optional[int] = None,
         search_forward: bool = True
     ) -> Optional[int]:
         """
@@ -211,6 +234,7 @@ class VoiceTimingSync:
             word: Word to find (normalized)
             timestamps: List of timestamp dicts
             start_from: Index to start searching from
+            limit: Maximum number of words to search
             search_forward: If True, search forward; if False, search backward
 
         Returns:
@@ -221,9 +245,15 @@ class VoiceTimingSync:
         word_clean = re.sub(r'[.,!?;:"\'\(\)\[\]{}%]', '', word_lower)
 
         if search_forward:
-            indices = range(start_from, len(timestamps))
+            end_idx = len(timestamps)
+            if limit is not None:
+                end_idx = min(start_from + limit, len(timestamps))
+            indices = range(start_from, end_idx)
         else:
-            indices = range(start_from, -1, -1)
+            end_idx = -1
+            if limit is not None:
+                end_idx = max(start_from - limit, -1)
+            indices = range(start_from, end_idx, -1)
 
         for i in indices:
             ts_word = timestamps[i].get('word', '')

@@ -392,7 +392,7 @@ Track 4: Background Music
 ## Command
 
 ```bash
-python .claude/skills/video-editor/cli.py \
+python3 .claude/skills/video-editor/cli.py \
   "public/projects/{project-name}" \
   --fps 30
 ```
@@ -495,7 +495,7 @@ node .claude/skills/video-resource-finder/scripts/add-music-to-project.js \
   --projectDir "public/projects/$PROJECT"
 
 # Bước 4: Build timeline OTIO
-python .claude/skills/video-editor/cli.py "public/projects/$PROJECT"
+python3 .claude/skills/video-editor/cli.py "public/projects/$PROJECT"
 
 # Bước 5: Render video
 npx remotion render OtioTimeline "public/projects/$PROJECT/out/final.mp4" \

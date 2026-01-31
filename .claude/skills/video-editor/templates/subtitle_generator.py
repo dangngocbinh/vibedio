@@ -35,7 +35,7 @@ class SubtitleGenerator:
         Returns:
             OTIO Track with subtitle clips
         """
-        track = otio.schema.Track(name="Subtitles", kind=otio.schema.TrackKind.Video)
+        track = otio.schema.Track(name="Captions", kind=otio.schema.TrackKind.Video)
 
         timestamps = voice_data.get('timestamps', [])
         if not timestamps:

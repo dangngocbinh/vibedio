@@ -18,13 +18,13 @@ User Request → Analyze → Research (nếu cần) → Generate Script → Qual
 **CLI Usage**:
 ```bash
 # Check FFmpeg/FFprobe installed
-python utils/video_processor.py check
+python3 utils/video_processor.py check
 
 # Get video metadata
-python utils/video_processor.py metadata /path/to/video.mp4
+python3 utils/video_processor.py metadata /path/to/video.mp4
 
 # Extract audio to MP3
-python utils/video_processor.py extract /path/to/video.mp4 output.mp3
+python3 utils/video_processor.py extract /path/to/video.mp4 output.mp3
 ```
 
 **Python API**:
@@ -271,7 +271,7 @@ quality_report = checker.full_quality_check({
 **CLI Usage**:
 ```bash
 # Generate script for topic-based videos
-python demo.py \
+python3 demo.py \
   --topic "5 cách học tiếng Anh hiệu quả" \
   --type listicle \
   --duration 60 \

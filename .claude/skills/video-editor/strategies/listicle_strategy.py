@@ -72,18 +72,7 @@ class ListicleStrategy(BaseStrategy):
         subtitle_gen = SubtitleGenerator(self.fps)
         subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
         timeline.tracks.append(subtitle_track)
-        voice_track = self._create_voice_track(voice_data, duration)
-        timeline.tracks.append(voice_track)
 
-        # Track 4: Background Music
-        music_track = self._create_music_track(resources, duration)
-        if music_track:
-            timeline.tracks.append(music_track)
-
-        # Track 5: Subtitles (Moved to end for overlay)
-        subtitle_gen = SubtitleGenerator(self.fps)
-        subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
-        timeline.tracks.append(subtitle_track)
 
     def _create_broll_track(
         self,

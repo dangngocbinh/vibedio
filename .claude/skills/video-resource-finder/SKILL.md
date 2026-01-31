@@ -1,3 +1,7 @@
+---
+name: video-resource-finder
+description: Tự động tìm kiếm, tải về stock resources (video, image, music, sfx) và tạo ảnh AI cho video project.
+---
 # VIDEO RESOURCE FINDER SKILL
 
 ## MỤC ĐÍCH

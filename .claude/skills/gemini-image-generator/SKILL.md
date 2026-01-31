@@ -1,3 +1,7 @@
+---
+name: gemini-image-generator
+description: Tạo ảnh minh họa, creative content bằng Google Gemini API. Hỗ trợ tạo chuỗi ảnh (sequence) cho story.
+---
 # GEMINI IMAGE GENERATOR SKILL
 
 ## MỤC ĐÍCH

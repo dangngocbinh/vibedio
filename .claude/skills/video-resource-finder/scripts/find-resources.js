@@ -67,7 +67,19 @@ async function main() {
   }
 
   // Resolve project directory path
-  const projectDir = path.resolve(args.projectDir);
+  let projectDir = path.resolve(args.projectDir);
+
+  // Smart detection: If script.json doesn't exist at resolved path, try resolving relative to project root
+  if (!fs.existsSync(path.join(projectDir, 'script.json'))) {
+    const rootDir = path.resolve(__dirname, '..', '..', '..', '..');
+    const fallbackPath = path.resolve(rootDir, args.projectDir);
+
+    if (fs.existsSync(path.join(fallbackPath, 'script.json'))) {
+      console.log(`ℹ️  Adjusted project path to: ${fallbackPath}`);
+      projectDir = fallbackPath;
+    }
+  }
+
   console.log(`📁 Project Directory: ${projectDir}`);
   console.log(`📥 Download: ${args.download && !args.skipDownload ? 'enabled' : 'disabled'}`);
   if (args.download && !args.skipDownload) {

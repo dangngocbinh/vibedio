@@ -138,21 +138,22 @@ def import_files(project_dir: Path, file_paths: List[str]):
         log_error("Lỗi khi import file!")
         sys.exit(1)
 
-def run_step_script(project_dir: Path, topic: str, type: str):
-    log_info("Bắt đầu bước 1: Tạo Kịch Bản (Script)...")
-    
-    # Call video-script-generator
+def run_step_script(project_dir: Path, topic: str, type: str, ratio: str = "9:16"):
+    log_info(f"Bắt đầu bước 1: Tạo Kịch Bản (Script) - Aspect Ratio: {ratio}...")
+
+    # Call video-script-generator CLI
     cmd = [
-        "python3", 
-        str(SCRIPT_SKILL / "demo.py"),
+        "python3",
+        str(SCRIPT_SKILL / "cli.py"),  # ← Changed from demo.py to cli.py
         "--topic", topic,
         "--type", type,
+        "--ratio", ratio,
         "--output", str(project_dir / "script.json")
     ]
-    
+
     try:
         subprocess.run(cmd, check=True)
-        log_info("✅ Kịch bản đã tạo xong: script.json")
+        log_info(f"✅ Kịch bản đã tạo xong: script.json (ratio: {ratio})")
     except subprocess.CalledProcessError:
         log_error("Lỗi khi tạo script!")
         sys.exit(1)
@@ -206,18 +207,19 @@ def run_step_voice(project_dir: Path):
         log_error("Lỗi khi tạo voice!")
         sys.exit(1)
 
-def run_step_multi_video_setup(project_dir: Path):
-    log_info("Bắt đầu bước 1: Setup Multi-Video (Import & Transcribe)...")
-    
+def run_step_multi_video_setup(project_dir: Path, ratio: str = "9:16"):
+    log_info(f"Bắt đầu bước 1: Setup Multi-Video (Import & Transcribe) - Aspect Ratio: {ratio}...")
+
     cmd = [
         "python3",
         str(SCRIPT_SKILL / "cli_multi.py"),
-        "--project", project_dir.name
+        "--project", project_dir.name,
+        "--ratio", ratio  # ← Added aspect ratio parameter
     ]
-    
+
     try:
         subprocess.run(cmd, check=True)
-        log_info("✅ Setup hoàn tất. Script.json đã có transcript.")
+        log_info(f"✅ Setup hoàn tất. Script.json đã có transcript (ratio: {ratio}).")
     except subprocess.CalledProcessError:
         log_error("Lỗi khi setup multi-video!")
         sys.exit(1)
@@ -286,6 +288,8 @@ def main():
     produce_parser.add_argument("--workflow", default="auto", choices=["auto", "topic-to-video", "multi-video-edit", "multi-video-resume"])
     produce_parser.add_argument("--topic", help="Topic for topic-to-video workflow")
     produce_parser.add_argument("--type", default="facts", help="Video type")
+    produce_parser.add_argument("--ratio", default="9:16",
+                                help="Aspect ratio (9:16 for TikTok/Shorts, 16:9 for YouTube, 1:1 for Instagram, 4:5 for Instagram Portrait)")
 
     # Status Command
     status_parser = subparsers.add_parser("status")
@@ -308,8 +312,8 @@ def main():
                 return
 
             # Execute Pipeline
-            run_step_script(proj_dir, args.topic, args.type)
-            state.update_step("script", "completed", "script.json")
+            run_step_script(proj_dir, args.topic, args.type, args.ratio)
+            state.update_step("script", "completed", {"file": "script.json", "ratio": args.ratio})
             
             run_step_voice(proj_dir)
             state.update_step("voice", "completed", "voice.json")
@@ -324,8 +328,8 @@ def main():
             
         elif args.workflow == "multi-video-edit":
             # 1. Setup (Import/Extraction/Transcription)
-            run_step_multi_video_setup(proj_dir)
-            state.update_step("setup", "completed", "script.json (transcript)")
+            run_step_multi_video_setup(proj_dir, args.ratio)
+            state.update_step("setup", "completed", {"file": "script.json (transcript)", "ratio": args.ratio})
             
             # 2. Agent Interaction required
             log_info("🛑 PAUSE: Đã có Transcript.")

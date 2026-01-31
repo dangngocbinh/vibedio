@@ -1,3 +1,7 @@
+---
+name: local-asset-import
+description: Import file nội bộ (video, image, audio) vào project, tự động đổi tên và cập nhật resources.json.
+---
 # Local Asset Import Skill
 
 Import local files (images, videos, audio) into a video project. Supports files from anywhere on the filesystem - files outside the project are automatically copied in.

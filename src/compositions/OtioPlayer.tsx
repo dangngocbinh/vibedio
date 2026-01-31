@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { AbsoluteFill, Audio, Img, Sequence, Video, useVideoConfig, staticFile, useCurrentFrame, interpolate, random, delayRender, continueRender, Series } from 'remotion';
-import { SubtitleTrack } from '../components/SubtitleTrack';
+import { SubtitleTrack } from '../components/captions/SubtitleTrack';
 import { TransitionSeries, linearTiming } from '@remotion/transitions';
 import { slide } from "@remotion/transitions/slide";
 import { fade } from "@remotion/transitions/fade";
