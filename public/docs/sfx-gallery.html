@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFX Gallery - Thư viện âm thanh thông minh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --card-bg: #161e31;
+            --primary: #38bdf8;
+            --secondary: #818cf8;
+            --success: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            padding: 60px 20px;
+            text-align: center;
+            background: radial-gradient(circle at top, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .guide-section {
+            max-width: 900px;
+            margin: -30px auto 50px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .guide-step {
+            text-align: center;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin: 0 auto 15px;
+        }
+
+        .guide-step h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .guide-step p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--primary);
+            width: fit-content;
+        }
+
+        .info .name {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 6px;
+        }
+
+        .info .desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .prompt-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prompt-box:hover {
+            background: rgba(56, 189, 248, 0.05);
+            border-color: var(--primary);
+        }
+
+        .prompt-label {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .prompt-text {
+            font-style: italic;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        button {
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-play {
+            background: var(--primary);
+            color: #0b0f1a;
+        }
+
+        .btn-play:hover {
+            background: #7dd3fc;
+            filter: brightness(1.1);
+        }
+
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-copy:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .section-title {
+            grid-column: 1 / -1;
+            margin-top: 40px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="toast" class="toast">✨ Đã sao chép câu lệnh! Hãy dán vào ChatGPT/Claude ngay.</div>
+
+    <div class="header">
+        <h1>Thư Viện SFX Thông Minh</h1>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 30px;">Tăng hồn cho video của bạn bằng
+            những âm thanh chuyển cảnh và hiệu ứng chuyên nghiệp.</p>
+    </div>
+
+    <div class="guide-section">
+        <div class="guide-step">
+            <div class="step-num">1</div>
+            <h3>Nghe thử</h3>
+            <p>Bấm nút 'Nghe thử' để tìm âm thanh phù hợp với bối cảnh video.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">2</div>
+            <h3>Copy Câu lệnh</h3>
+            <p>Chọn âm thanh ưng ý và bấm vào ô 'Câu lệnh mẫu' để sao chép.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">3</div>
+            <h3>Dán cho AI</h3>
+            <p>Dán nội dung vào khung chat với AI, nó sẽ tự động thêm âm thanh vào video.</p>
+        </div>
+    </div>
+
+    <div class="container" id="gallery">
+        <!-- Items will be injected here -->
+    </div>
+
+    <script>
+        const sfxList = [
+            {
+                category: 'Chuyển Cảnh (Transitions)',
+                items: [
+                    { name: 'Vút mạnh (Whoosh Fast)', file: 'whoosh.mp3', desc: 'Dùng khi chuyển cảnh cực nhanh hoặc chữ bay vào tốc độ cao.', tag: 'Năng động' },
+                    { name: 'Gió lướt (Subtle Whoosh)', file: 'whoosh1.mp3', desc: 'Âm thanh nhẹ nhàng, dùng cho các đoạn tâm sự, cảnh lướt mượt.', tag: 'Mượt mà' },
+                    { name: 'Kịch tính (Cinematic Whoosh)', file: 'whoosh2.mp3', desc: 'Tiếng vút trầm sâu, tạo cảm giác quan trọng, kịch tính.', tag: 'Điện ảnh' },
+                    { name: 'Chuyển đoạn (Switch)', file: 'transition.mp3', desc: 'Âm thanh chuyển đoạn lớn giữa các chương trong câu chuyện.', tag: 'Cơ bản' }
+                ]
+            },
+            {
+                category: 'Hiệu Ứng (Effects)',
+                items: [
+                    { name: 'Leng keng (Magic Bling)', file: 'bling1.mp3', desc: 'Dùng khi hiện ra các icon lấp lánh (tim, sao, tiền) hoặc sticker.', tag: 'Kỳ ảo' },
+                    { name: 'Click nút (UI Click)', file: 'click.mp3', desc: 'Mô phỏng tiếng nhấn chuột khi hiển thị các nút bấm hoặc sticker.', tag: 'Công nghệ' },
+                    { name: 'Thành công (Success Chime)', file: 'chime1.mp3', desc: 'Tiếng chuông nhẹ khi kết một ý quan trọng hoặc hiện logo.', tag: 'Tươi sáng' },
+                    { name: 'Thông báo (Modern Beep)', file: 'beep1.mp3', desc: 'Tiếng bíp ngắn gọn để gây sự chú ý vào một thông tin quan trọng.', tag: 'Gây chú ý' },
+                    { name: 'Kết thúc (Final Finish)', file: 'finish.mp3', desc: 'Âm thanh chốt hạ cho video, thường dùng lúc hiện lời chào.', tag: 'Kết thúc' }
+                ]
+            }
+        ];
+
+        const gallery = document.getElementById('gallery');
+        const toast = document.getElementById('toast');
+
+        function showToast(msg) {
+            if (msg) toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function copyToClipboard(text, msg) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(msg);
+            });
+        }
+
+        sfxList.forEach(section => {
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.innerText = section.category;
+            gallery.appendChild(title);
+
+            section.items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const prompt = `Thêm âm thanh "${item.name}" (file: /audio/${item.file}) vào video tại giây thứ [điền số giây] để tăng hiệu ứng hình ảnh.`;
+
+                card.innerHTML = `
+                <div class="tag">${item.tag}</div>
+                <div class="info">
+                    <div class="name">${item.name}</div>
+                    <div class="desc">${item.desc}</div>
+                </div>
+                
+                <div class="prompt-box" onclick="copyToClipboard('${prompt}', '✨ Đã copy câu lệnh! Hãy dán cho AI và điền số giây.')">
+                    <div class="prompt-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        CÂU LỆNH MẪU (COPY)
+                    </div>
+                    <div class="prompt-text">"${prompt}"</div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-play" onclick="new Audio('../audio/${item.file}').play()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        Nghe thử
+                    </button>
+                    <button class="btn-copy" onclick="copyToClipboard('/audio/${item.file}', '📂 Đã copy đường dẫn file!')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10M7 12h10M7 17h10"/></svg>
+                        Copy Path
+                    </button>
+                </div>
+            `;
+                gallery.appendChild(card);
+            });
+        });
+    </script>
+
+</body>
+
+</html>

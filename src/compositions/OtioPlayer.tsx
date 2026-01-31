@@ -160,6 +160,11 @@ export const sanitizeUrl = (url?: string, projectId?: string) => {
         }
     }
 
+    // Handle paths starting with /audio/ (Specific fix for SFX)
+    if (url.startsWith('/audio/')) {
+        return staticFile(url.substring(1));
+    }
+
     // Handle relative paths (not http/https/data)
     if (!url.match(/^(https?:|data:|file:|\/)/)) {
         if (projectId) {
@@ -214,6 +219,10 @@ export const OtioClip: React.FC<{
     const mediaRef = clip.media_references?.[mediaRefKey];
     const rawSrc = mediaRef?.target_url;
     const src = sanitizeUrl(rawSrc, projectId);
+
+    if (trackKind === 'Audio') {
+        console.log(`[OtioClip Debug] Clip: ${clip.name}, RawSrc: ${rawSrc}, FinalSrc: ${src}, StartFrom: ${startFromFrames}, Duration: ${durationFrames}`);
+    }
 
     // if (!src) return null; // Logic gốc là return null, nhưng ta muốn debug xem clip nào lỗi hoặc missing
     // Với text clip hoặc generated clip, có thể ko có src.

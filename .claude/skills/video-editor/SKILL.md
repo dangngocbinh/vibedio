@@ -107,43 +107,54 @@ Components tự động phát hiện kích thước video và điều chỉnh:
 
 Skill video-editor hỗ trợ thêm hiệu ứng âm thanh (SFX) để tăng cảm xúc cho video.
 
-### Thư mục SFX
-Tất cả file âm thanh hiệu ứng cần được lưu tại: `public/audio/`
+### ⚠️ QUY TẮC QUAN TRỌNG (UPDATED)
 
-Các file phổ biến có sẵn:
-- `whoosh1.mp3`, `whoosh2.mp3` - Dùng cho transition, flying text
-- `click1.mp3` - Dùng cho sticker, UI appearance
-- `bling1.mp3` - Dùng cho success, sparkle, pop
-- `chime1.mp3` - Dùng cho intro/outro titles
-- `beep1.mp3`, `alarm1.mp3` - Dùng cho cảnh báo, lỗi hoặc hiệu ứng tech
-- `transition.mp3`, `finish.mp3`, `whoosh.mp3` - Các file mặc định khác
+Tham khảo tài liệu đầy đủ tại: 👉 **[docs/sfx-guide.md](docs/sfx-guide.md)**
 
-### Cách thêm vào OTIO
+1.  **Đường dẫn (Asset Path):**
+    - BẮT BUỘC dùng đường dẫn tuyệt đối bắt đầu bằng `/audio/`.
+    - Ví dụ ĐÚNG: `/audio/whoosh.mp3`
+    - Ví dụ SAI: `public/audio/whoosh.mp3`, `../../audio/whoosh.mp3`
 
-Tạo Track mới tên "Audio Effects" và thêm clip dạng `Audio`:
+2.  **Âm lượng (Volume):**
+    - BẮT BUỘC đặt metadata `volume: "2.0"` (200%) cho các clip SFX.
+    - Lý do: Để âm thanh hiệu ứng nghe rõ trên nền nhạc background.
+
+3.  **Cấu trúc Track:**
+    - Không trộn SFX vào track Voice hoặc Music.
+    - Nên tách thành các track riêng: `Transition SFX` (cho chuyển cảnh) và `Component SFX` (cho sticker, title).
+4.  **Định Vị (Positioning):**
+    - Sử dụng `metadata.globalTimelineStart` (tính bằng Giây) để đặt vị trí xuất hiện.
+    - `source_range.start_time` phải luôn là `0.0`.
+
+### Code Mẫu (Python OTIO)
 
 ```python
-sf_clip = otio.schema.Clip(
-    name="SFX: whoosh",
+sfx_clip = otio.schema.Clip(
+    name="SFX: Whoosh",
+    metadata={ 
+        "volume": "2.0",
+        "globalTimelineStart": "5.0" # Position in Seconds
+    }, 
     media_reference=otio.schema.ExternalReference(
-        target_url="public/audio/whoosh.mp3"
+        target_url="/audio/whoosh.mp3" # Absolute path with /audio/ prefix
     ),
     source_range=otio.opentime.TimeRange(
-        start_time=otio.opentime.RationalTime(0, fps), # Start of audio file
-        duration=otio.opentime.RationalTime(30, fps)   # Duration to play
+        start_time=otio.opentime.RationalTime(0.0, fps), # Always 0.0
+        duration=otio.opentime.RationalTime(duration, fps)
     )
 )
-# Add to Audio Effects track
 ```
 
-### Auto-suggest SFX Mapping
+### Mapping Gợi Ý
 
 | Component/Action | Suggested SFX |
 |------------------|---------------|
-| `LayerTitle` (slide/fly) | `whoosh.mp3` |
-| `Sticker` (pop) | `click.mp3` hoặc `pop.mp3` |
-| `FullscreenTitle` | `transition.mp3` hoặc `cinematic-boom.mp3` |
-| `LayerEffect` (tech) | `glitch.mp3` |
+| `LayerTitle` (slide/fly) | `/audio/whoosh.mp3` |
+| `Sticker` (pop) | `/audio/click.mp3` |
+| `FullscreenTitle` | `/audio/transition.mp3` |
+| `LayerEffect` (tech) | `/audio/bling1.mp3` |
+| `End Screen` | `/audio/finish.mp3` |
 
 
 ### ⚠️ QUAN TRỌNG: Bạn KHÔNG CẦN thay đổi gì!
