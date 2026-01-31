@@ -1,314 +1,319 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Layer Effects Catalog</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <title>Layer Effect Gallery - Hiệu ứng hình ảnh thông minh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --bg: #0b0f1a;
+            --card-bg: #161e31;
+            --primary: #c084fc;
+            --secondary: #6366f1;
+            --success: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
-            padding: 40px;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            padding: 60px 20px;
+            text-align: center;
+            background: radial-gradient(circle at top, rgba(192, 132, 252, 0.15) 0%, transparent 70%);
         }
 
         h1 {
-            text-align: center;
-            color: #38bdf8;
-            margin-bottom: 40px;
+            font-weight: 800;
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
         }
 
-        .grid {
+        .guide-section {
+            max-width: 900px;
+            margin: -30px auto 50px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
         }
 
-        .card {
-            background: #1e293b;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #334155;
-        }
-
-        .preview {
-            height: 160px;
-            background: #000;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .label {
-            padding: 10px;
-            background: #0f172a;
+        .guide-step {
             text-align: center;
         }
 
-        code {
-            color: #f472b6;
-            font-size: 0.8rem;
-        }
-
-        /* CSS Animations for Preview */
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.7;
-            }
-        }
-
-        @keyframes scan {
-            0% {
-                top: 0%;
-            }
-
-            100% {
-                top: 100%;
-            }
-        }
-
-        @keyframes flash {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
-        }
-
-        .eff-spin {
-            animation: spin 4s linear infinite;
-        }
-
-        .eff-pulse {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        /* Specific Shapes */
-        .circle-dashed {
-            width: 80px;
-            height: 80px;
-            border: 4px dashed #0ea5e9;
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #fff;
             border-radius: 50%;
-        }
-
-        .square-spin {
-            width: 60px;
-            height: 60px;
-            border: 2px solid #0ea5e9;
-        }
-
-        .lines-h {
-            width: 80%;
-            height: 2px;
-            background: #0ea5e9;
-            box-shadow: 0 10px 0 #0ea5e9, 0 20px 0 #0ea5e9;
-        }
-
-        .crosshair {
-            width: 80px;
-            height: 80px;
-            position: relative;
-        }
-
-        .crosshair::before {
-            content: '';
-            position: absolute;
-            top: 40px;
-            left: 0;
-            width: 80px;
-            height: 2px;
-            background: #0ea5e9;
-        }
-
-        .crosshair::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 40px;
-            width: 2px;
-            height: 80px;
-            background: #0ea5e9;
-        }
-
-        .triangle {
-            width: 0;
-            height: 0;
-            border-left: 30px solid transparent;
-            border-right: 30px solid transparent;
-            border-bottom: 50px solid #0ea5e9;
-        }
-
-        .dots {
             display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin: 0 auto 15px;
+        }
+
+        .guide-step h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .guide-step p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+        }
+
+        .tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(192, 132, 252, 0.1);
+            color: var(--primary);
+            width: fit-content;
+        }
+
+        .info .name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .info .desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .prompt-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prompt-box:hover {
+            background: rgba(192, 132, 252, 0.05);
+            border-color: var(--primary);
+        }
+
+        .prompt-label {
+            font-size: 0.65rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
             gap: 5px;
         }
 
-        .dot {
-            width: 10px;
-            height: 10px;
-            background: #0ea5e9;
-            border-radius: 50%;
-            animation: flash 1s infinite alternate;
+        .prompt-text {
+            font-style: italic;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .btn-copy-json {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-copy-json:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .section-title {
+            grid-column: 1 / -1;
+            margin-top: 40px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            font-size: 1.4rem;
+            font-weight: 800;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Layer Effects Library (v2.0)</h1>
+    <div id="toast" class="toast">✨ Đã sao chép!</div>
 
-    <div class="grid">
-        <!-- TECH HUD -->
-        <div class="card">
-            <div class="preview">
-                <!-- High Fidelity Neon Circle -->
-                <svg width="80" height="80" viewBox="0 0 100 100" class="eff-spin"
-                    style="filter: drop-shadow(0 0 5px #0ea5e9);">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="10 5"
-                        opacity="0.6" />
-                    <circle cx="50" cy="50" r="35" fill="none" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="5 5"
-                        opacity="0.4" />
-                    <circle cx="50" cy="50" r="25" fill="none" stroke="#0ea5e9" stroke-width="4"
-                        stroke-dasharray="20 20" opacity="0.8" />
-                </svg>
-            </div>
-            <div class="label"><code>neon-circle</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div class="square-spin eff-spin"></div>
-            </div>
-            <div class="label"><code>rotating-squares</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div class="crosshair eff-spin"></div>
-            </div>
-            <div class="label"><code>crosshair</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div class="lines-h eff-pulse"></div>
-            </div>
-            <div class="label"><code>scan-lines</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div class="triangle eff-spin"></div>
-            </div>
-            <div class="label"><code>techno-triangle</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <!-- High Fidelity Radar Sweep -->
-                <div
-                    style="width: 80px; height: 80px; border-radius: 50%; border: 1px solid #0ea5e9; position: relative; overflow: hidden;">
-                    <div class="eff-spin"
-                        style="position: absolute; width: 100%; height: 100%; background: conic-gradient(from 0deg, transparent 270deg, #0ea5e9 360deg); opacity: 0.5;">
-                    </div>
-                    <div
-                        style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: #0ea5e9; border-radius: 50%; transform: translate(-50%, -50%);">
-                    </div>
-                </div>
-            </div>
-            <div class="label"><code>radar-sweep</code></div>
-        </div>
+    <div class="header">
+        <h1>Layer Effects Library</h1>
+        <p style="color: var(--text-muted)">Hiệu ứng đồ họa chuyển động Neon, HUD và Sci-Fi cho video của bạn.</p>
+    </div>
 
-        <!-- GEOMETRIC -->
-        <div class="card">
-            <div class="preview">
-                <div style="border: 2px solid #f472b6; width: 50px; height: 50px; transform: rotate(45deg);"
-                    class="eff-pulse"></div>
-            </div>
-            <div class="label"><code>burst</code></div>
+    <div class="guide-section">
+        <div class="guide-step">
+            <div class="step-num">1</div>
+            <h3>Chọn hiệu ứng</h3>
+            <p>Tìm hiệu ứng phù hợp với phong cách video (Tech, Comic, Minimal...)</p>
         </div>
-        <div class="card">
-            <div class="preview">
-                <div class="dots">
-                    <div class="dot"></div>
-                    <div class="dot" style="animation-delay:0.2s"></div>
-                    <div class="dot" style="animation-delay:0.4s"></div>
-                </div>
-            </div>
-            <div class="label"><code>loading-dots</code></div>
+        <div class="guide-step">
+            <div class="step-num">2</div>
+            <h3>Copy Prompt</h3>
+            <p>Bấm vào ô câu lệnh mẫu để copy lệnh gửi cho AI.</p>
         </div>
-        <div class="card">
-            <div class="preview">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
-            </div>
-            <div class="label"><code>plus-grid</code></div>
-        </div>
-
-        <!-- NEW -->
-        <div class="card">
-            <div class="preview">
-                <div class="circle-dashed" style="border-style: dotted;"></div>
-            </div>
-            <div class="label"><code>dashed-ring</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div style="width: 80px; height: 20px; border: 1px solid #0ea5e9;"></div>
-            </div>
-            <div class="label"><code>cyber-frame</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div class="dots" style="flex-direction: column;">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
-            </div>
-            <div class="label"><code>digital-noise</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div style="font-size: 20px; color: #f472b6; font-weight: bold;" class="eff-pulse">BOOM!</div>
-            </div>
-            <div class="label"><code>comic-boom</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div style="border: 2px solid #fff; border-radius: 50%; width: 60px; height: 60px;"></div>
-            </div>
-            <div class="label"><code>hand-drawn-circle</code></div>
-        </div>
-        <div class="card">
-            <div class="preview">
-                <div
-                    style="width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 20px solid #0ea5e9;">
-                </div>
-            </div>
-            <div class="label"><code>arrow-chevron</code></div>
+        <div class="guide-step">
+            <div class="step-num">3</div>
+            <h3>Tùy chỉnh</h3>
+            <p>AI sẽ tự động áp dụng hiệu ứng vào đúng vị trí bạn yêu cầu.</p>
         </div>
     </div>
+
+    <div class="container" id="gallery"></div>
+
+    <script>
+        const effects = [
+            {
+                category: 'Công nghệ & HUD (Futuristic)',
+                items: [
+                    { id: 'neon-circle', name: 'Neon Circle', desc: 'Vòng tròn xoay Neon phong cách tương lai.', tag: 'HiTech' },
+                    { id: 'radar-sweep', name: 'Radar Sweep', desc: 'Hiệu ứng radar quét màn hình.', tag: 'HUD' },
+                    { id: 'scan-lines', name: 'Scan Lines', desc: 'Hiệu ứng nhiễu sọc màn hình CCTV.', tag: 'Retro' },
+                    { id: 'cyber-frame-corners', name: 'Cyber Corners', desc: 'Khung góc màn hình kiểu công nghệ.', tag: 'Frame' }
+                ]
+            },
+            {
+                category: 'Hình học & Trừu tượng (Abstract)',
+                items: [
+                    { id: 'burst', name: 'Visual Burst', desc: 'Hiệu ứng bùng nổ khi hiện title/sticker.', tag: 'Impact' },
+                    { id: 'techno-triangle', name: 'Techno Triangle', desc: 'Tam giác lồng nhau dạng Sci-fi.', tag: 'Shapes' },
+                    { id: 'concentric-circles', name: 'Concentric Rings', desc: 'Các vòng tròn đồng tâm xoay nghịch chiều.', tag: 'Motion' },
+                    { id: 'hex-hive', name: 'Hex Hive', desc: 'Lưới tổ ong làm nền mờ.', tag: 'Background' }
+                ]
+            },
+            {
+                category: 'Nghệ thuật & Vẽ tay (Artistic)',
+                items: [
+                    { id: 'comic-boom', name: 'Comic BOOM!', desc: 'Hiệu ứng bùng nổ kiểu truyện tranh.', tag: 'Comic' },
+                    { id: 'hand-drawn-circle', name: 'Sketchy Circle', desc: 'Vòng tròn vẽ tay dùng để highlight vật thể.', tag: 'Handmade' },
+                    { id: 'zigzag-wave', name: 'Zizgag Wave', desc: 'Sóng điện zigzag năng động.', tag: 'Vibe' }
+                ]
+            }
+        ];
+
+        const gallery = document.getElementById('gallery');
+        const toast = document.getElementById('toast');
+
+        function notify(msg) {
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        effects.forEach(section => {
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.innerText = section.category;
+            gallery.appendChild(title);
+
+            section.items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const prompt = `Thêm hiệu ứng "${item.name}" (loại: ${item.id}) tại vị trí [giữa/góc/trái] từ giây thứ [điền giây]. Màu chủ đạo là [màu].`;
+                const jsonValue = JSON.stringify({
+                    remotion_component: "LayerEffect",
+                    props: { type: item.id, color: "#00d4ff", animation: "fade" }
+                }, null, 2);
+
+                card.innerHTML = `
+                <div class="tag">${item.tag}</div>
+                <div class="info">
+                    <div class="name">${item.name}</div>
+                    <div class="desc">${item.desc}</div>
+                </div>
+                
+                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify('✨ Đã copy câu lệnh Prompt!')">
+                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
+                    <div class="prompt-text">"${prompt}"</div>
+                </div>
+
+                <button class="btn-copy-json" onclick="navigator.clipboard.writeText(\`${jsonValue}\`); notify('📂 Đã copy mã kỹ thuật JSON!')">
+                    Copy technical JSON code
+                </button>
+            `;
+                gallery.appendChild(card);
+            });
+        });
+    </script>
 
 </body>
 

@@ -4,826 +4,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lower Third Templates Gallery - 40 Styles</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Montserrat:wght@700&family=Press+Start+2P&family=Caveat:wght@700&family=Playfair+Display:ital,wght@1,700&display=swap"
+    <title>Lower Third Gallery - Thiết kế Tiêu đề góc dưới</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --accent: #3b82f6;
+            --bg: #0b0f1a;
+            --card-bg: #161e31;
             --primary: #3498db;
+            --secondary: #2ecc71;
+            --success: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 40px;
+            padding: 0;
         }
 
-        header {
+        .header {
+            padding: 60px 20px;
             text-align: center;
-            margin-bottom: 60px;
+            background: radial-gradient(circle at top, rgba(52, 152, 219, 0.15) 0%, transparent 70%);
         }
 
-        header h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            margin-bottom: 10px;
-            background: linear-gradient(to right, #60a5fa, #a855f7);
+        h1 {
+            font-weight: 800;
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            letter-spacing: -0.02em;
         }
 
-        .category-section {
-            margin-bottom: 80px;
-        }
-
-        .category-title {
-            font-size: 2rem;
-            color: #60a5fa;
-            border-bottom: 2px solid #334155;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .gallery {
+        .guide-section {
+            max-width: 900px;
+            margin: -30px auto 50px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
         }
 
-        .template-card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+        .guide-step {
+            text-align: center;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin: 0 auto 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s ease;
             display: flex;
             flex-direction: column;
+            gap: 15px;
         }
 
-        .template-card:hover {
+        .card:hover {
             transform: translateY(-5px);
-            border-color: var(--accent);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border-color: var(--primary);
         }
 
-        /* --- PREVIEW CANVAS --- */
-        .preview-area {
-            height: 220px;
-            background-color: #000;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 40px;
-            overflow: hidden;
-        }
-
-        .info-area {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            background: #1e293b;
-        }
-
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .info-area h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: #f1f5f9;
-        }
-
-        .template-id {
-            background: #334155;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            color: #94a3b8;
-        }
-
-        .info-area p {
-            margin: 0;
-            font-size: 0.85rem;
-            color: #94a3b8;
-            line-height: 1.5;
-        }
-
-        /* --- CSS MASKING & ANIMATION HELPERS --- */
-        .preview-content {
-            position: relative;
-            width: 100%;
-        }
-
-        /* --- TEMPLATE REPLICAS (Direct CSS) --- */
-
-        .modern-skew {
-            transform: skewX(-15deg);
-            background: #fff;
-            padding: 10px 40px 10px 20px;
-            display: inline-block;
-            box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .modern-skew h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 900;
-            color: #2c3e50;
-            transform: skewX(15deg);
-            text-transform: uppercase;
-        }
-
-        .modern-skew-sub {
-            background: var(--primary);
-            padding: 5px 30px 5px 15px;
-            display: inline-block;
-            margin-top: 5px;
-            transform: skewX(-15deg) translateX(20px);
-        }
-
-        .modern-skew-sub p {
-            margin: 0;
-            color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            transform: skewX(15deg);
-        }
-
-        .glass-modern {
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .glass-modern h1 {
-            margin: 0;
-            font-size: 28px;
-            color: #fff;
+        .name {
             font-weight: 700;
-        }
-
-        .glass-modern p {
-            margin: 5px 0 0;
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .neon-glow {
-            border-left: 6px solid var(--primary);
-            padding: 10px 25px;
-            background: rgba(0, 0, 0, 0.5);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .neon-glow h1 {
-            margin: 0;
+            font-size: 1.2rem;
             color: #fff;
-            text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary);
-            font-size: 28px;
         }
 
-        .neon-glow p {
-            margin: 0;
+        .tag {
+            font-size: 0.7rem;
             color: var(--primary);
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-            font-size: 14px;
+            letter-spacing: 0.1em;
         }
 
-        .minimal-bold {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 20px 40px;
-            border-left: 8px solid var(--primary);
+        .prompt-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
         }
 
-        .minimal-bold h1 {
-            margin: 0;
-            font-size: 32px;
-            font-weight: 900;
-            color: #fff;
-            text-transform: uppercase;
-            margin: 0;
-        }
-
-        .minimal-bold p {
-            margin: 0;
-            font-size: 18px;
+        .prompt-label {
+            font-size: 0.65rem;
             color: var(--primary);
-            font-weight: bold;
-        }
-
-        .gradient-wave {
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            padding: 15px 100px;
-            text-align: center;
-            border-radius: 50px;
-            width: fit-content;
-            margin: 0 auto;
-        }
-
-        .gradient-wave h1 {
-            margin: 0;
-            font-size: 28px;
-            color: #fff;
-        }
-
-        .gradient-wave p {
-            margin: 0;
-            font-size: 16px;
-            color: #fff;
-            opacity: 0.9;
-        }
-
-        .corporate-clean {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 15px 30px;
-            backdrop-filter: blur(5px);
-        }
-
-        .corporate-bar {
-            width: 6px;
-            height: 50px;
-            background: var(--primary);
-            margin-right: 20px;
-        }
-
-        .corporate-clean h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 300;
-            color: #fff;
-        }
-
-        .corporate-line {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.3);
-            margin: 5px 0;
-        }
-
-        .corporate-clean p {
-            margin: 0;
-            font-size: 14px;
-            color: #eee;
-            font-weight: 600;
-        }
-
-        .tech-grid {
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        .tech-head {
-            color: var(--primary);
-            font-size: 12px;
+            font-weight: 800;
             margin-bottom: 5px;
         }
 
-        .tech-box {
-            background: #000;
-            color: var(--primary);
-            padding: 5px 15px;
-            display: inline-block;
-            border: 1px solid var(--primary);
-        }
-
-        .tech-sub {
-            color: #fff;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .elegant-serif {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            width: 80%;
-            margin: 0 auto;
-        }
-
-        .elegant-serif h1 {
-            font-family: 'Playfair Display', serif;
+        .prompt-text {
             font-style: italic;
-            font-size: 32px;
-            color: #d4af37;
-            margin: 0;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.4;
         }
 
-        .elegant-line {
-            width: 50px;
-            height: 1px;
-            background: #d4af37;
-            margin: 10px auto;
-        }
-
-        .elegant-serif p {
-            letter-spacing: 4px;
-            font-size: 14px;
-            color: #fff;
-            text-transform: uppercase;
-            margin: 0;
-        }
-
-        .breaking-news {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-
-        .breaking-tag {
-            background: #fff;
-            color: #e74c3c;
-            padding: 2px 10px;
-            font-weight: bold;
-            margin-right: 20px;
-            display: inline-block;
-        }
-
-        .breaking-main {
-            background: #e74c3c;
-            color: #fff;
-            padding: 10px 50px;
-            display: flex;
-            align-items: center;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .breaking-sub {
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            padding: 5px 50px;
-            font-size: 16px;
-        }
-
-        .social-youtube {
-            display: flex;
-            align-items: center;
-            background: #fff;
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: white;
+            padding: 15px 30px;
             border-radius: 50px;
-            padding: 10px 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            font-weight: 700;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .social-yt-icon {
-            width: 50px;
-            height: 50px;
-            background: #ff0000;
-            border-radius: 50%;
-            margin-right: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            font-weight: bold;
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
         }
 
-        .social-youtube h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #000;
-        }
-
-        .social-youtube p {
-            margin: 0;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .social-insta {
-            display: flex;
-            align-items: center;
-        }
-
-        .insta-ring {
-            padding: 3px;
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            border-radius: 50%;
-        }
-
-        .insta-icon {
-            width: 60px;
-            height: 60px;
-            background: #fff;
-            border-radius: 50%;
-            border: 3px solid #000;
-        }
-
-        .social-insta-text {
-            margin-left: 20px;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .social-insta h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .gaming-glitch {
-            color: #fff;
-            font-weight: 950;
-            font-size: 48px;
-            text-shadow: 3px 0 #ff00ff, -3px 0 #00ffff;
-        }
-
-        .gaming-sub {
-            color: #00ff00;
-            font-size: 16px;
-            font-family: monospace;
-            margin: 0;
-        }
-
-        .luxury-gold h1 {
-            margin: 0;
-            font-size: 32px;
-            background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .luxury-line {
-            height: 2px;
-            background: #bf953f;
-            width: 100px;
-            margin: 5px 0;
-        }
-
-        .luxury-gold p {
-            color: #bf953f;
-            letter-spacing: 3px;
-            margin: 0;
-        }
-
-        .comic-pop-box {
-            background: #ff0;
-            border: 5px solid #000;
-            padding: 10px 40px;
-            transform: rotate(-3deg);
-            display: inline-block;
-        }
-
-        .comic-pop-box h1 {
-            margin: 0;
-            font-size: 28px;
-            color: #000;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .comic-pop-sub {
-            background: #f0f;
-            color: #fff;
-            padding: 5px 20px;
-            border: 3px solid #000;
-            transform: rotate(2deg) translate(20px, -10px);
-            width: fit-content;
-            font-weight: bold;
-        }
-
-        .cyber-hud {
-            border: 1px solid #00ffff;
-            padding: 15px;
-            position: relative;
-            color: #00ffff;
-            font-family: monospace;
-            width: fit-content;
-        }
-
-        .cyber-scan {
-            position: absolute;
-            top: -10px;
-            left: 10px;
-            background: #000;
-            padding: 0 5px;
-            font-size: 10px;
-        }
-
-        .cyber-hud h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .cyber-bar {
-            height: 2px;
-            width: 60%;
-            background: #00ffff;
-            margin-top: 10px;
-        }
-
-        .hand-drawn-box {
-            background: #fff;
-            border: 3px solid #000;
-            padding: 10px 30px;
-            border-radius: 15px 50px 30px 10px;
-            transform: rotate(-3deg);
-            width: fit-content;
-        }
-
-        .hand-drawn-box h1 {
-            margin: 0;
-            font-size: 28px;
-            color: #000;
-            font-family: 'Caveat', cursive;
-        }
-
-        .brush-stroke-box {
-            background: #e67e22;
-            padding: 10px 60px;
-            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-            transform: rotate(-2deg);
-            width: fit-content;
-        }
-
-        .brush-stroke-box h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #fff;
-            font-weight: bold;
-        }
-
-        .brush-stroke-sub {
-            margin-left: 60px;
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .retro-8bit-box {
-            background: #000;
-            border: 4px solid #fff;
-            padding: 10px;
-            display: inline-block;
-        }
-
-        .retro-8bit-box h1 {
-            margin: 0;
-            font-size: 18px;
-            color: #0f0;
-            font-family: 'Press Start 2P', cursive;
-        }
-
-        .retro-8bit-box p {
-            margin: 0;
-            font-size: 10px;
-            color: #fff;
-            font-family: 'Press Start 2P', cursive;
-            margin-top: 5px;
-        }
-
-        .hologram-box {
-            border-left: 2px solid #00f2ff;
-            padding-left: 20px;
-            background: linear-gradient(rgba(0, 242, 255, 0.1) 50%, transparent 50%);
-            background-size: 100% 4px;
-            color: #00f2ff;
-        }
-
-        .hologram-box h1 {
-            margin: 0;
-            font-size: 24px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-        }
-
-        .stencil-cut-box {
-            background: #fff;
-            padding: 10px 30px;
-            width: fit-content;
-        }
-
-        .stencil-cut-box h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 900;
-            color: #000;
-        }
-
-        .stencil-cut-sub {
-            background: var(--primary);
-            padding: 5px 20px;
-            color: #fff;
-            width: fit-content;
-            font-weight: bold;
-        }
-
-        .ink-bleed h1 {
-            font-size: 40px;
-            color: #fff;
-            filter: blur(0px);
-            margin: 0;
-        }
-
-        .ink-bleed p {
-            color: var(--primary);
-            margin: 0;
-        }
-
-        .origami-box {
-            background: var(--primary);
-            padding: 10px 40px;
-            transform: skewY(-5deg);
-            position: relative;
-            width: fit-content;
-        }
-
-        .origami-box h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #fff;
-        }
-
-        .origami-fold {
-            position: absolute;
-            left: 0;
-            bottom: -20px;
-            border-top: 20px solid #1a5276;
-            border-left: 20px solid transparent;
-        }
-
-        .chalkboard-box {
-            background: #1e352f;
-            border: 10px solid #5d4037;
-            padding: 20px 40px;
-            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
-            width: fit-content;
-        }
-
-        .chalkboard-box h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #fff;
-            font-family: 'Caveat', cursive;
-            opacity: 0.9;
-        }
-
-        .blueprint-box {
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 20px;
-            background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-            color: #fff;
-            font-family: monospace;
-            position: relative;
-        }
-
-        .blueprint-tag {
-            position: absolute;
-            bottom: -10px;
-            right: -10px;
-            font-size: 10px;
-            background: #000;
-            padding: 2px 5px;
+        .section-title {
+            grid-column: 1 / -1;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            font-size: 1.5rem;
+            font-weight: 800;
         }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <h1>Lower Third Gallery</h1>
-        <p>Preview 40 premium video titles for your project.</p>
-    </header>
+    <div id="toast" class="toast">✨ Đã sao chép câu lệnh thành công!</div>
 
-    <div id="gallery-container">
-        <!-- Categories will be generated here -->
+    <div class="header">
+        <h1>Lower Third Library</h1>
+        <p style="color: var(--text-muted)">Hơn 40 mẫu tiêu đề hiện đại dành cho giới thiệu tên, chức danh và thông báo.
+        </p>
     </div>
 
+    <div class="guide-section">
+        <div class="guide-step">
+            <div class="step-num">1</div>
+            <h3>Chọn phong cách</h3>
+            <p>Chọn mẫu tiêu đề phù hợp với nội dung video của bạn.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">2</div>
+            <h3>Copy Prompt</h3>
+            <p>Bấm vào ô câu lệnh mẫu để copy cho AI xử lý nhanh.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">3</div>
+            <h3>Gửi cho AI</h3>
+            <p>Dán vào khung chat và điền nội dung bạn muốn hiển thị.</p>
+        </div>
+    </div>
+
+    <div class="container" id="gallery"></div>
+
     <script>
-        const groups = [
+        const templates = [
             {
-                name: "Modern & Basic",
-                templates: [
-                    { id: "modern-skew", name: "Modern Skew", desc: "Sleek tilted blocks with shadow.", class: "modern-skew", html: "<h1>NGUYỄN VĂN A</h1>", subHtml: "<div class='modern-skew-sub'><p>KỸ SƯ XÂY DỰNG</p></div>" },
-                    { id: "minimal-bold", name: "Minimal Bold", desc: "Ultra bold uppercase with left bar.", class: "minimal-bold", html: "<h1>BREAKING STORY</h1>", subHtml: "<p>EXCLUSIVE REPORT</p>" },
-                    { id: "playful-round", name: "Playful Round", desc: "Friendly rounded corners and soft colors.", class: "glass-modern", html: "<h1 style='color:#3498db; background:#fff; padding:10px 20px; border-radius:0 20px 20px 20px; display:inline-block;'>LÊ THỊ B</h1>", subHtml: "<p style='color:#fff; margin-top:5px; font-weight:bold;'>VLOG GIẢI TRÍ</p>" },
-                    { id: "corporate-clean", name: "Corporate Clean", desc: "Professional divider line and elegant layout.", class: "corporate-clean", html: "<div class='corporate-bar'></div><div><h1>PROF. JOHANNES</h1><div class='corporate-line'></div><p>DIRECTOR OF STRATEGY</p></div>", subHtml: "" }
+                category: '💎 Modern & Clean (Hiện đại)',
+                items: [
+                    { id: 'modern-skew', name: 'Modern Skew', tag: 'Vlog / Modern', desc: 'Thiết kế nghiêng cá tính, năng động.' },
+                    { id: 'minimal-bold', name: 'Minimal Bold', tag: 'Clean', desc: 'Tối giản, chữ đậm cực kỳ rõ ràng.' },
+                    { id: 'glass-modern', name: 'Glassmorphism', tag: 'Luxury', desc: 'Hiệu ứng kính mờ trong suốt thời thượng.' }
                 ]
             },
             {
-                name: "Elegant & Luxury",
-                templates: [
-                    { id: "elegant-serif", name: "Elegant Serif", desc: "Classy centered italic typography.", class: "elegant-serif", html: "<h1>The Wedding of Sarah</h1><div class='elegant-line'></div><p>Summer Collections 2024</p>", subHtml: "" },
-                    { id: "luxury-gold", name: "Luxury Gold", desc: "Shining gold gradient effect for high-end feel.", class: "luxury-gold", html: "<h1>VICTORIA SECRET</h1><div class='luxury-line'></div><p>LIMITED EDITION</p>", subHtml: "" },
-                    { id: "wedding-floral", name: "Wedding Floral", desc: "Soft and romantic for special events.", class: "elegant-serif", html: "<h1 style='color:#5d4037; background:transparent;'>SƠN & THỦY</h1><p style='color:#8d6e63;'>20 . 10 . 2024</p>", subHtml: "" },
-                    { id: "glass-modern", name: "Glass Modern", desc: "Modern glassmorphism with blur effect.", class: "glass-modern", html: "<h1>ALEXANDER WANG</h1>", subHtml: "<p>CREATIVE DIRECTOR</p>" }
+                category: '📺 Broadcast & News (Truyền hình)',
+                items: [
+                    { id: 'breaking-news', name: 'Breaking News', tag: 'News', desc: 'Phong cách bản tin nóng kinh điển.' },
+                    { id: 'classic-tv', name: 'Classic TV', tag: 'Retro', desc: 'Mẫu tiêu đề truyền hình thập niên 90.' },
+                    { id: 'cyberpunk-hud', name: 'Cyber HUD', tag: 'Gaming / Tech', desc: 'Giao diện công nghệ tương lai màu Neon.' }
                 ]
             },
             {
-                name: "Broadcast & News",
-                templates: [
-                    { id: "breaking-news", name: "Breaking News", desc: "Standard news banner for urgent alerts.", class: "breaking-news", html: "<div class='breaking-main'><div class='breaking-tag'>BREAKING</div>HÀ NỘI ĐÓN RÉT ĐẬM</div><div class='breaking-sub'>NHIỆT ĐỘ XUỐNG DƯỚI 10 ĐỘ C TRONG ĐÊM</div>", subHtml: "" },
-                    { id: "classic-tv", name: "Classic TV", desc: "Retro broadcast style from the 90s.", class: "preview-content", html: "<div style='background:rgba(0,0,255,0.7); color:#fff; padding:10px 50px;'><h1>TRUYỀN HÌNH VIỆT NAM</h1><p style='text-transform:uppercase;'>THỜI SỰ 19 GIỜ</p></div>", subHtml: "" },
-                    { id: "sports-ticker", name: "Sports Ticker", desc: "Live score ticker style with team icons.", class: "preview-content", html: "<div style='display:flex; background:#e74c3c; width:100%; border-radius:0;'><div style='padding:15px; font-weight:900;'>LIVE</div><div style='background:#fff; color:#000; flex:1; padding:15px; font-weight:bold;'>VIỆT NAM [ 2 ] - [ 0 ] THÁI LAN</div></div>", subHtml: "" },
-                    { id: "documentary-sidebar", name: "Documentary", desc: "Side bar text often used in biographies.", class: "preview-content", html: "<div style='border-left:4px solid #3498db; padding-left:20px;'><h1>ĐẠI VƯƠNG QUỐC</h1><p style='color:#aaa;'>MÙA XUÂN TRÊN CAO NGUYÊN</p></div>", subHtml: "" }
-                ]
-            },
-            {
-                name: "Creative Arts",
-                templates: [
-                    { id: "hand-drawn", name: "Hand Drawn", desc: "Sketchy artistic look with cursive font.", class: "hand-drawn-box", html: "<h1>Travel with me!</h1>", subHtml: "<p style='margin:10px 0 0 10px;'>Hanoi, Vietnam</p>" },
-                    { id: "brush-stroke", name: "Brush Stroke", desc: "Energetic paint stroke background.", class: "brush-stroke-box", html: "<h1>CREATIVE MIND</h1>", subHtml: "<div class='brush-stroke-sub'>ARTISTIC DEPT.</div>" },
-                    { id: "comic-pop", name: "Comic Pop", desc: "Vibrant yellow/pink pop art style.", class: "preview-content", html: "<div class='comic-pop-box'><h1>WHAM!!</h1></div><div class='comic-pop-sub'>BOOM CRASH!</div>", subHtml: "" },
-                    { id: "origami", name: "Origami", desc: "3D folded paper aesthetics.", class: "origami-box", html: "<h1>NEW ARRIVAL</h1><div class='origami-fold'></div>", subHtml: "<p style='margin:15px 0 0 40px; color:#fff;'>SPRING COLLECTION</p>" }
-                ]
-            },
-            {
-                name: "Tech & Futuristic",
-                templates: [
-                    { id: "tech-grid", name: "Tech Grid", desc: "Matrix/Terminal style for coding videos.", class: "tech-grid", html: "<div class='tech-head'>[ SYST_LOG ]</div><div class='tech-box'>ID: ADMIN_B99</div><div class='tech-sub'>PERMISSION: GRANTED _</div>", subHtml: "" },
-                    { id: "cyberpunk-hud", name: "Cyberpunk HUD", desc: "Neon cyan interface elements.", class: "cyber-hud", html: "<div class='cyber-scan'>SCANNING...</div><h1>UNIT_7718</h1><p>TARGET ACQUIRED</p><div class='cyber-bar'></div>", subHtml: "" },
-                    { id: "hologram", name: "Hologram", desc: "Sci-fi distorted projection look.", class: "hologram-box", html: "<h1>PROJECT APOLLO</h1><p>VERSION 2.0.4</p>", subHtml: "" },
-                    { id: "blueprint", name: "Blueprint", desc: "Architectural drawing board layout.", class: "blueprint-box", html: "<h1>DRAFT_091</h1><p>SITE_PLAN: CAN_THO</p><div class='blueprint-tag'>ARCHITECT_V2</div>", subHtml: "" }
-                ]
-            },
-            {
-                name: "Dynamic Effects",
-                templates: [
-                    { id: "split-reveal", name: "Split Reveal", desc: "Text emerges from a central line.", class: "preview-content", html: "<div style='border-left:4px solid #3498db; padding-left:20px;'><h1>REVEAL TEXT</h1><div style='height:2px; background:#3498db; width:80%; margin:5px 0;'></div><p>SUBTITLE REVEAL</p></div>", subHtml: "" },
-                    { id: "neon-glow", name: "Neon Glow", desc: "Pulsating neon light borders.", class: "neon-glow", html: "<h1>NIGHT CITY</h1><p>CYBERPUNK VIBES</p>", subHtml: "" },
-                    { id: "gaming-glitch", name: "Gaming Glitch", desc: "Aggressive digital interference style.", class: "gaming-glitch", html: "LEVEL UP", subHtml: "<p class='gaming-sub'>SCORE: 99999</p>" },
-                    { id: "confetti", name: "Confetti", desc: "Celebration particles animation.", class: "preview-content", html: "<h1 style='font-size:40px; color:#fff; font-weight:900; -webkit-text-stroke:2px #000; letter-spacing:5px;'>JACKPOT!!</h1><p style='color:#ff0; font-weight:bold;'>BIG WINNER</p>", subHtml: "" }
-                ]
-            },
-            {
-                name: "Nature & Theme",
-                templates: [
-                    { id: "nature-eco", name: "Nature Eco", desc: "Green and organic for environment topics.", class: "preview-content", html: "<div style='display:flex; align-items:center;'><div style='width:40px; height:40px; background:#2d5a27; border-radius:50% 0 50% 0; margin-right:15px;'></div><div><h1 style='color:#2d5a27; font-weight:bold;'>HÀNH TRÌNH XANH</h1><p style='color:#556b2f;'>BẢO VỆ MÔI TRƯỜNG</p></div></div>", subHtml: "" },
-                    { id: "space-cosmos", name: "Space Cosmos", desc: "Dreamy spaced out starry typography.", class: "preview-content", html: "<h1 style='letter-spacing:10px; font-weight:100; color:#fff; text-shadow:0 0 10px #fff;'>GALAXY 9</h1><p style='letter-spacing:5px; color:#888;'>DEEP SPACE</p>", subHtml: "" },
-                    { id: "chalkboard", name: "Chalkboard", desc: "School board hand-written feel.", class: "chalkboard-box", html: "<h1>Bài học số 5</h1><p>Học Tiếng Anh Giao Tiếp</p>", subHtml: "" },
-                    { id: "quote-box", name: "Quote", desc: "Special layout for famous sayings.", class: "preview-content", html: "<div style='text-align:center;'><div style='font-size:60px; color:#3498db; line-height:0.1;'>\"</div><h1>Stay hungry, stay foolish</h1><p style='color:#3498db; margin-top:10px;'>— Steve Jobs</p></div>", subHtml: "" }
+                category: '🎨 Creative & Artistic (Sáng tạo)',
+                items: [
+                    { id: 'comic-pop', name: 'Comic Pop', tag: 'Fun', desc: 'Phong cách truyện tranh siêu anh hùng.' },
+                    { id: 'ink-bleed', name: 'Ink Bleed', tag: 'Art', desc: 'Chữ hiện ra từ các vết mực loang.' },
+                    { id: 'hand-drawn', name: 'Hand Drawn', tag: 'Creative', desc: 'Nét vẽ tay nguệch ngoạc thân thiện.' }
                 ]
             }
         ];
 
-        const container = document.getElementById('gallery-container');
+        const gallery = document.getElementById('gallery');
+        const toast = document.getElementById('toast');
 
-        groups.forEach(group => {
-            const section = document.createElement('div');
-            section.className = 'category-section';
+        function notify() {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
 
-            const title = document.createElement('h2');
-            title.className = 'category-title';
-            title.innerText = group.name;
-            section.appendChild(title);
+        templates.forEach(section => {
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.innerText = section.category;
+            gallery.appendChild(title);
 
-            const gallery = document.createElement('div');
-            gallery.className = 'gallery';
-
-            group.templates.forEach(t => {
+            section.items.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'template-card';
+                card.className = 'card';
+
+                const prompt = `Thêm tiêu đề Lower Third mẫu "${item.id}" với nội dung chính là "[Tên]" và phụ đề là "[Chức danh]" vào giây thứ [giây]. Màu chủ đạo là [màu].`;
+
                 card.innerHTML = `
-                    <div class="preview-area">
-                        <div class="preview-content">
-                            <div class="${t.class}">${t.html}</div>
-                            ${t.subHtml}
-                        </div>
-                    </div>
-                    <div class="info-area">
-                        <div class="info-header">
-                            <h3>${t.name}</h3>
-                            <span class="template-id">ID: <code>${t.id}</code></span>
-                        </div>
-                        <p>${t.desc}</p>
-                    </div>
-                `;
+                <div class="tag">${item.tag}</div>
+                <div class="info">
+                    <div class="name">${item.name}</div>
+                    <div class="desc">${item.desc}</div>
+                </div>
+                
+                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify()">
+                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
+                    <div class="prompt-text">"${prompt}"</div>
+                </div>
+                <div style="font-size: 0.65rem; color: var(--text-muted)">Template ID: ${item.id}</div>
+            `;
                 gallery.appendChild(card);
             });
-
-            section.appendChild(gallery);
-            container.appendChild(section);
         });
     </script>
+
 </body>
 
 </html>

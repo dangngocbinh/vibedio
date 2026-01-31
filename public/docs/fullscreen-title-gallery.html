@@ -4,1094 +4,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fullscreen Title Templates Gallery</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Montserrat:wght@700&family=Press+Start+2P&family=Caveat:wght@700&family=Playfair+Display:ital,wght@1,700&family=Orbitron:wght@400;900&family=Bebas+Neue&family=Permanent+Marker&family=Architects+Daughter&display=swap"
+    <title>Fullscreen Title Gallery - Tiêu đề toàn màn hình</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
+            --bg: #0b1121;
             --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --accent: #3b82f6;
-            --primary: #3498db;
+            --primary: #fbbf24;
+            --secondary: #f43f5e;
+            --success: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 40px;
+            padding: 0;
         }
 
-        header {
+        .header {
+            padding: 60px 20px;
             text-align: center;
-            margin-bottom: 60px;
+            background: radial-gradient(circle at top, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
         }
 
-        header h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            margin-bottom: 10px;
-            background: linear-gradient(to right, #60a5fa, #f43f5e, #f59e0b);
+        h1 {
+            font-weight: 800;
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .category-section {
-            margin-bottom: 80px;
-        }
-
-        .category-title {
-            font-size: 2rem;
-            color: #60a5fa;
-            border-bottom: 2px solid #334155;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-            gap: 25px;
-        }
-
-        .template-card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .template-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-        }
-
-        /* --- PREVIEW CANVAS --- */
-        .preview-area {
-            height: 250px;
-            /* Taller for fullscreen feel */
-            background-color: #000;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            /* Default gradient background */
-            background: linear-gradient(45deg, #1e293b, #0f172a);
-        }
-
-        .info-area {
-            padding: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            background: #1e293b;
-        }
-
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .info-area h3 {
-            margin: 0;
-            font-size: 1rem;
-            color: #f1f5f9;
-        }
-
-        .template-id {
-            background: #334155;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            color: #94a3b8;
-            font-family: monospace;
-        }
-
-        .info-area p {
-            margin: 0;
-            font-size: 0.8rem;
-            color: #94a3b8;
-        }
-
-        /* --- PRE-EXISTING TEMPLATE STYLES --- */
-        .cinematic-intro {
-            text-align: center;
-            color: #fff;
-        }
-
-        .cinematic-intro h1 {
-            font-size: 32px;
-            font-weight: 300;
-            letter-spacing: 12px;
-            text-transform: uppercase;
-            margin: 0;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-        }
-
-        .cinematic-intro .pres {
-            letter-spacing: 6px;
-            font-size: 10px;
-            color: #aaa;
-            margin-bottom: 10px;
-        }
-
-        .cinematic-intro .line {
-            width: 60px;
-            height: 1px;
-            background: #fff;
-            margin: 15px auto;
-        }
-
-        .tech-hub {
-            font-family: monospace;
-            color: #00ff00;
-            width: 80%;
-        }
-
-        .tech-hub-box {
-            border-left: 3px solid #00ff00;
-            padding-left: 15px;
-        }
-
-        .tech-hub h1 {
-            font-size: 22px;
-            margin: 0;
-        }
-
-        .tech-hub p {
-            font-size: 11px;
-            color: #00cc00;
-            margin-top: 5px;
-        }
-
-        .minimal-chapter {
-            text-align: center;
-            color: #000;
-            background: #fff;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .minimal-chapter h1 {
-            font-size: 38px;
-            margin: 0;
-            font-weight: 900;
-            letter-spacing: -2px;
-        }
-
-        .minimal-chapter p {
-            font-size: 14px;
-            font-style: italic;
-            margin-top: 8px;
-            color: #555;
-        }
-
-        .bold-statement {
-            text-align: center;
-            color: #fff;
-        }
-
-        .bold-badge {
-            background: #fff;
-            color: #000;
-            padding: 4px 12px;
-            display: inline-block;
-            font-weight: bold;
-            font-size: 12px;
-            margin-bottom: 8px;
-        }
-
-        .bold-statement h1 {
-            font-size: 36px;
-            font-weight: 900;
-            text-transform: uppercase;
-            line-height: 0.9;
-            margin: 0;
-        }
-
-        .bold-statement p {
-            font-size: 18px;
-            color: #ffeb3b;
-            margin-top: 10px;
-            font-weight: 700;
-        }
-
-        .neon-night {
-            text-align: center;
-        }
-
-        .neon-night h1 {
-            font-size: 26px;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 10px #f0f;
-            border: 2px solid #f0f;
-            padding: 10px 30px;
-            margin: 0;
-        }
-
-        .neon-night p {
-            font-size: 14px;
-            color: #0ff;
-            text-shadow: 0 0 5px #0ff;
-            margin-top: 15px;
-            letter-spacing: 4px;
-        }
-
-        .gradient-dream h1 {
-            font-size: 34px;
-            font-weight: 900;
-            background: linear-gradient(to right, #ff9a9e, #fecfef, #99f2c8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-
-        .gradient-dream p {
-            color: #fff;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
-
-        .retro-pop {
-            transform: rotate(-5deg);
-            text-align: center;
-        }
-
-        .retro-pop-main {
-            background: #ff0;
-            border: 4px solid #000;
-            padding: 10px 25px;
-            box-shadow: 8px 8px 0 #000;
-        }
-
-        .retro-pop h1 {
-            font-size: 24px;
-            color: #000;
-            font-weight: 900;
-            margin: 0;
-        }
-
-        .retro-pop-sub {
-            background: #f0f;
-            border: 3px solid #000;
-            padding: 4px 12px;
-            display: inline-block;
-            margin-top: 10px;
-            transform: rotate(8deg) translateX(15px);
-        }
-
-        .retro-pop p {
-            font-size: 12px;
-            color: #fff;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .breaking-news-full {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .breaking-bar {
-            height: 80px;
-            background: #c0392b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .breaking-news-full h1 {
-            font-size: 28px;
-            color: #fff;
-            font-weight: 900;
-            margin: 0;
-        }
-
-        .breaking-sub {
-            background: #fff;
-            padding: 8px 0;
-            text-align: center;
-            width: 100%;
-        }
-
-        .breaking-sub p {
-            font-size: 14px;
-            color: #c0392b;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .quote-hero {
-            text-align: center;
-            max-width: 85%;
-        }
-
-        .quote-mark {
-            font-size: 60px;
-            color: #3498db;
-            line-height: 0.5;
-            font-family: serif;
-        }
-
-        .quote-hero h1 {
-            font-size: 22px;
-            font-style: italic;
-            font-family: 'Playfair Display', serif;
-            color: #fff;
-            margin: 15px 0;
-        }
-
-        .quote-hero p {
-            color: #3498db;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .split-screen {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .split-left {
-            flex: 1;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 15px;
-        }
-
-        .split-right {
-            flex: 1;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            padding-left: 15px;
-        }
-
-        .split-left h1 {
-            color: #000;
-            font-size: 26px;
-            margin: 0;
-        }
-
-        .split-right p {
-            color: #fff;
-            font-size: 14px;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        /* --- NEW PREMIUM TEMPLATE STYLES --- */
-        .space-odyssey {
-            text-align: center;
-            color: #fff;
-        }
-
-        .space-odyssey h1 {
-            font-size: 30px;
-            letter-spacing: 15px;
-            font-weight: 100;
-            text-transform: uppercase;
-            margin: 0;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-        }
-
-        .space-odyssey p {
-            font-size: 10px;
-            letter-spacing: 5px;
-            opacity: 0.7;
-            margin-top: 15px;
-        }
-
-        .luxury-gold {
-            text-align: center;
-        }
-
-        .luxury-gold h1 {
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            margin: 0;
-            letter-spacing: 2px;
-        }
-
-        .gold-line {
-            height: 1px;
-            width: 100px;
-            background: #bf953f;
-            margin: 10px auto;
-        }
-
-        .luxury-gold p {
-            color: #bf953f;
-            font-size: 12px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin: 0;
-        }
-
-        .nature-vibes {
-            text-align: center;
-            color: #2d5a27;
-        }
-
-        .nature-vibes h1 {
-            font-size: 32px;
-            font-family: 'Playfair Display', serif;
-            font-style: italic;
-            margin: 0;
-        }
-
-        .nature-vibes p {
-            font-size: 14px;
-            letter-spacing: 2px;
-            color: #4a7c44;
-            margin-top: 5px;
-        }
-
-        .cyberpunk-glitch {
-            color: #fff;
-            transform: skewX(-10deg);
-            text-align: center;
-        }
-
-        .cyberpunk-glitch h1 {
-            font-size: 34px;
-            font-weight: 900;
-            text-shadow: 3px 0 #ff00ff, -3px 0 #00ffff;
-            margin: 0;
-        }
-
-        .cyberpunk-glitch p {
-            font-size: 13px;
-            background: #ff00ff;
-            color: #fff;
-            padding: 2px 10px;
-            display: inline-block;
-            margin-top: 6px;
-            font-weight: bold;
-        }
-
-        .vintage-film {
-            text-align: center;
-            color: #4a3728;
-            filter: sepia(1);
-        }
-
-        .vintage-film h1 {
-            font-size: 30px;
-            font-family: serif;
-            border-bottom: 3px double #4a3728;
-            display: inline-block;
-            padding: 0 15px;
-            text-transform: uppercase;
-        }
-
-        .liquid-motion {
-            text-align: center;
-        }
-
-        .liquid-motion h1 {
-            font-size: 40px;
-            font-weight: 900;
-            color: #fff;
-            mix-blend-mode: difference;
-        }
-
-        .magazine-cover {
-            padding: 40px;
-            width: 100%;
-            height: 100%;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
-
-        .mag-big {
-            font-size: 60px;
-            font-weight: 900;
-            text-transform: uppercase;
-            line-height: 0.8;
-            margin: 0;
-            letter-spacing: -4px;
-            font-family: 'Bebas Neue', sans-serif;
-        }
-
-        .mag-small {
-            font-size: 24px;
-            font-weight: 300;
-            text-transform: uppercase;
-            margin: 0;
-        }
-
-        .mag-footer {
-            margin-top: auto;
-            border-top: 6px solid #fff;
-            padding-top: 10px;
-            width: 100px;
-        }
-
-        .industrial-steel {
-            text-align: left;
-            border: 2px solid #666;
-            padding: 30px;
-            background: rgba(0, 0, 0, 0.3);
-            color: #e0e0e0;
-        }
-
-        .industrial-steel h1 {
-            font-size: 26px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            margin: 0;
-        }
-
-        .steel-bar {
-            height: 8px;
-            width: 80px;
-            background: #3498db;
-            margin-top: 8px;
-        }
-
-        .ink-wash {
-            text-align: center;
-            color: #000;
-            filter: blur(0.4px);
-        }
-
-        .ink-wash h1 {
-            font-size: 32px;
-            font-family: serif;
-            margin: 0;
-        }
-
-        .ink-border {
-            border-top: 1px solid #000;
-            width: 150px;
-            margin: 8px auto;
-        }
-
-        .gaming-stream {
-            color: #fff;
-            width: 80%;
-            height: 60%;
-            border: 3px solid #ff0055;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 20px #ff0055;
-        }
-
-        .game-badge {
-            position: absolute;
-            top: -15px;
-            left: 20px;
-            background: #ff0055;
-            padding: 2px 10px;
-            font-weight: bold;
-            font-size: 10px;
-        }
-
-        .gaming-stream h1 {
-            font-size: 24px;
-            font-weight: 900;
-            font-style: italic;
-            margin: 0;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .gaming-stream p {
-            font-size: 12px;
-            color: #00ffff;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .architect-blueprint {
-            color: #fff;
-            font-family: monospace;
-            text-align: left;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 40px;
-            width: 80%;
-        }
-
-        .blueprint-info {
-            font-size: 10px;
-            margin-bottom: 20px;
-            opacity: 0.6;
-        }
-
-        .comic-kaboom {
-            text-align: center;
-        }
-
-        .bubble {
-            background: #ffcc00;
-            padding: 15px 30px;
-            border: 5px solid #000;
-            border-radius: 30px;
-            transform: rotate(-3deg);
-        }
-
-        .comic-kaboom h1 {
-            font-size: 30px;
-            color: #000;
-            font-weight: 900;
-            margin: 0;
-            -webkit-text-stroke: 1px #fff;
-        }
-
-        .comic-sub {
-            background: #ff3300;
-            color: #fff;
-            padding: 5px 20px;
-            border: 3px solid #000;
-            display: inline-block;
-            margin-top: -10px;
-            transform: rotate(5deg) translateX(-20px);
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .holographic-lens {
-            text-align: center;
-            color: #fff;
-            filter: contrast(1.5) brightness(1.2);
-        }
-
-        .holographic-lens h1 {
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 200%;
-            margin: 0;
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        .paper-cutout {
-            text-align: center;
-        }
-
-        .paper-cutout h1.p-title {
-            font-size: 34px;
-            font-weight: 900;
-            color: #ff5722;
-            text-shadow: 4px 4px 0 #bf360c, 8px 8px 15px rgba(0, 0, 0, 0.3);
-            margin: 0;
-        }
-
-        .brush-stroke {
-            text-align: center;
-            color: #fff;
-        }
-
-        .brush-bg {
-            background: #000;
-            padding: 15px 40px;
-            transform: rotate(-2deg);
-            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .brush-stroke h1 {
-            font-size: 28px;
-            font-family: 'Permanent Marker', cursive;
-            margin: 0;
-        }
-
-        .strobe-light {
-            text-align: center;
-            color: #fff;
-        }
-
-        .strobe-light h1 {
-            font-size: 38px;
-            font-weight: 940;
-            text-transform: uppercase;
-            margin: 0;
-        }
-
-        .strobe-sub {
-            background: #fff;
-            color: #000;
-            padding: 4px 15px;
-            font-weight: 900;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        .sunset-serenity {
-            text-align: center;
-            color: #fff;
-        }
-
-        .sunset-line {
-            height: 2px;
-            width: 200px;
-            background: linear-gradient(90deg, transparent, #fff, transparent);
-            margin: 15px auto;
-        }
-
-        .sunset-serenity h1 {
-            font-size: 30px;
-            font-weight: 200;
-            letter-spacing: 4px;
-            margin: 0;
-        }
-
-        .urban-graffiti {
-            text-align: center;
-            color: #fff;
-            transform: rotate(-3deg);
-        }
-
-        .urban-graffiti h1 {
-            font-size: 38px;
-            font-weight: 900;
-            text-shadow: 4px 4px 0 #ff0055, -4px -4px 0 #00ffff;
-            margin: 0;
-            font-family: 'Permanent Marker', cursive;
-        }
-
-        .frozen-pixel {
-            text-align: center;
-            color: #00ffff;
-        }
-
-        .frozen-pixel h1 {
-            font-size: 30px;
-            font-weight: 900;
-            text-shadow: 0 0 15px #00ffff;
-            border: 5px solid #00ffff;
-            padding: 15px;
-            display: inline-block;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 18px;
-        }
-
-        .royal-velvet {
-            text-align: center;
-            color: #ffd700;
-        }
-
-        .royal-velvet h1 {
-            font-size: 32px;
-            font-family: serif;
-            text-transform: uppercase;
-            letter-spacing: 8px;
-            margin: 0;
-        }
-
-        .eco-green {
-            text-align: center;
-            color: #fff;
-        }
-
-        .eco-box {
-            border: 4px solid #fff;
-            border-radius: 80px 0 80px 0;
-            padding: 30px 60px;
-        }
-
-        .eco-green h1 {
-            font-size: 30px;
-            font-weight: 900;
-            margin: 0;
-        }
-
-        .eco-green p {
-            color: #8bc34a;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .data-stream {
-            text-align: center;
-            color: #00ff00;
-            font-family: monospace;
-        }
-
-        .data-stream h1 {
-            font-size: 26px;
-            margin: 0;
-        }
-
-        .data-stream h1.dim {
-            opacity: 0.3;
-        }
-
-        .data-badge {
-            background: #00ff00;
-            color: #000;
-            padding: 2px 10px;
-            margin-top: 15px;
-            display: inline-block;
-        }
-
-        .pop-shock {
-            text-align: center;
-        }
-
-        .pop-yellow {
-            background: #ffeb3b;
-            padding: 15px 30px;
-            transform: rotate(-2deg) skewX(-10deg);
-            border: 8px solid #000;
-        }
-
-        .pop-shock h1 {
-            font-size: 30px;
-            color: #000;
-            font-weight: 950;
-            margin: 0;
-        }
-
-        .pop-pink {
-            background: #e91e63;
-            color: #fff;
-            padding: 5px 20px;
-            border: 5px solid #000;
-            display: inline-block;
-            margin-top: -8px;
-            transform: rotate(5deg) translateX(30px);
-        }
-
-        .shadow-play {
-            text-align: center;
-        }
-
-        .shadow-play h1 {
-            font-size: 44px;
-            font-weight: 900;
-            color: rgba(0, 0, 0, 0.8);
-            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
-            margin: 0;
-        }
-
-        .geometric-grid {
-            text-align: center;
-            color: #fff;
-        }
-
-        .grid-box {
-            border: 1px solid #fff;
-            padding: 40px;
-            position: relative;
-        }
-
-        .grid-corner {
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            border: 1px solid #fff;
-        }
-
-        .corner-tl {
-            top: -8px;
-            left: -8px;
-        }
-
-        .corner-br {
-            bottom: -8px;
-            right: -8px;
-        }
-
-        .watercolor-bleed {
-            text-align: center;
-            color: #fff;
-        }
-
-        .watercolor-bleed h1 {
-            font-size: 34px;
-            font-weight: 100;
-            text-shadow: 0 0 15px rgba(255, 100, 100, 0.5);
-            margin: 0;
-        }
-
-        .glassmorphism-pro {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .guide-section {
+            max-width: 900px;
+            margin: -30px auto 50px;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 20px;
-            padding: 30px 50px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .guide-step {
             text-align: center;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .glassmorphism-pro h1 {
-            font-size: 28px;
-            font-weight: 900;
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin: 0 auto 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+        }
+
+        .name {
+            font-weight: 800;
+            font-size: 1.4rem;
             color: #fff;
-            margin: 0;
         }
 
-        .glassmorphism-pro p {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 10px;
-            letter-spacing: 3px;
+        .tag {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .prompt-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 18px;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+
+        .prompt-label {
+            font-size: 0.65rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .prompt-text {
+            font-style: italic;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .section-title {
+            grid-column: 1 / -1;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+            padding-left: 20px;
+            font-size: 1.8rem;
+            font-weight: 800;
         }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <h1>Fullscreen Title Gallery</h1>
-        <p>40 Premium Fullscreen Templates for Intros, Chapters & Outros</p>
-    </header>
+    <div id="toast" class="toast">✨ Đã copy Prompt mẫu!</div>
 
-    <div id="gallery-container">
-        <!-- Categories will be generated here -->
+    <div class="header">
+        <h1>Fullscreen Titles</h1>
+        <p style="color: var(--text-muted)">Các siêu Template tiêu đề chuyên nghiệp dành cho Intro, Outro và phân đoạn
+            video.</p>
     </div>
+
+    <div class="guide-section">
+        <div class="guide-step">
+            <div class="step-num">1</div>
+            <h3>Chọn phong cách</h3>
+            <p>Chọn mẫu phù hợp cho Intro hoặc Chapter Divider.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">2</div>
+            <h3>Copy Prompt</h3>
+            <p>Bấm vào khung Prompt mẫu để copy lệnh cho AI.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">3</div>
+            <h3>Tùy chỉnh</h3>
+            <p>Thay đổi Title và Subtitle theo đúng nội dung của bạn.</p>
+        </div>
+    </div>
+
+    <div class="container" id="gallery"></div>
 
     <script>
         const groups = [
             {
-                name: "Cinematic & Minimal",
-                templates: [
-                    { id: "cinematic-intro", name: "Cinematic Intro", desc: "Classic film intro with letter spacing.", bg: "#000", html: "<div class='cinematic-intro'><div class='pres'>PRESENTS</div><h1>THE UNIVERSE</h1><div class='line'></div><p>A REMOTION FILM</p></div>" },
-                    { id: "minimal-chapter", name: "Minimal Chapter", desc: "Clean white background with bold typography.", bg: "#fff", html: "<div class='minimal-chapter'><h1>CHAPTER ONE</h1><p>THE BEGINNING</p></div>" },
-                    { id: "quote-hero", name: "Quote Hero", desc: "Elegant layout for important quotes.", bg: "#1a1a1a", html: "<div class='quote-hero'><div class='quote-mark'>\"</div><h1>Design is intelligence made visible.</h1><p>— Alina Wheeler</p></div>" },
-                    { id: "midnight-mystery", name: "Midnight Mystery", desc: "Dark mysterious letter spacing.", bg: "#050505", html: "<div class='space-odyssey'><h1>THE UNKNOWN</h1><p>A FRIGHTENING TRUTH</p></div>" },
-                    { id: "shadow-play", name: "Shadow Play", desc: "Minimalist heavy shadow style.", bg: "#34495e", html: "<div class='shadow-play'><h1>STARK DARK</h1><p>THE BEAUTY OF SHADOWS</p></div>" },
-                    { id: "floating-bubbles", name: "Floating Bubbles", desc: "Soft clean bokeh movement.", bg: "#1e293b", html: "<div class='cinematic-intro'><h1>DREAMSCAPE</h1><p>A JOURNEY THROUGH LIGHT</p></div>" }
+                category: '⭐ Cinematic & Premium (Sang trọng)',
+                items: [
+                    { id: 'cinematic-intro', name: 'Cinematic Intro', tag: 'Intro / Film', desc: 'Thiết kế sang trọng, chữ mảnh, phong cách điện ảnh.' },
+                    { id: 'luxury-gold', name: 'Luxury Gold', tag: 'Premium', desc: 'Chữ nhũ vàng kim rực rỡ trên nền tối.' },
+                    { id: 'space-odyssey', name: 'Space Odyssey', tag: 'Sci-Fi', desc: 'Không gian vũ trụ sâu thẳm, chữ thưa tinh tế.' }
                 ]
             },
             {
-                name: "Modern & Bold",
-                templates: [
-                    { id: "bold-statement", name: "Bold Statement", desc: "High impact uppercase text.", bg: "#ff5722", html: "<div class='bold-statement'><div class='bold-badge'>WARNING</div><h1>DON'T MISS OUT</h1><p>LAST CHANCE TO JOIN</p></div>" },
-                    { id: "breaking-news-full", name: "Breaking News", desc: "Full screen news alert style.", bg: "#333", html: "<div class='breaking-news-full'><div class='breaking-bar'><h1>THÔNG BÁO KHẨN</h1></div><div class='breaking-sub'><p>BÃO SỐ 3 ĐÃ ĐỔ BỘ</p></div></div>" },
-                    { id: "split-screen", name: "Split Screen", desc: "Two-tone split layout.", bg: "transparent", html: "<div class='split-screen'><div class='split-left'><h1>BEFORE</h1></div><div class='split-right'><p>AFTER</p></div></div>" },
-                    { id: "strobe-light", name: "Strobe Light", desc: "High energy flashing style.", bg: "#000", html: "<div class='strobe-light'><h1>PARTY UP!</h1><div class='strobe-sub'>LET'S GO WILD</div></div>" },
-                    { id: "pop-shock", name: "Pop Shock", desc: "Vibrant color shock layout.", bg: "#512da8", html: "<div class='pop-shock'><div class='pop-yellow'><h1>BIG SALE</h1></div><div class='pop-pink'><p>FLASH DEALS</p></div></div>" },
-                    { id: "liquid-motion", name: "Liquid Motion", desc: "High contrast fluid style.", bg: "#000", html: "<div class='liquid-motion'><h1>VIBE FLOW</h1></div>" }
+                category: '⚡ Modern & Hype (Năng động)',
+                items: [
+                    { id: 'bold-statement', name: 'Bold Statement', tag: 'Impact', desc: 'Tiêu đề in hoa kích thước lớn, gây ấn tượng mạnh.' },
+                    { id: 'neon-night', name: 'Neon Night', tag: 'Gaming / Club', desc: 'Đèn Neon rực rỡ nhấp nháy trên nền đêm.' },
+                    { id: 'retro-pop', name: 'Retro Pop Art', tag: 'Fun', desc: 'Bùng nổ màu sắc phong cách 90s.' }
                 ]
             },
             {
-                name: "Creative & Artistic",
-                templates: [
-                    { id: "retro-pop", name: "Retro Pop", desc: "90s geometric pop art.", bg: "#673ab7", html: "<div class='retro-pop'><div class='retro-pop-main'><h1>POW!!</h1></div><div class='retro-pop-sub'><p>AMAZING</p></div></div>" },
-                    { id: "ink-wash", name: "Ink Wash", desc: "Traditional ink painting.", bg: "#f5f5f5", html: "<div class='ink-wash'><h1>ZEN GARDEN</h1><div class='ink-border'></div><p>ANCIENT PHILOSOPHY</p></div>" },
-                    { id: "brush-stroke", name: "Brush Stroke", desc: "Permanent marker artistic look.", bg: "#fff", html: "<div class='brush-stroke'><div class='brush-bg'><h1>CREATIVE</h1></div><p style='color:#333; margin-top:10px; font-weight:bold;'>MASTERCLASS</p></div>" },
-                    { id: "urban-graffiti", name: "Urban Graffiti", desc: "Street art graffiti style.", bg: "#222", html: "<div class='urban-graffiti'><h1>HIP HOP</h1><p style='color:#ffea00; font-family:cursive;'>CITY VIBES</p></div>" },
-                    { id: "paper-cutout", name: "Paper Cutout", desc: "Layered paper effect.", bg: "#eee", html: "<div class='paper-cutout'><h1 class='p-title'>ART CRAFT</h1><h1 style='color:#ffccbc; font-size:20px;'>KIDS WORLD</h1></div>" },
-                    { id: "watercolor-bleed", name: "Watercolor Bleed", desc: "Soft artistic watercolor.", bg: "#ffebee", html: "<div class='watercolor-bleed'><h1>FLORAL ART</h1><p style='color:#ffccbc; font-style:italic;'>SPRING COLLECTION</p></div>" },
-                    { id: "abstract-waves", name: "Abstract Waves", desc: "Modern wave movement.", bg: "#1a237e", html: "<div class='strobe-light'><h1>OCEAN VIBE</h1><p style='font-size:14px; margin-top:10px;'>RELAXING FLOW</p></div>" },
-                    { id: "comic-kaboom", name: "Comic Kaboom", desc: "Pop art comic book style.", bg: "#f44336", html: "<div class='comic-kaboom'><div class='bubble'><h1>KABOOM!</h1></div><div class='comic-sub'>LEVEL UP</div></div>" }
-                ]
-            },
-            {
-                name: "Tech & Futuristic",
-                templates: [
-                    { id: "tech-hub", name: "Tech Hub", desc: "Terminal interface.", bg: "#000", html: "<div class='tech-hub'><div class='tech-hub-box'><div>&gt; BOOTING...</div><h1>ACCESS_GRANTED</h1><p>// WELCOME_ADMIN</p></div></div>" },
-                    { id: "neon-night", name: "Neon Night", desc: "Cyberpunk neon vibes.", bg: "#111", html: "<div class='neon-night'><h1>NIGHT CITY</h1><p>2077 VIBES</p></div>" },
-                    { id: "cyberpunk-glitch", name: "Cyberpunk Glitch", desc: "Neon glitch aesthetic.", bg: "#0a0a0a", html: "<div class='cyberpunk-glitch'><h1>OVERLOAD</h1><p>PROTOCOL X-9</p></div>" },
-                    { id: "holographic-lens", name: "Holographic Lens", desc: "3D holographic projection.", bg: "#000", html: "<div class='holographic-lens'><h1>BIO_SCANNER</h1><p style='opacity:0.6; margin-top:10px;'>DNA VERIFIED</p></div>" },
-                    { id: "data-stream", name: "Data Stream", desc: "Matrix code data stream.", bg: "#000", html: "<div class='data-stream'><h1>LOADING...</h1><h1 class='dim'>78% DONE</h1><div class='data-badge'>ENCRYPTED</div></div>" },
-                    { id: "architect-blueprint", name: "Blueprint", desc: "Technical architectural design.", bg: "#2980b9", html: "<div class='architect-blueprint'><div class='blueprint-info'>SHT: A1 / VER: 1.0</div><h1>DESIGN PLAN</h1><hr style='opacity:0.5;'/><p>CITY CENTER</p></div>" },
-                    { id: "frozen-pixel", name: "Frozen Pixel", desc: "Retro icy pixelated look.", bg: "#001f3f", html: "<div class='frozen-pixel'><h1>ICE CORE</h1><p style='color:#fff; margin-top:10px; font-style:italic;'>LEVEL 01</p></div>" },
-                    { id: "gaming-stream", name: "Gaming Stream", desc: "Esports live stream style.", bg: "#111", html: "<div class='gaming-stream'><div class='game-badge'>LIVE</div><h1>PRO PLAYER</h1><p>FINALS 2025</p></div>" }
-                ]
-            },
-            {
-                name: "Theme & Premium",
-                templates: [
-                    { id: "space-odyssey", name: "Space Odyssey", desc: "Cosmic wide spacing.", bg: "#000", html: "<div class='space-odyssey'><h1>MARS MISSION</h1><p>DISCOVERY 2045</p></div>" },
-                    { id: "luxury-gold", name: "Luxury Gold", desc: "Premium golden gradient.", bg: "#1a1a1a", html: "<div class='luxury-gold'><h1>VALET PARKING</h1><div class='gold-line'></div><p>ELITE MEMBERS</p></div>" },
-                    { id: "nature-vibes", name: "Nature Vibes", desc: "Earthy organic serif.", bg: "#f1f8e9", html: "<div class='nature-vibes'><h1>ORGANIC GARDEN</h1><p>HEALTHY LIVING</p></div>" },
-                    { id: "vintage-film", name: "Vintage Film", desc: "Sepia aged film.", bg: "#f3e5f5", html: "<div class='vintage-film'><h1>PAST TIMES</h1><p style='margin-top:10px;'>MEMORIES 1924</p></div>" },
-                    { id: "magazine-cover", name: "Magazine Cover", desc: "Editorial layout.", bg: "#000", html: "<div class='magazine-cover'><h1 class='mag-big'>VOGUE</h1><h1 class='mag-small'>PARIS</h1><div class='mag-footer'></div><p>SPRING 2025</p></div>" },
-                    { id: "industrial-steel", name: "Industrial Steel", desc: "Metallic professional design.", bg: "#2c3e50", html: "<div class='industrial-steel'><h1>MECH CORP</h1><div class='steel-bar'></div><p style='color:#aaa; margin-top:10px;'>ENGINEERING</p></div>" },
-                    { id: "glassmorphism-pro", name: "Glassmorphism Pro", desc: "High-end frosted glass.", bg: "#2196f3", html: "<div class='glassmorphism-pro'><h1>DASHBOARD</h1><p>USER INTERFACE</p></div>" },
-                    { id: "royal-velvet", name: "Royal Velvet", desc: "Rich royal theme.", bg: "#4a148c", html: "<div class='royal-velvet'><h1>MONARCHY</h1><p style='color:#fff; margin-top:10px; opacity:0.8;'>REIGN OF KINGS</p></div>" },
-                    { id: "sunset-serenity", name: "Sunset Serenity", desc: "Soft warm sunset layout.", bg: "#ff7043", html: "<div class='sunset-serenity'><h1>PEACEFUL DAYS</h1><div class='sunset-line'></div><p>MINDSET VLOG</p></div>" },
-                    { id: "eco-green", name: "Eco Green", desc: "Sustainability focused.", bg: "#2d5a27", html: "<div class='eco-green'><div class='eco-box'><h1>GREEN EARTH</h1><p>SAVE THE PLANET</p></div></div>" },
-                    { id: "geometric-grid", name: "Geometric Grid", desc: "Precise vector grid.", bg: "#000", html: "<div class='geometric-grid'><div class='grid-box'><div class='grid-corner corner-tl'></div><div class='grid-corner corner-br'></div><h1>LOGIC GATE</h1><p style='color:#aaa; margin-top:10px;'>PRECISION</p></div></div>" },
-                    { id: "gradient-dream", name: "Gradient Dream", desc: "Soft pastel gradients.", bg: "#222", html: "<div class='gradient-dream'><h1>Dreamscape</h1><p>Relaxing Music</p></div>" }
+                category: '📝 Content & Narrative (Nội dung)',
+                items: [
+                    { id: 'minimal-chapter', name: 'Minimal Chapter', tag: 'Vlog / Clean', desc: 'Tối giản tuyệt đối cho các đoạn phân cảnh.' },
+                    { id: 'quote-hero', name: 'Quote Hero', tag: 'Education', desc: 'Dành riêng để trích dẫn những câu nói hay.' },
+                    { id: 'breaking-news-full', name: 'Breaking News', tag: 'Event', desc: 'Giao diện bản tin nóng toàn màn hình.' }
                 ]
             }
         ];
 
-        const container = document.getElementById('gallery-container');
+        const gallery = document.getElementById('gallery');
+        const toast = document.getElementById('toast');
 
-        groups.forEach(group => {
-            const section = document.createElement('div');
-            section.className = 'category-section';
+        function notify() {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
 
-            const title = document.createElement('h2');
-            title.className = 'category-title';
-            title.innerText = group.name;
-            section.appendChild(title);
+        groups.forEach(section => {
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.innerText = section.category;
+            gallery.appendChild(title);
 
-            const gallery = document.createElement('div');
-            gallery.className = 'gallery';
-
-            group.templates.forEach(t => {
+            section.items.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'template-card';
+                card.className = 'card';
 
-                const preview = document.createElement('div');
-                preview.className = 'preview-area';
-                if (t.bg) preview.style.background = t.bg;
-                preview.innerHTML = t.html;
+                const prompt = `Thêm Fullscreen Title mẫu "${item.id}" làm [Intro/Chapter] với tiêu đề: "[Tên]" và phụ đề: "[Mô tả]". Thời lượng [5] giây.`;
 
-                const info = document.createElement('div');
-                info.className = 'info-area';
-                info.innerHTML = `
-                    <div class="info-header">
-                        <h3>${t.name}</h3>
-                        <span class="template-id">${t.id}</span>
-                    </div>
-                    <p>${t.desc}</p>
-                `;
-
-                card.appendChild(preview);
-                card.appendChild(info);
+                card.innerHTML = `
+                <div class="tag">${item.tag}</div>
+                <div class="info">
+                    <div class="name">${item.name}</div>
+                    <div style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">${item.desc}</div>
+                </div>
+                
+                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify()">
+                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
+                    <div class="prompt-text">"${prompt}"</div>
+                </div>
+                <div style="font-size: 0.65rem; color: var(--text-muted)">Template ID: ${item.id}</div>
+            `;
                 gallery.appendChild(card);
             });
-
-            section.appendChild(gallery);
-            container.appendChild(section);
         });
     </script>
+
 </body>
 
 </html>
