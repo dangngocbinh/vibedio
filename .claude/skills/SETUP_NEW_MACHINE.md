@@ -1,38 +1,6 @@
 # SETUP NEW MACHINE - Video Automation Project
 
-## ⚡ AUTO SETUP (RECOMMENDED)
-
-**Chạy 1 lệnh duy nhất để cài đặt tất cả:**
-
-```bash
-python3 .claude/skills/environment-setup/setup.py --all
-```
-
-**Script tự động:**
-1. ✅ Check Python 3, Node.js, npm, ffmpeg
-2. ✅ Cài system packages thiếu (brew/apt tùy OS)
-3. ✅ Tạo Python venv cho tất cả skills
-4. ✅ Install pip packages (opentimelineio, pydantic...)
-5. ✅ Install npm packages (remotion, react...)
-6. ✅ Configure .env file (hỏi API keys - tự động skip nếu đã có)
-7. ✅ Verify toàn bộ installation
-
-**Thời gian:** ~5-10 phút (tùy tốc độ mạng)
-
-**Manual setup từng bước:**
-```bash
-python3 .claude/skills/environment-setup/setup.py check           # Check prerequisites
-python3 .claude/skills/environment-setup/setup.py install-system  # Install ffmpeg, python, node
-python3 .claude/skills/environment-setup/setup.py setup-venv      # Create venvs
-python3 .claude/skills/environment-setup/setup.py install-python  # Install pip packages
-python3 .claude/skills/environment-setup/setup.py install-node    # npm install
-python3 .claude/skills/environment-setup/setup.py configure-env   # Setup .env
-python3 .claude/skills/environment-setup/setup.py verify          # Verify all
-```
-
----
-
-## 📋 MANUAL SETUP (Alternative)
+## 📋 MANUAL SETUP
 
 ### 1️⃣ Prerequisites
 
