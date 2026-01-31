@@ -7,6 +7,7 @@ import {
   spring,
   Easing,
 } from 'remotion';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 // ============ TYPES ============
 // LayerTitleStyle: Định nghĩa các kiểu hiển thị title overlay (tương tự như các preset trong video editor)
@@ -32,13 +33,18 @@ export interface LayerTitleProps {
 
 // ============ STYLE PRESETS ============
 // Hàm trả về CSS preset cho mỗi kiểu style (tương tự như trong Vue, đây là computed styles)
-const getStylePreset = (style: LayerTitleStyle): React.CSSProperties => {
+// Now accepts a scalePixel function for responsive scaling
+const getStylePreset = (
+  style: LayerTitleStyle,
+  scalePixel: (val: number) => number,
+  isPortrait: boolean
+): React.CSSProperties => {
   const presets: Record<string, React.CSSProperties> = {
     'lower-third': {
       position: 'absolute',
-      bottom: 80,
-      left: 60,
-      maxWidth: '60%',
+      bottom: scalePixel(80),
+      left: scalePixel(60),
+      maxWidth: isPortrait ? '90%' : '60%',
     },
     'centered': {
       position: 'absolute',
@@ -51,8 +57,8 @@ const getStylePreset = (style: LayerTitleStyle): React.CSSProperties => {
     },
     'corner-badge': {
       position: 'absolute',
-      top: 40,
-      right: 40,
+      top: scalePixel(40),
+      right: scalePixel(40),
     },
     'full-screen': {
       position: 'absolute',
@@ -191,6 +197,11 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  const { scalePixel, scaleFontSize, isPortrait, uniformScale } = useResponsiveScale();
+
+  // Responsive scaled values
+  const scaledFontSize = scaleFontSize(fontSize);
+  const scaledSubtitleSize = scaleFontSize(subtitleSize);
 
   React.useEffect(() => {
     if (fontFamily && !fontFamily.includes(',') && !fontFamily.includes('system-ui')) {
@@ -226,8 +237,8 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
     ? useTypewriter(subtitle, frame, title.length / 0.8, 0.6)
     : subtitle;
 
-  // Style preset
-  const positionStyle = getStylePreset(style);
+  // Style preset - now with responsive scaling
+  const positionStyle = getStylePreset(style, scalePixel, isPortrait);
 
   // Container style with animation
   const containerStyle: React.CSSProperties = {
@@ -282,7 +293,7 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
           <h1
             style={{
               color: textColor,
-              fontSize: style === 'full-screen' ? fontSize * 1.5 : style === 'centered' ? fontSize * 1.2 : fontSize,
+              fontSize: style === 'full-screen' ? scaledFontSize * 1.5 : style === 'centered' ? scaledFontSize * 1.2 : scaledFontSize,
               fontWeight: 900,
               margin: 0,
               fontFamily: fontFamily || 'Inter, system-ui, sans-serif',
@@ -300,7 +311,7 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
             <p
               style={{
                 color: accentColor,
-                fontSize: style === 'full-screen' ? subtitleSize * 1.3 : subtitleSize,
+                fontSize: style === 'full-screen' ? scaledSubtitleSize * 1.3 : scaledSubtitleSize,
                 fontWeight: 500,
                 margin: '8px 0 0',
                 fontFamily: fontFamily || 'Inter, system-ui, sans-serif',
