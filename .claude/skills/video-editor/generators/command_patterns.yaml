@@ -1,0 +1,131 @@
+# OTIO Script Generator - Command Patterns
+# Maps natural language commands to editing operations
+
+patterns:
+  # CLIP OPERATIONS
+  - name: insert_clip
+    pattern: 'insert\s+(?:clip\s+|video\s+)?(?P<file>[\w\./\-]+(?:\.\w+)?)\s+at\s+(?P<time>\d+\.?\d*)\s*s?(?:\s+on\s+(?:track\s+)?(?P<track>\d+|[\w\-]+))?'
+    operation: insert_clip
+    params:
+      file: str
+      time: float
+      track: str|int
+    description: "Insert clip at specific time position"
+    example: "insert clip video.mp4 at 10s on track 0"
+
+  - name: remove_clip
+    pattern: 'remove\s+(?:clip\s+)?(?P<clip_id>\d+)(?:\s+from\s+track\s+(?P<track>\d+|[\w\-]+))?(?:\s+with\s+ripple)?'
+    operation: remove_clip
+    params:
+      clip_id: int
+      track: str|int
+      ripple: bool
+    description: "Remove clip from timeline"
+    example: "remove clip 2 from track 0"
+
+  - name: replace_clip
+    pattern: 'replace\s+(?:clip\s+)?(?P<clip_id>\d+)\s+with\s+(?P<new_file>[\w\./\-]+(?:\.\w+)?)'
+    operation: replace_clip
+    params:
+      clip_id: int
+      new_file: str
+    description: "Replace existing clip with new file"
+    example: "replace clip 1 with new_video.mp4"
+
+  # TRANSITION OPERATIONS
+  - name: add_transition
+    pattern: 'add\s+(?P<duration>\d+\.?\d*)\s*s?(?:\s+)?(?:transition|dissolve|fade)\s+(?:between\s+)?clips?\s+(?P<start_clip>\d+)[\s\-]+(?P<end_clip>\d+)(?:\s+on\s+track\s+(?P<track>\d+|[\w\-]+))?'
+    operation: add_transition
+    params:
+      duration: float
+      start_clip: int
+      end_clip: int
+      track: str|int
+    description: "Add transition between clips"
+    example: "add 2s transition between clips 2-3"
+
+  - name: remove_transition
+    pattern: 'remove\s+(?:transition|dissolve|fade)\s+(?:between\s+)?clips?\s+(?P<start_clip>\d+)[\s\-]+(?P<end_clip>\d+)(?:\s+on\s+track\s+(?P<track>\d+|[\w\-]+))?'
+    operation: remove_transition
+    params:
+      start_clip: int
+      end_clip: int
+      track: str|int
+    description: "Remove transition between clips"
+    example: "remove transition between clips 2-3"
+
+  # TIMING OPERATIONS
+  - name: adjust_duration
+    pattern: 'adjust\s+duration\s+of\s+(?:clip\s+)?(?P<clip_id>\d+)\s+to\s+(?P<new_duration>\d+\.?\d*)\s*s?(?:\s+on\s+track\s+(?P<track>\d+|[\w\-]+))?'
+    operation: adjust_duration
+    params:
+      clip_id: int
+      new_duration: float
+      track: str|int
+    description: "Change clip duration"
+    example: "adjust duration of clip 0 to 5s"
+
+  - name: shift_clips
+    pattern: 'shift\s+clips?\s+(?:starting\s+from\s+)?(?P<start_clip>\d+)\s+(?:by|forward|backward)?\s+(?P<offset>[\+\-]?\d+\.?\d*)\s*s?(?:\s+on\s+track\s+(?P<track>\d+|[\w\-]+))?'
+    operation: shift_clips
+    params:
+      start_clip: int
+      offset: float
+      track: str|int
+    description: "Move clips in timeline"
+    example: "shift clips starting from 1 by 2s on track 0"
+
+  # TRACK OPERATIONS
+  - name: create_track
+    pattern: 'create\s+(?:new\s+)?(?:track|video track)\s+(?:named\s+)?(?P<name>[\w\-]+)?'
+    operation: create_track
+    params:
+      name: str
+    description: "Add new video track"
+    example: "create track named V2"
+
+  - name: remove_track
+    pattern: 'remove\s+(?:track\s+)?(?P<track>\d+|[\w\-]+)'
+    operation: remove_track
+    params:
+      track: str|int
+    description: "Delete track"
+    example: "remove track 1"
+
+  - name: merge_tracks
+    pattern: 'merge\s+(?:tracks?\s+)?(?P<source_track>\d+|[\w\-]+)\s+(?:into|with)\s+(?P<target_track>\d+|[\w\-]+)'
+    operation: merge_tracks
+    params:
+      source_track: str|int
+      target_track: str|int
+    description: "Merge one track into another"
+    example: "merge track 1 into track 0"
+
+  # WORKFLOW COMMANDS
+  - name: workflow_intro_outro
+    pattern: '(?:create|add|generate)\s+(?:intro\s+)?(?:and\s+)?outro\s+(?:workflow)?(?:\s+intro:\s+(?P<intro_file>[\w\./\-]+(?:\.\w+)?))?\s*(?:outro:\s+(?P<outro_file>[\w\./\-]+(?:\.\w+)?)?)?'
+    operation: workflow_intro_outro
+    params:
+      intro_file: str
+      outro_file: str
+    description: "Add intro and outro to video"
+    example: "create intro and outro workflow intro: intro.mp4 outro: outro.mp4"
+
+  - name: workflow_watermark
+    pattern: 'add\s+(?:watermark|logo|overlay)\s+(?P<file>[\w\./\-]+(?:\.\w+)?)\s+(?:at\s+)?(?P<position>[\w\-]+)?(?:\s+duration:\s+(?P<duration>\d+\.?\d*)\s*s)?'
+    operation: workflow_watermark
+    params:
+      file: str
+      position: str
+      duration: float
+    description: "Add watermark overlay"
+    example: "add watermark logo.png at bottom-right"
+
+  - name: workflow_ripple_edit
+    pattern: 'ripple\s+(?:delete|remove)\s+(?:clip\s+)?(?P<clip_id>\d+)(?:\s+on\s+track\s+(?P<track>\d+|[\w\-]+))?'
+    operation: workflow_ripple_edit
+    params:
+      clip_id: int
+      track: str|int
+    description: "Delete clip with automatic gap closure"
+    example: "ripple delete clip 2 on track 0"

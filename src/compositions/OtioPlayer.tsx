@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { AbsoluteFill, Audio, Img, Sequence, Video, useVideoConfig, staticFile, useCurrentFrame, interpolate, random, delayRender, continueRender } from 'remotion';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { AbsoluteFill, Audio, Img, Sequence, Video, useVideoConfig, staticFile, useCurrentFrame, interpolate, random, delayRender, continueRender, Series } from 'remotion';
+import { SubtitleTrack } from '../components/SubtitleTrack';
 import { TransitionSeries, linearTiming } from '@remotion/transitions';
 import { slide } from "@remotion/transitions/slide";
 import { fade } from "@remotion/transitions/fade";
@@ -37,8 +38,32 @@ const FadePresentation: React.FC<any> = ({ children, presentationProgress }) => 
     );
 };
 
+const ZoomOutPresentation: React.FC<any> = ({ children, presentationProgress }) => {
+    return (
+        <AbsoluteFill>
+            <AbsoluteFill style={{
+                opacity: interpolate(presentationProgress, [0, 0.5], [1, 0]),
+                transform: `scale(${interpolate(presentationProgress, [0, 1], [1, 0.8])})`
+            }}>
+                {children[0]}
+            </AbsoluteFill>
+            <AbsoluteFill style={{
+                opacity: interpolate(presentationProgress, [0.5, 1], [0, 1]),
+                transform: `scale(${interpolate(presentationProgress, [0, 1], [1.2, 1])})`
+            }}>
+                {children[1]}
+            </AbsoluteFill>
+        </AbsoluteFill>
+    );
+};
+
 const fadeTransition = () => ({
     component: FadePresentation,
+    props: {},
+});
+
+const zoomOutTransition = () => ({
+    component: ZoomOutPresentation,
     props: {},
 });
 
@@ -54,7 +79,7 @@ interface TimeRange {
     duration: RationalTime;
 }
 
-interface Item {
+export interface Item {
     OTIO_SCHEMA: string;
     name: string;
     source_range?: TimeRange;
@@ -117,14 +142,14 @@ export const calculateTotalDuration = (timeline: Item, fps: number): number => {
 };
 
 // Hàm helper để convert RationalTime sang frame number của Remotion
-const toFrames = (time: RationalTime, compositionFps: number) => {
+export const toFrames = (time: RationalTime, compositionFps: number) => {
     const seconds = time.value / time.rate;
     return Math.round(seconds * compositionFps);
 };
 
 // Helper function sanitize URLs
 // Helper function sanitize URLs
-const sanitizeUrl = (url?: string, projectId?: string) => {
+export const sanitizeUrl = (url?: string, projectId?: string) => {
     if (!url) return url;
 
     // Handle file:// protocol
@@ -149,7 +174,7 @@ const sanitizeUrl = (url?: string, projectId?: string) => {
     return url;
 };
 
-const OtioClip: React.FC<{
+export const OtioClip: React.FC<{
     clip: Item;
     fps: number;
     clipIndex: number;
@@ -223,11 +248,13 @@ const OtioClip: React.FC<{
     if (isAudio && clip.metadata?.audio_fade_in) {
         const fadeSec = parseFloat(clip.metadata.audio_fade_in);
         const fadeFrames = fadeSec * fps;
-        const fadeMultiplier = interpolate(frame, [0, fadeFrames], [0, 1], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp"
-        });
-        audioVolume = baseVolume * fadeMultiplier;
+        if (fadeFrames > 0) {
+            const fadeMultiplier = interpolate(frame, [0, fadeFrames], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp"
+            });
+            audioVolume = baseVolume * fadeMultiplier;
+        }
     }
 
     // Opacity (fade in/out cho tất cả) - Safe interpolation
@@ -313,6 +340,8 @@ const getTransitionPresentation = (type: string) => {
         case 'wipe': return wipe({ direction: 'from-left' });
         case 'flip': return flip({ direction: 'from-left' });
         case 'clockwipe': return clockWipe({ width: 10, height: 10 });
+        case 'zoomout':
+        case 'zoom': return zoomOutTransition();
         case 'fade': default: return fade();
     }
 };
@@ -598,11 +627,39 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string, tr
         );
     }
 
-    // Audio Track OR Overlay/Subtitle Track (Absolute Positioning)
+    // Overlay/Subtitle Track (Use Series for single-track visualization)
+    // Overlay/Subtitle Track (Consolidated Single Track Visualization)
+    // "Clean Timeline" Mode: Renders all items on this track within a single AbsoluteFill.
+    // This prevents the "waterfall" effect in Remotion Studio where each clip gets its own row.
+    // Overlay/Subtitle Track (Series Visualization)
+    // Uses Remotion <Series> to arrange clips sequentially on a single track.
+    // This provides distinct visual blocks in the Timeline (unlike AbsoluteFill) 
+    // and prevents the "waterfall" effect (unlike multiple Sequences).
+    if (isOverlayTrack) {
+        return (
+            <AbsoluteFill style={{ ...trackStyle, pointerEvents: 'none' }}>
+                <SubtitleTrack
+                    clips={clips}
+                    fps={fps}
+                    projectId={projectId || ''}
+                    trackKind={trackKind || 'Subtitle'}
+                />
+            </AbsoluteFill>
+        );
+    }
+
+
+
+    // 1. Calculate start frames and sort clips
+
+
+
+
+    // Audio Track (Absolute Positioning - Waterfall is fine for audio usually)
     return (
         <AbsoluteFill>
             {clips.map((clip: Item, clipIndex: number) => {
-                // Calculate Start Frame: Prefer globalTimelineStart metadata, then source_range.start_time
+                // Calculate Start Frame
                 let startFrame = 0;
 
                 if (clip.metadata?.globalTimelineStart !== undefined) {
@@ -610,7 +667,6 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string, tr
                 } else if (clip.source_range?.start_time) {
                     startFrame = toFrames(clip.source_range.start_time, fps);
                 } else {
-                    // Fallback to accumulation (flawed for gaps but works for simple stacks)
                     const preClips = clips.slice(0, clipIndex);
                     const startSeconds = preClips.reduce((acc: number, c: Item) => {
                         const dur = c.source_range?.duration;
@@ -619,54 +675,7 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string, tr
                     startFrame = Math.round(startSeconds * fps);
                 }
 
-                const startOffsetSeconds = startFrame / fps;
-
-                // Handle TikTokCaption overlay component
-                if (clip.metadata?.remotion_component === 'TikTokCaption') {
-                    const props = clip.metadata.props || {};
-                    const durationStruct = clip.source_range?.duration;
-                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
-
-                    if (durationFrames <= 0) {
-                        console.warn(`[OtioPlayer] TikTokCaption "${clip.name}" has 0 duration, skipping`);
-                        return null;
-                    }
-
-                    return (
-                        <Sequence
-                            key={clip.name || clipIndex}
-                            from={startFrame}
-                            durationInFrames={durationFrames}
-                        >
-                            <TikTokCaption {...props} startOffset={startOffsetSeconds} />
-                        </Sequence>
-                    );
-                }
-
-                // Handle TitleCard overlay component
-                if (clip.metadata?.remotion_component === 'TitleCard') {
-                    const props = clip.metadata.props || {};
-                    if (props.backgroundImage) {
-                        props.backgroundImage = sanitizeUrl(props.backgroundImage, projectId);
-                    }
-                    const durationStruct = clip.source_range?.duration;
-                    let durationFrames = durationStruct ? toFrames(durationStruct, fps) : 90;
-
-                    if (durationFrames <= 0) {
-                        console.warn(`[OtioPlayer] TitleCard "${clip.name}" has 0 duration, skipping`);
-                        return null;
-                    }
-
-                    return (
-                        <Sequence
-                            key={clip.name || clipIndex}
-                            from={startFrame}
-                            durationInFrames={durationFrames}
-                        >
-                            <TitleCard {...props} />
-                        </Sequence>
-                    );
-                }
+                // Audio doesn't use TikTokCaption/TitleCard usually, but keep generic logic if needed
 
                 // Handle LayerTitle overlay components
                 if (clip.metadata?.remotion_component === 'LayerTitle') {
@@ -835,44 +844,86 @@ export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimelin
     const [activeTimeline, setActiveTimeline] = useState<Item | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
+    // Ref to hold the current active timeline for comparison in the polling closure
+    const activeTimelineRef = useRef<Item | null>(null);
 
+    // Update ref whenever state changes
+    useEffect(() => {
+        activeTimelineRef.current = activeTimeline;
+    }, [activeTimeline]);
 
     // [Vue: useEffect] -> Similar to `onMounted` combined with `watch`.
     // It runs when the component mounts and whenever the dependencies in the array [projectId, defaultTimeline] change.
     useEffect(() => {
-        const load = async () => {
+        let isMounted = true;
+        const POLLING_INTERVAL = 2000; // Poll every 2 seconds
+
+        const load = async (ignoreCache = false) => {
             try {
+                let tl: Item | null = null;
                 if (projectId) {
                     const list = await fetchProjects();
                     const project = list.find(p => p.id === projectId);
 
                     if (project) {
-                        const tl = await loadProject(project);
-                        setActiveTimeline(tl);
+                        tl = await loadProject(project, ignoreCache);
                     } else {
                         console.warn("OtioPlayer: Project ID not found in list");
-                        setActiveTimeline(defaultTimeline || null);
+                        tl = defaultTimeline || null;
                     }
                 } else {
                     const list = await fetchProjects();
                     if (list.length > 0) {
                         const latest = list[0];
-                        const tl = await loadProject(latest);
-                        setActiveTimeline(tl);
+                        tl = await loadProject(latest, ignoreCache);
                     } else {
-                        setActiveTimeline(defaultTimeline || null);
+                        tl = defaultTimeline || null;
+                    }
+                }
+
+                if (isMounted) {
+                    if (ignoreCache && tl && activeTimelineRef.current) {
+                        // Compare to avoid unnecessary re-renders
+                        // We use the ref here to access the latest state without triggering the effect to re-run
+                        if (JSON.stringify(tl) !== JSON.stringify(activeTimelineRef.current)) {
+                            console.log("[OtioPlayer] Changes detected, reloading timeline...");
+                            setActiveTimeline(tl);
+                        }
+                    } else {
+                        // Initial load or first valid data
+                        if (ignoreCache && !activeTimelineRef.current) {
+                            setActiveTimeline(tl);
+                        } else if (!ignoreCache) {
+                            setActiveTimeline(tl);
+                        }
                     }
                 }
             } catch (err) {
                 console.error("OtioPlayer: Failed to load project", err);
-                setActiveTimeline(defaultTimeline || null);
+                if (isMounted && !activeTimelineRef.current) {
+                    setActiveTimeline(defaultTimeline || null);
+                }
             } finally {
-                setIsLoaded(true);
-                continueRender(handle);
+                if (isMounted) {
+                    setIsLoaded(true);
+                    continueRender(handle);
+                }
             }
         };
-        load();
-    }, [projectId, defaultTimeline, handle]);
+
+        // Initial load
+        load(false);
+
+        // Polling interval
+        const intervalId = setInterval(() => {
+            load(true);
+        }, POLLING_INTERVAL);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, [projectId, defaultTimeline, handle]); // Removed activeTimeline from dependencies
 
     // Render Logic
     if (!isLoaded && !activeTimeline) {
@@ -897,6 +948,7 @@ export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimelin
             {tracks.map((track: Item, trackIndex: number) => (
                 <TrackRenderer key={track.name || trackIndex} track={track} fps={fps} projectId={projectId} trackIndex={trackIndex} />
             ))}
+
         </AbsoluteFill>
     );
 };

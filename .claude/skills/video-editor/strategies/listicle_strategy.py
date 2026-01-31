@@ -21,6 +21,9 @@ class ListicleStrategy(BaseStrategy):
     - Hook (5s) → Item 1 (10s) → Item 2 (10s) → ... → CTA (5s)
     """
 
+    # 3 seconds padding at the end
+    OUTRO_PADDING: float = 3.0
+
     def populate_tracks(
         self,
         timeline: otio.schema.Timeline,
@@ -39,6 +42,9 @@ class ListicleStrategy(BaseStrategy):
         """
         scenes = script.get('scenes', [])
         duration = script.get('metadata', {}).get('duration', 60)
+        
+        # Add padding to total duration
+        duration += self.OUTRO_PADDING
 
         # Track 1: B-Roll Video
         video_track = self._create_broll_track(scenes, resources)
@@ -48,17 +54,10 @@ class ListicleStrategy(BaseStrategy):
         graphics_track = self._create_graphics_track(scenes)
         timeline.tracks.append(graphics_track)
 
-        # Track 3: Subtitles
-        subtitle_gen = SubtitleGenerator(self.fps)
-        subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
-        timeline.tracks.append(subtitle_track)
-
-        # Track 3.5: Overlays (Stickers, Titles)
+        # Track 3: Overlays (Stickers, Titles)
         overlays_track = self._create_overlays_track(script)
         if overlays_track and len(overlays_track) > 0:
             timeline.tracks.append(overlays_track)
-
-
 
         # Track 4: Voice
         voice_track = self._create_voice_track(voice_data, duration)
@@ -68,6 +67,23 @@ class ListicleStrategy(BaseStrategy):
         music_track = self._create_music_track(resources, duration)
         if music_track:
             timeline.tracks.append(music_track)
+
+        # Track 6: Subtitles (Moved to end for overlay)
+        subtitle_gen = SubtitleGenerator(self.fps)
+        subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
+        timeline.tracks.append(subtitle_track)
+        voice_track = self._create_voice_track(voice_data, duration)
+        timeline.tracks.append(voice_track)
+
+        # Track 4: Background Music
+        music_track = self._create_music_track(resources, duration)
+        if music_track:
+            timeline.tracks.append(music_track)
+
+        # Track 5: Subtitles (Moved to end for overlay)
+        subtitle_gen = SubtitleGenerator(self.fps)
+        subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
+        timeline.tracks.append(subtitle_track)
 
     def _create_broll_track(
         self,
@@ -89,6 +105,10 @@ class ListicleStrategy(BaseStrategy):
         for i, scene in enumerate(scenes):
             scene_id = scene.get('id', '')
             duration = scene.get('duration', 5)
+
+            # Extend last scene to match total duration padding
+            if i == len(scenes) - 1:
+                duration += self.OUTRO_PADDING
 
             # Create clip from resources
             clip = self.create_clip_from_resource(scene_id, resources, duration)

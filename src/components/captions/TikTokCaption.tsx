@@ -22,6 +22,7 @@ interface TikTokCaptionProps {
     highlightColor?: string;
     fontSize?: number;
     letterSpacing?: string | number;  // Add letterSpacing prop
+    frame?: number; // Override frame behavior for manual control
 }
 
 export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
@@ -34,8 +35,10 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
     highlightColor: directHighlightColor,
     fontSize: directFontSize,
     letterSpacing: directLetterSpacing,  // Add letterSpacing destructuring
+    frame: overrideFrame,
 }) => {
-    const frame = useCurrentFrame();
+    const currentFrame = useCurrentFrame();
+    const frame = overrideFrame !== undefined ? overrideFrame : currentFrame;
     const { fps } = useVideoConfig();
     const currentTime = (frame / fps) + startOffset;
 

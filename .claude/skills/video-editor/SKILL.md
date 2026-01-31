@@ -147,6 +147,18 @@ file:///absolute/path/to/voice.wav
 ✅ Share project folder với team → paths valid
 ✅ Move project to production server → no path updates needed
 
+## 🛡️ VALIDATION & SAFE SAVE
+
+Skill này áp dụng quy trình **Safe-Save** để bảo vệ project khỏi các lỗi render trong Remotion Studio:
+
+1. **Validation**: Sau khi xử lý logic, script sẽ lưu vào file `.otio.tmp`.
+2. **Check Rules**: 
+   - Không được có 2 Transitions đứng cạnh nhau.
+   - Thời lượng của Transition không được lớn hơn thời lượng của Clip đứng trước/sau nó.
+3. **Commit**: Nếu thỏa mãn các quy tắc, file `.tmp` mới được ghi đè vào `project.otio`.
+
+Luôn sử dụng `otio_validator.py` khi viết các script can thiệp vào timeline.
+
 ## INPUT REQUIREMENTS
 
 ### 1. script.json (Required)
@@ -269,6 +281,15 @@ Nếu `ratio` không có trong script.json, mặc định là `9:16` (1080×1920
 
 **Required fields:**
 - At least one of: `videos`, `images`, `music`, `soundEffects`
+
+### Output Track Ordering Policy
+
+Để đảm bảo UI trong Remotion Studio không bị rối (do track Phụ đề thường có rất nhiều clip nhỏ) và Phụ đề luôn hiển thị trên cùng, áp dụng thứ tự sau:
+
+1. **Visual Tracks**: Images, Videos, Title Cards, B-roll.
+2. **Audio Tracks**: Voice, Background Music.
+3. **Control Tracks**: Trống (nếu có).
+4. **Captions/Subtitles**: LUÔN LUÔN ở vị trí cuối cùng trong file OTIO.
 
 ## OUTPUT STRUCTURE
 
@@ -820,12 +841,12 @@ Pinned resources hỗ trợ `relativePath`, `localPath`, hoặc `url`. Paths đ�
 
 ## VALIDATION RULES
 
-Before generating timeline:
 - ✅ All 3 JSON files exist
 - ✅ `script.json` has valid `videoType`
 - ✅ `voice.json` has `timestamps` array
 - ✅ `resources.json` has at least one resource type (including pinnedResources)
 - ✅ Scene durations sum to expected total (±3s tolerance)
+- ✅ **Caption track is the last track** in the timeline tracks list.
 
 ## BEST PRACTICES
 
@@ -886,6 +907,15 @@ cd /tmp/test-project
 ### Paths not resolving in Remotion
 → Verify all paths are relative, no absolute `/Users/...` paths
 
+### "inputRange must be strictly monotonically increasing"
+→ Xảy ra khi dùng `interpolate` với dải giá trị bằng 0 (ví dụ `[0, 0]`). Cần check `duration > 0` trước khi gọi hàm.
+
+### "Duration of <Sequence /> must not be shorter than Transition"
+→ Xảy ra khi Clip quá ngắn (ví dụ 0.5s) nhưng Transition trước nó lại dài (ví dụ 1s). Cần rút ngắn Transition lại.
+
+### "Transition must not be followed by another Transition"
+→ Lỗi logic timeline khiến 2 transition nằm sát nhau. Cần kiểm tra kỹ index khi chèn hoặc dùng script `fix_sequence.py`.
+
 ## DEPENDENCIES
 
 ```txt
@@ -901,6 +931,13 @@ pip install -r requirements.txt
 ```
 
 ## VERSION HISTORY
+
+- v1.3 (2026-01-30): Sticker Overlays & Animations
+  - **NEW** `Sticker` component for emojis, memes, and images
+  - **NEW** Overlays track support for multiple sticker layers
+  - **NEW** Rich animation library: pop, shake, rotate, elastic, slide
+  - **NEW** Positioning system: presets (center, corners), random, custom coordinates
+  - **UPDATED** `OtioPlayer` to support Sticker rendering
 
 - v1.2 (2026-01-26): Enhanced Music Support
   - **IMPROVED** `AssetResolver.resolve_music_from_resources()` supports multiple formats:
@@ -924,12 +961,52 @@ pip install -r requirements.txt
   - Subtitle generation
   - Migration from output/ to public/projects/
 
-- v1.3 (2026-01-30): Sticker Overlays & Animations
-  - **NEW** `Sticker` component for emojis, memes, and images
-  - **NEW** Overlays track support for multiple sticker layers
-  - **NEW** Rich animation library: pop, shake, rotate, elastic, slide
-  - **NEW** Positioning system: presets (center, corners), random, custom coordinates
-  - **UPDATED** `OtioPlayer` to support Sticker rendering
+
+
+---
+
+# TIMELINE INSPECTOR
+
+**Inspect and analyze OTIO timeline structure before editing.**
+
+The Timeline Inspector helps you understand your project's timeline - which tracks exist, what clips are in each track, their indices, and durations. This is **essential** before using the Script Generator to edit.
+
+## Quick Start
+
+### 1. View Timeline Summary
+
+```bash
+python generators/cli.py inspect --project public/projects/my-video/project.otio
+```
+
+**Output:**
+================================================================================
+Timeline: {project-name}
+================================================================================
+Duration: 60.0s
+Tracks: 5
+
+Track 0: B-Roll
+  Kind: Video
+  Items: 11
+    [0] hook Video                     Clip         (5.00s)
+    [1] item1 Video                    Clip         (10.00s)
+    [2]                                Transition   (0.47s)
+    ...
+
+Track 4: Subtitles
+  Kind: Video
+  Items: 34
+    [0] Sub: Text...                   Clip         (1.13s)
+```
+
+This shows:
+- ✅ **Track index** (0, 1, 2, ...) → use in edit commands
+- ✅ **Track name** (B-Roll, Subtitles, ...) → reference
+- ✅ **Clip index** [0], [1], [2], ... → use for edits
+- ✅ **Clip name and duration** → understand content
+
+---
 
 ## STICKER OVERLAYS
 
@@ -985,43 +1062,6 @@ Thêm clip `Sticker` vào track "Title Overlays" hoặc tạo track mới chuyê
 | `slide-up` | Trượt từ dưới lên |
 | `slide-down` | Trượt từ trên xuống |
 | `fade` | Hiện dần đơn giản |
-
-### Custom Positioning Example
-
-```json
-{
-    "metadata": {
-        "remotion_component": "Sticker",
-        "props": {
-            "src": "public/stickers/wow-face.png",
-            "style": "custom",
-            "top": "20%",
-            "left": "10%",
-            "width": 400,
-            "animation": "elastic",
-            "rotation": -15
-        }
-    }
-}
-```
-
-### Random Sticker Example (Meme Burst)
-
-Để tạo hiệu ứng nhiều sticker xuất hiện ngẫu nhiên, bạn có thể thêm nhiều clip Sticker chồng lên nhau với `style: "random"`.
-
-```json
-{
-    "metadata": {
-        "remotion_component": "Sticker",
-        "props": {
-            "src": "public/emojis/heart.png",
-            "style": "random",
-            "width": 150,
-            "animation": "pop"
-        }
-    }
-}
-```
 
 ## LAYER EFFECTS
 
@@ -1082,25 +1122,4 @@ Thêm clip `Sticker` vào track "Title Overlays" hoặc tạo track mới chuyê
 | `glitch-bars` | Các thanh ngang nhiễu |
 | `arrow-chevron-right` | Mũi tên chỉ hướng |
 | `custom` | Load Lottie/Image từ URL |
-
-### Props Reference
-
-```typescript
-{
-  type?: string;          // 'neon-circle', 'scan-lines', etc.
-  src?: string;           // URL nếu type='custom'
-  color?: string;         // Main color
-  secondaryColor?: string;// Secondary color
-  speed?: number;         // Animation speed
-  width?: number;         // Width
-  height?: number;        // Height
-  top?: string|number;    // Position
-  left?: string|number;   // Position
-  animation?: 'fade'|'scale'|'rotate'|'pulse'; // Entry animation
-}
-```
-
-### Full Documentation
-
-See [docs/layer-effect-guide.md](docs/layer-effect-guide.md).
 

@@ -84,22 +84,7 @@ class MultiVideoEditStrategy(BaseStrategy):
             broll_track = self._create_broll_track(scenes, video_logic_map, resources, shift_map)
             timeline.tracks.append(broll_track)
         
-        # 5. Track 4: Captions (Shifted Time)
-        timestamps = transcript.get('timestamps', [])
-        if timestamps:
-            print(f"  Creating captions track with {len(timestamps)} words...")
-            caption_track = self._create_caption_track(script, transcript, video_logic_map, segments)
-            timeline.tracks.append(caption_track)
-        
-        
-        # 6. Track 5: Global Audio (Base Video Audio - Split & Gap)
-        # We DISABLE this for now as it causes doubling with video track audio. 
-        # The video track will handle audio itself.
-        # print(f"  Creating audio track for base videos...")
-        # audio_track = self._create_base_audio_track(segments, video_logic_map)
-        # timeline.tracks.append(audio_track)
-        
-        # 7. Track 6: Background Music (Continuous)
+        # 6. Track 5: Background Music (Continuous)
         if music_config.get('enabled', True):
             print("  Creating background music track...")
             # Calculate total duration including gaps
@@ -107,6 +92,13 @@ class MultiVideoEditStrategy(BaseStrategy):
             music_track = self._create_music_track(resources, script, total_duration)
             if music_track:
                 timeline.tracks.append(music_track)
+
+        # 7. Track 6: Captions (Shifted Time) - [USER POLICY] Appended last for UI aesthetics
+        timestamps = transcript.get('timestamps', [])
+        if timestamps:
+            print(f"  Creating captions track with {len(timestamps)} words...")
+            caption_track = self._create_caption_track(script, transcript, video_logic_map, segments)
+            timeline.tracks.append(caption_track)
                 
     def _build_segments(
         self,

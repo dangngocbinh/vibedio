@@ -19,7 +19,7 @@ export const fetchProjects = async (): Promise<ProjectItem[]> => {
     return projectsList as ProjectItem[];
 };
 
-export const loadProject = async (project: ProjectItem): Promise<any> => {
+export const loadProject = async (project: ProjectItem, ignoreCache: boolean = false): Promise<any> => {
     // Navigate to public/projects folder using staticFile to get correct URL (works in Studio with hashed paths)
     const projectBase = staticFile(project.path);
 
@@ -28,16 +28,18 @@ export const loadProject = async (project: ProjectItem): Promise<any> => {
     // But OtioPlayer expects OTIO. If there is a native OTIO file, we should probably use it.
     // However, the example `5-sai-lam` has script.json but NO otio file.
 
+    const cacheBuster = ignoreCache ? `?t=${Date.now()}` : '';
+
     if (project.hasOtio && project.otioFile) {
-        const res = await fetch(`${projectBase}/${project.otioFile}`);
+        const res = await fetch(`${projectBase}/${project.otioFile}${cacheBuster}`);
         const otio = await res.json();
         return fixOtioPaths(otio, projectBase);
     }
 
     if (project.hasScript) {
         // Load script.json and resources.json
-        const scriptRes = await fetch(`${projectBase}/script.json`);
-        const resourcesRes = await fetch(`${projectBase}/resources.json`);
+        const scriptRes = await fetch(`${projectBase}/script.json${cacheBuster}`);
+        const resourcesRes = await fetch(`${projectBase}/resources.json${cacheBuster}`);
 
         if (!scriptRes.ok) throw new Error('Failed to load script.json');
         const script = await scriptRes.json();

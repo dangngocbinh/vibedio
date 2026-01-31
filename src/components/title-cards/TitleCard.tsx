@@ -7,6 +7,7 @@ export interface TitleCardProps {
     position?: 'overlay' | 'top' | 'center' | 'bottom';
     sceneType?: string;
     backgroundImage?: string;
+    frame?: number;
 }
 
 const STYLE_CONFIGS = {
@@ -53,8 +54,10 @@ export const TitleCard: React.FC<TitleCardProps> = ({
     position = 'overlay',
     sceneType,
     backgroundImage,
+    frame: overrideFrame,
 }) => {
-    const frame = useCurrentFrame();
+    const currentFrame = useCurrentFrame();
+    const frame = overrideFrame !== undefined ? overrideFrame : currentFrame;
     const { fps, durationInFrames } = useVideoConfig();
 
     const config = STYLE_CONFIGS[style] || STYLE_CONFIGS.minimal;

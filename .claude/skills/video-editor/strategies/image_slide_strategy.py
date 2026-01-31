@@ -37,6 +37,10 @@ class ImageSlideStrategy(BaseStrategy):
     - Story videos with scene images
     - Educational content with visual aids
     """
+    
+    # 3 seconds padding at the end to prevent abrupt cut
+    OUTRO_PADDING: float = 3.0
+
 
     def __init__(self, fps: int = 30, project_dir: str = ""):
         """
@@ -81,6 +85,9 @@ class ImageSlideStrategy(BaseStrategy):
         total_duration = self.voice_sync.get_total_voice_duration(voice_data)
         if total_duration == 0:
             total_duration = script.get('metadata', {}).get('duration', 60)
+        
+        # Add padding to allow music/video to fade out naturally
+        total_duration += self.OUTRO_PADDING
 
         # Track 1: Images with effects (synced to voice)
         image_track = self._create_image_track_synced(
@@ -102,14 +109,7 @@ class ImageSlideStrategy(BaseStrategy):
         if len(titles_track) > 0:
             timeline.tracks.append(titles_track)
 
-        # Track 3: Subtitles (TikTok highlight style)
-        subtitle_gen = SubtitleGenerator(self.fps)
-        subtitle_track = subtitle_gen.generate_track(
-            voice_data, script, max_words_per_phrase=5
-        )
-        timeline.tracks.append(subtitle_track)
-
-        # Track 4: Voice
+        # Track 3: Voice
         voice_track = self._create_voice_track(voice_data, total_duration)
         timeline.tracks.append(voice_track)
 
@@ -119,6 +119,40 @@ class ImageSlideStrategy(BaseStrategy):
         if music_track:
             timeline.tracks.append(music_track)
 
+        # Track 5: Subtitles (TikTok highlight style) - LAST
+        subtitle_gen = SubtitleGenerator(self.fps)
+        subtitle_track = subtitle_gen.generate_track(
+            voice_data, script, max_words_per_phrase=5
+        )
+        timeline.tracks.append(subtitle_track)
+        subtitle_gen = SubtitleGenerator(self.fps)
+        subtitle_track = subtitle_gen.generate_track(
+            voice_data, script, max_words_per_phrase=5
+        )
+        timeline.tracks.append(subtitle_track)
+
+        # Track 2: Custom Titles (FullscreenTitle, LayerTitle)
+        title_gen = TitleGenerator(self.fps)
+        titles_track = title_gen.generate_track(script)
+        if len(titles_track) > 0:
+            timeline.tracks.append(titles_track)
+
+        # Track 3: Voice
+        voice_track = self._create_voice_track(voice_data, total_duration)
+        timeline.tracks.append(voice_track)
+
+        # Track 4: Background Music (optional)
+        music_config = script.get('music', {})
+        music_track = self._create_music_track(resources, total_duration, music_config)
+        if music_track:
+            timeline.tracks.append(music_track)
+
+        # Track 5: Subtitles (TikTok highlight style) - LAST
+        subtitle_gen = SubtitleGenerator(self.fps)
+        subtitle_track = subtitle_gen.generate_track(
+            voice_data, script, max_words_per_phrase=5
+        )
+        timeline.tracks.append(subtitle_track)
     def _create_image_track_synced(
         self,
         scenes: List[Dict[str, Any]],
@@ -152,6 +186,10 @@ class ImageSlideStrategy(BaseStrategy):
                 duration = scene.get('duration', 5)
             else:
                 duration = timing.duration
+            
+            # Extend last scene to match total duration padding
+            if i == len(scenes) - 1:
+                duration += self.OUTRO_PADDING
 
             # Get effect suggestion
             effect = effect_suggestions.get(scene_id, self.effect_suggester.DEFAULT_EFFECT)
