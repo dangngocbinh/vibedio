@@ -17,6 +17,7 @@ sys.path.insert(0, '.')
 from commands.add_title import add_title
 from commands.add_sticker import add_sticker
 from commands.add_effect import add_effect
+from commands.add_cta import add_cta
 from commands.list_clips import list_clips
 
 
@@ -82,6 +83,26 @@ def add_effect_cmd(project, effect_type, at_second, duration, intensity):
     except Exception as e:
         click.echo(f"{Fore.RED}❌ Error: {str(e)}{Style.RESET_ALL}", err=True)
         sys.exit(1)
+@cli.command()
+@click.option('--project', required=True, help='Project name')
+@click.option('--title', required=True, help='Main text')
+@click.option('--subtitle', default=None, help='Sub text')
+@click.option('--template', default='classic-youtube', help='CTA template')
+@click.option('--at-second', type=float, required=True, help='Start time in seconds')
+@click.option('--duration', type=float, default=5.0, help='Duration in seconds')
+@click.option('--primary-color', default='#ff0000', help='Primary color')
+@click.option('--secondary-color', default='#ffffff', help='Secondary color')
+@click.option('--text-color', default='#000000', help='Text color')
+@click.option('--font-size', type=int, default=32, help='Font size')
+@click.option('--avatar', default=None, help='Avatar URL')
+def add_cta_cmd(project, title, subtitle, template, at_second, duration, primary_color, secondary_color, text_color, font_size, avatar):
+    """Add CallToAction overlay to timeline."""
+    try:
+        add_cta(project, title, subtitle, template, at_second, duration, primary_color, secondary_color, text_color, font_size, avatar)
+    except Exception as e:
+        click.echo(f"{Fore.RED}❌ Error: {str(e)}{Style.RESET_ALL}", err=True)
+        sys.exit(1)
+
 
 
 @cli.command()

@@ -39,6 +39,7 @@ def add_sticker(
     # Create clip metadata for Sticker component
     clip_metadata = {
         "remotion_component": "Sticker",
+        "globalTimelineStart": str(at_second),
         "props": {
             "emoji": emoji,
             "animation": animation,

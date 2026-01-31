@@ -94,11 +94,13 @@ class MultiVideoEditStrategy(BaseStrategy):
                 timeline.tracks.append(music_track)
 
         # 7. Track 6: Captions (Shifted Time) - [USER POLICY] Appended last for UI aesthetics
-        timestamps = transcript.get('timestamps', [])
-        if timestamps:
-            print(f"  Creating captions track with {len(timestamps)} words...")
-            caption_track = self._create_caption_track(script, transcript, video_logic_map, segments)
-            timeline.tracks.append(caption_track)
+        voice_config = script.get('voice', {})
+        if voice_config.get('enabled', True):
+            timestamps = transcript.get('timestamps', [])
+            if timestamps:
+                print(f"  Creating captions track with {len(timestamps)} words...")
+                caption_track = self._create_caption_track(script, transcript, video_logic_map, segments)
+                timeline.tracks.append(caption_track)
                 
     def _build_segments(
         self,

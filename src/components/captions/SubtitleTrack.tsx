@@ -3,7 +3,12 @@ import { AbsoluteFill, Series } from 'remotion';
 import { TikTokCaption } from './TikTokCaption';
 import { TitleCard } from '../title-cards/TitleCard';
 import { LayerTitle } from '../titles/LayerTitle';
-import { OpeningTitle } from '../titles/OpeningTitle';
+import { FullscreenTitle } from '../FullscreenTitle/FullscreenTitle';
+import { Sticker } from '../titles/Sticker';
+import { LayerEffect } from '../effects/LayerEffect';
+import { LowerThird } from '../titles/LowerThird';
+import { CallToAction } from '../CallToAction/CallToAction';
+import { StarParticles } from '../effects/StarParticles';
 import { OtioClip, sanitizeUrl, toFrames, Item } from '../../compositions/OtioPlayer';
 
 interface SubtitleTrackProps {
@@ -105,10 +110,47 @@ export const SubtitleTrack: React.FC<SubtitleTrackProps> = ({ clips, fps, projec
                                     return <LayerTitle {...props} />;
                                 }
 
-                                // 4. OpeningTitle
-                                if (item.clip.metadata?.remotion_component === 'OpeningTitle') {
+
+                                // 4. FullscreenTitle
+                                if (item.clip.metadata?.remotion_component === 'FullscreenTitle') {
                                     const props = item.clip.metadata.props || {};
-                                    return <OpeningTitle {...props} />;
+                                    return <FullscreenTitle {...props} />;
+                                }
+
+                                // 5. Sticker
+                                if (item.clip.metadata?.remotion_component === 'Sticker') {
+                                    const props = item.clip.metadata.props || {};
+                                    if (props.src) {
+                                        props.src = sanitizeUrl(props.src, projectId);
+                                    }
+                                    return <Sticker {...props} />;
+                                }
+
+                                // 6. LayerEffect
+                                if (item.clip.metadata?.remotion_component === 'LayerEffect') {
+                                    const props = item.clip.metadata.props || {};
+                                    if (props.src) {
+                                        props.src = sanitizeUrl(props.src, projectId);
+                                    }
+                                    return <LayerEffect {...props} />;
+                                }
+
+                                // 7. LowerThird
+                                if (item.clip.metadata?.remotion_component === 'LowerThird') {
+                                    const props = item.clip.metadata.props || {};
+                                    return <LowerThird {...props} />;
+                                }
+
+                                // 8. CallToAction
+                                if (item.clip.metadata?.remotion_component === 'CallToAction') {
+                                    const props = item.clip.metadata.props || {};
+                                    return <CallToAction {...props} />;
+                                }
+
+                                // 9. StarParticles
+                                if (item.clip.metadata?.remotion_component === 'StarParticles') {
+                                    const props = item.clip.metadata.props || {};
+                                    return <StarParticles {...props} />;
                                 }
 
                                 // 5. Fallback

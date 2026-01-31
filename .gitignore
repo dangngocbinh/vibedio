@@ -16,7 +16,7 @@ src/generated/projects.json
 public/projects.json
 
 # Python cache
-__pycache__/
+__pycache__/*
 *.pyc
 *.pyo
 *.pyd
@@ -24,3 +24,4 @@ __pycache__/
 env/
 venv/
 .venv/
+src/generated/*

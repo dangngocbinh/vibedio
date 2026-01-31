@@ -55,6 +55,7 @@ export interface CallToActionProps {
     textColor?: string;     // Text color
     fontSize?: number;
     fontFamily?: string;    // Font family (e.g., 'Inter', 'Roboto')
+    avatar?: string;        // URL for the avatar image
 }
 
 // ============ COMPONENT ============
@@ -67,6 +68,7 @@ export const CallToAction: React.FC<CallToActionProps> = ({
     textColor = '#000000',
     fontSize = 32,
     fontFamily,
+    avatar,
 }) => {
     const frame = useCurrentFrame();
     const { durationInFrames } = useVideoConfig();
@@ -110,10 +112,12 @@ export const CallToAction: React.FC<CallToActionProps> = ({
                     }}>
                         <div style={{
                             width: 60, height: 60, borderRadius: '50%', overflow: 'hidden', marginRight: 20,
-                            backgroundImage: 'linear-gradient(135deg, #eee 25%, transparent 25%), linear-gradient(225deg, #eee 25%, transparent 25%), linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(315deg, #eee 25%, transparent 25%)',
-                            backgroundPosition: '10px 0, 10px 0, 0 0, 0 0', backgroundSize: '20px 20px', backgroundColor: '#e5e5f7'
+                            backgroundImage: avatar ? `url(${avatar})` : 'linear-gradient(135deg, #eee 25%, transparent 25%), linear-gradient(225deg, #eee 25%, transparent 25%), linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(315deg, #eee 25%, transparent 25%)',
+                            backgroundPosition: avatar ? 'center' : '10px 0, 10px 0, 0 0, 0 0',
+                            backgroundSize: avatar ? 'cover' : '20px 20px',
+                            backgroundColor: '#e5e5f7'
                         }}>
-                            {/* Placeholder Avatar */}
+                            {/* Avatar */}
                         </div>
                         <div style={{ marginRight: 30 }}>
                             <h1 style={{ margin: 0, fontSize: fontSize * 0.8, fontWeight: 'bold' }}>Your Channel</h1>

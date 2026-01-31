@@ -1,5 +1,5 @@
 """Listicle video strategy (numbered list format)."""
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import opentimelineio as otio
 
 from strategies.base_strategy import BaseStrategy
@@ -60,18 +60,25 @@ class ListicleStrategy(BaseStrategy):
             timeline.tracks.append(overlays_track)
 
         # Track 4: Voice
-        voice_track = self._create_voice_track(voice_data, duration)
-        timeline.tracks.append(voice_track)
+        voice_config = script.get('voice', {})
+        has_voice = voice_config.get('enabled', True) and voice_data.get('text')
+        
+        if has_voice:
+            voice_track = self._create_voice_track(voice_data, duration)
+            timeline.tracks.append(voice_track)
 
         # Track 5: Background Music
-        music_track = self._create_music_track(resources, duration)
-        if music_track:
-            timeline.tracks.append(music_track)
+        music_config = script.get('music', {})
+        if music_config.get('enabled', True):
+            music_track = self._create_music_track(resources, duration, music_config)
+            if music_track:
+                timeline.tracks.append(music_track)
 
         # Track 6: Subtitles (Moved to end for overlay)
-        subtitle_gen = SubtitleGenerator(self.fps)
-        subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
-        timeline.tracks.append(subtitle_track)
+        if has_voice:
+            subtitle_gen = SubtitleGenerator(self.fps)
+            subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
+            timeline.tracks.append(subtitle_track)
 
 
     def _create_broll_track(
@@ -186,7 +193,8 @@ class ListicleStrategy(BaseStrategy):
     def _create_music_track(
         self,
         resources: Dict[str, Any],
-        duration: float
+        duration: float,
+        music_config: Optional[Dict[str, Any]] = None
     ) -> otio.schema.Track:
         """
         Create background music track.
@@ -194,12 +202,20 @@ class ListicleStrategy(BaseStrategy):
         Args:
             resources: Parsed resources.json
             duration: Duration in seconds
+            music_config: Optional music config from script.json
 
         Returns:
             OTIO Track with music clip or None if no music found
         """
-        # Create music clip with 2s fade-in
-        music_clip = self.create_music_clip(resources, duration, fade_in_sec=2.0)
+        # Get config from script, default to sensible values
+        volume = 0.2
+        fade_in = 2.0
+        if music_config:
+            volume = music_config.get('volume', 0.2)
+            fade_in = music_config.get('fadeIn', 2.0)
+
+        # Create music clip
+        music_clip = self.create_music_clip(resources, duration, fade_in_sec=fade_in, volume=volume)
 
         if not music_clip:
             return None

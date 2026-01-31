@@ -110,28 +110,30 @@ class ImageSlideStrategy(BaseStrategy):
             timeline.tracks.append(titles_track)
 
         # Track 3: Voice
-        voice_track = self.create_audio_track("Voice")
+        voice_config = script.get('voice', {})
+        has_voice = voice_config.get('enabled', True) and voice_data.get('text')
         
-        # [FIX] Calculate voice offset if initial scenes are titles/no-voice
-        voice_offset = 0.0
-        for scene in scenes:
-            timing = scene_timings.get(scene.get('id', ''))
-            # If scene has no voice words matched and is a title or has no text, it adds to offset
-            if timing and timing.word_count == 0:
-                voice_offset += timing.duration
-            else:
-                # Stop as soon as we find a scene with voice content
-                break
-        
-        if voice_offset > 0:
-            gap = otio.schema.Gap(source_range=self.timing.create_time_range(0, voice_offset))
-            voice_track.append(gap)
+        if has_voice:
+            voice_track = self.create_audio_track("Voice")
             
-        voice_clip = self.create_voice_clip(voice_data, total_duration)
-        # Shift voice clip in OtioPlayer
-        voice_clip.metadata['globalTimelineStart'] = str(voice_offset)
-        voice_track.append(voice_clip)
-        timeline.tracks.append(voice_track)
+            # [RULE] Voice always starts from beginning (0.0) unless explicitly configured mechanism exists
+            # User request: "nếu chèn voice ko hỏi chèn ở đâu thì hãy hiểu là chèn từ đầu nhé"
+            # User request: "TIMELINE GIAY THỨ HAI MỚI XUẤT HIỆN VOICE NHÉ" -> offset configurable via script
+            voice_offset = voice_config.get('startOffset', 0.0)
+            
+            # Previous logic attempted to auto-calculate offset based on intro scenes, 
+            # but this caused confusion and mismatch ("bị bậy"). 
+            # We disable it to strictly follow "start from 0" rule unless manually overridden.
+            
+            if voice_offset > 0:
+                gap = otio.schema.Gap(source_range=self.timing.create_time_range(0, voice_offset))
+                voice_track.append(gap)
+                
+            voice_clip = self.create_voice_clip(voice_data, total_duration)
+            # Shift voice clip in OtioPlayer
+            voice_clip.metadata['globalTimelineStart'] = str(voice_offset)
+            voice_track.append(voice_clip)
+            timeline.tracks.append(voice_track)
 
         # Track 4: Background Music (optional)
         music_config = script.get('music', {})
@@ -139,18 +141,32 @@ class ImageSlideStrategy(BaseStrategy):
         if music_track:
             timeline.tracks.append(music_track)
 
-        # Track 5: Subtitles (TikTok highlight style) - LAST
-        subtitle_gen = SubtitleGenerator(self.fps)
-        subtitle_track = subtitle_gen.generate_track(
-            voice_data, script, max_words_per_phrase=5
-        )
-        
-        # Add Gap for sequential consistency in TransitionSeries mode
-        if voice_offset > 0:
-            gap = otio.schema.Gap(source_range=self.timing.create_time_range(0, voice_offset))
-            subtitle_track.insert(0, gap)
+        if has_voice:
+            # [SMART SYNC] Calculate voice_offset from script
+            # If startOffset is set, it becomes the AUTHORITY for the Intro Duration
+            voice_offset = script.get('voice', {}).get('startOffset', 0.0)
             
-        timeline.tracks.append(subtitle_track)
+            # If we have an offset AND the first scene is a title/intro
+            # We automatically snap the intro duration to match the offset
+            # This saves the user from manually syncing them
+            if voice_offset > 0 and len(scenes) > 0:
+                first_scene = scenes[0]
+                if first_scene.get('type') == 'title':
+                    print(f"⚡️ [Smart Sync] Auto-adjusting Intro Duration to {voice_offset}s to match Voice Offset")
+                    first_scene['duration'] = voice_offset
+                    # Update local timing map if needed (though visual track is generated later)
+
+            subtitle_gen = SubtitleGenerator(self.fps)
+            # Pass offset to generator so it shifts timestamps internally
+            subtitle_track = subtitle_gen.generate_track(
+                voice_data, script, max_words_per_phrase=5, offset=voice_offset
+            )
+            
+            # NOTE: We do NOT insert a Gap here anymore. 
+            # The SubtitleGenerator has shifted the timestamps, so SubtitleTrack.tsx will 
+            # automatically create the necessary gaps based on the shifted start times.
+                
+            timeline.tracks.append(subtitle_track)
 
     def _create_image_track_synced(
         self,
@@ -273,13 +289,19 @@ class ImageSlideStrategy(BaseStrategy):
         # Create image clip with effect
         effect_params = self.effect_suggester.get_effect_params(effect)
 
-        return self.create_image_clip_with_effect(
+        clip = self.create_image_clip_with_effect(
             url=image_url,
             name=f"{scene_id} Image",
             duration_sec=duration,
             effect=effect.effect,
             effect_params=effect_params
         )
+        
+        # [FEATURE] Apply custom volume if specified in scene (e.g. mute specific scene)
+        if 'videoVolume' in scene:
+            clip.metadata['video_volume'] = str(scene['videoVolume'])
+            
+        return clip
 
     def _create_placeholder_clip(
         self,
@@ -352,11 +374,13 @@ class ImageSlideStrategy(BaseStrategy):
         # Get volume from music config, default to 0.2 (20%)
         volume = 0.2
         fade_in = 2.0
+        fade_out = 3.0
         if music_config:
             volume = music_config.get('volume', 0.2)
             fade_in = music_config.get('fadeIn', 2.0)
+            fade_out = music_config.get('fadeOut', 3.0)
 
-        music_clip = self.create_music_clip(resources, duration, fade_in_sec=fade_in, volume=volume)
+        music_clip = self.create_music_clip(resources, duration, fade_in_sec=fade_in, fade_out_sec=fade_out, volume=volume)
 
         if not music_clip:
             return None

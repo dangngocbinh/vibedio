@@ -22,7 +22,8 @@ class SubtitleGenerator:
         self,
         voice_data: Dict[str, Any],
         script: Dict[str, Any],
-        max_words_per_phrase: int = 5
+        max_words_per_phrase: int = 5,
+        offset: float = 0.0
     ) -> otio.schema.Track:
         """
         Generate subtitle track with word-level timing.
@@ -31,6 +32,7 @@ class SubtitleGenerator:
             voice_data: Parsed voice.json with timestamps
             script: Parsed script.json for subtitle style config
             max_words_per_phrase: Maximum words per subtitle phrase (default: 5)
+            offset: Time offset in seconds to shift all subtitles (sync with voice offset)
 
         Returns:
             OTIO Track with subtitle clips
@@ -41,14 +43,21 @@ class SubtitleGenerator:
         if not timestamps:
             return track
 
-        # Group words into phrases
+        # Group words into phrases (using original relative timestamps)
         phrases = self._group_into_phrases(timestamps, max_words_per_phrase)
 
         # Get subtitle style from script
         subtitle_style = script.get('subtitle', {})
 
-        # Create clip for each phrase
+        # Create clip for each phrase with offset applied
         for phrase in phrases:
+            # Apply offset to phrase timing and internal words
+            phrase['start'] += offset
+            phrase['end'] += offset
+            for word in phrase['words']:
+                word['start'] += offset
+                word['end'] += offset
+                
             clip = self._create_subtitle_clip(phrase, subtitle_style)
             track.append(clip)
 
@@ -162,10 +171,10 @@ class SubtitleGenerator:
         clip.metadata['props'] = {
             'text': phrase['text'],
             'words': phrase['words'],
-            'style': subtitle_style.get('style', 'highlight-word'),
-            'position': subtitle_style.get('position', 'center'),
-            'font': subtitle_style.get('font', 'Montserrat'),
-            'highlightColor': subtitle_style.get('highlightColor', '#FFD700')
+            'theme': subtitle_style.get('theme', 'clean-minimal'),  # Default theme
+            'position': subtitle_style.get('position', 'bottom'),  # Default to bottom for TikTok style
+            'font': subtitle_style.get('font'),  # Let theme handle default
+            'highlightColor': subtitle_style.get('highlightColor'),  # Let theme handle default
         }
 
         return clip

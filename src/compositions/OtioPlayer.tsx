@@ -7,7 +7,6 @@ import { fade } from "@remotion/transitions/fade";
 import { wipe } from "@remotion/transitions/wipe";
 import { flip } from "@remotion/transitions/flip";
 import { clockWipe } from "@remotion/transitions/clock-wipe";
-import { OpeningTitle } from '../components/titles/OpeningTitle';
 import { PersistentTitle } from '../user-components/VietnamVibes/PersistentTitle';
 import { FloatingEffect } from '../user-components/VietnamVibes/FloatingEffect';
 import { StarParticles } from '../components/effects/StarParticles';
@@ -257,6 +256,21 @@ export const OtioClip: React.FC<{
         }
     }
 
+    if (isAudio && clip.metadata?.audio_fade_out) {
+        const fadeSec = parseFloat(clip.metadata.audio_fade_out);
+        const fadeFrames = fadeSec * fps;
+        if (fadeFrames > 0) {
+            const endFrame = durationFrames;
+            const startFadeFrame = durationFrames - fadeFrames;
+            const fadeMultiplier = interpolate(frame, [startFadeFrame, endFrame], [1, 0], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp"
+            });
+            // Multiply the existing volume (which might have fade in applied)
+            audioVolume = audioVolume * fadeMultiplier;
+        }
+    }
+
     // Opacity (fade in/out cho tất cả) - Safe interpolation
     let opacity = 1;
     const enterDuration = clip.metadata?.fade_in_duration ? parseFloat(clip.metadata.fade_in_duration) * fps : 0;
@@ -393,7 +407,6 @@ const AudioShaker: React.FC<{
 // This covers "Captions", "Title Cards", "Subtitles", and any future overlay tracks.
 const isOverlayComponentTrack = (track: Item): boolean => {
     if (track.name === 'Title Cards') return false; // Force Title Cards to use TransitionSeries (Sequential)
-    if (track.name === 'Captions') return false; // Force Captions to use TransitionSeries (Sequential)
 
     const clips = (track.children || []).filter(
         (item: Item) => !item.OTIO_SCHEMA?.startsWith('Transition') && !item.OTIO_SCHEMA?.startsWith('Gap')
@@ -408,6 +421,7 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string, tr
     // Check if this is an overlay track (Video kind but uses absolute positioning, not TransitionSeries)
     const isOverlayTrack = track.kind === 'Video' && (
         isOverlayComponentTrack(track) ||
+        track.name === 'Captions' ||
         track.name?.includes('Subtitles') ||
         track.name?.includes('Title Overlays') ||
         track.name?.includes('LayerEffects')
@@ -445,16 +459,6 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string, tr
                                 presentation={getTransitionPresentation(type) as any}
                                 timing={linearTiming({ durationInFrames: frames })}
                             />
-                        );
-                    }
-                    if (item.metadata?.remotion_component === 'OpeningTitle') {
-                        const props = item.metadata.props || {};
-                        const durationStruct = item.source_range?.duration;
-                        const durationFrames = durationStruct ? toFrames(durationStruct, fps) : 120;
-                        return (
-                            <TransitionSeries.Sequence key={item.name || itemIndex} durationInFrames={durationFrames}>
-                                <OpeningTitle {...props} />
-                            </TransitionSeries.Sequence>
                         );
                     }
                     if (item.metadata?.remotion_component === 'PersistentTitle') {

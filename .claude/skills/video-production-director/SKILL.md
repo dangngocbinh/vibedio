@@ -397,7 +397,7 @@ Director: [Check project.otio exists]
 👉 **`.claude/skills/COMPONENTS_REFERENCE.md`**
 
 Tài liệu này chứa:
-- 5 main components: LayerTitle, Sticker, LayerEffect, LowerThird, OpeningTitle
+- 5 main components: LayerTitle, Sticker, LayerEffect, LowerThird, FullscreenTitle
 - 160+ sticker templates (Lottie + static)
 - 50+ effect types (tech, geometric, comic, nature)
 - 40+ lower third templates

@@ -78,8 +78,11 @@ Dành cho video tạo từ ảnh AI (Gemini) hoặc stock images với:
 Khi tạo OTIO timeline với overlays (titles, stickers, effects), **BẮT BUỘC** tham khảo:
 👉 **`.claude/skills/COMPONENTS_REFERENCE.md`**
 
+Khi làm việc với captions/subtitles, tham khảo:
+👉 **`docs/caption-guide.md`** - TikTok Caption themes và best practices
+
 **Thông tin quan trọng:**
-- **5 main components**: LayerTitle, Sticker, LayerEffect, LowerThird, OpeningTitle
+- **5 main components**: LayerTitle, Sticker, LayerEffect, LowerThird, FullscreenTitle
 - **160+ sticker templates**: lottie-fire, lottie-thumbs-up, heart-red, etc.
 - **50+ effect types**: neon-circle, scan-lines, particles, etc.
 - **40+ lower third templates**: breaking-news, social-youtube, gaming-glitch, etc.
@@ -141,7 +144,7 @@ If these fields are missing, they're created automatically:
 - `script` → empty narration metadata
 - `voice` → null provider (pre-recorded)
 - `music` → disabled by default
-- `subtitle` → default styling (Arial, center, yellow)
+- `subtitle` → default theme (clean-minimal, bottom position)
 - `metadata.width/height/ratio` → 1920x1080, 16:9
 
 **Benefit**: Minimal configuration for simple projects ✅
@@ -340,6 +343,40 @@ Nếu `ratio` không có trong script.json, mặc định là `9:16` (1080×1920
 
 **Required fields:**
 - At least one of: `videos`, `images`, `music`, `soundEffects`
+
+### Voice & Subtitle Synchronization (IMPORTANT)
+
+**RULE**: Voice and Subtitle tracks MUST always be perfectly synchronized.
+- If the Voice track is delayed/offset (e.g., to start at 2.0s), the Subtitle track MUST be delayed by the exact same amount.
+- **Control**: Use `voice.startOffset` in `script.json` to control this. DO NOT hardcode offsets in the code.
+
+**script.json configuration:**
+```json
+{
+  "voice": {
+    "enabled": true,
+    "startOffset": 2.0  // Delays BOTH voice and subtitles by 2.0 seconds
+  }
+}
+```
+
+**Implementation Logic (in Strategy):**
+1. Read `startOffset` from `script.voice`.
+2. Insert a `Gap` of `startOffset` duration at the start of **Voice Track**.
+3. Insert a `Gap` of `startOffset` duration at the start of **Subtitle Track**.
+4. This ensures voice audio and caption visuals remain 1:1 synced.
+
+### Tips for Faster Workflow (Automation)
+
+**1. Smart Intro Sync**
+- Just set `voice.startOffset` in `script.json` (e.g. `2.0`).
+- The system will **automatically adjust** the duration of your first scene (if it's a Title/Intro) to match this 2.0s perfectly.
+- You do NOT need to manually edit the scene duration.
+
+**2. Automatic Text Sync**
+- Ensure your scenes in `script.json` have a `"text"` field populated with the corresponding sentence from the script.
+- If present, the video clips will automatically stretch/shrink to match the spoken duration of that text.
+- This creates instant, semantic synchronization without manual timing.
 
 ### Output Track Ordering Policy
 

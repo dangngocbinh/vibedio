@@ -41,6 +41,7 @@ def add_title(
     # Create clip metadata for LayerTitle component
     clip_metadata = {
         "remotion_component": "LayerTitle",
+        "globalTimelineStart": str(at_second),
         "props": {
             "title": text,
             "style": style,

@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, spring } from 'remotion';
 import { CaptionWord, CaptionStyle } from '../../types';
 import { CAPTION_THEMES, CaptionTheme, getTheme } from './caption-themes';
-import { staticFile } from 'remotion';
 
-// Load font manually via CSS since @remotion/google-fonts might be having issues
-const fontUrl = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap";
-const fontStyle = document.createElement('style');
-fontStyle.innerHTML = `@import url('${fontUrl}');`;
-document.head.appendChild(fontStyle);
+// Load font once globally
+if (typeof document !== 'undefined' && !document.getElementById('caption-fonts')) {
+    const fontStyle = document.createElement('style');
+    fontStyle.id = 'caption-fonts';
+    fontStyle.innerHTML = `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Inter:wght@400;700&display=swap');`;
+    document.head.appendChild(fontStyle);
+}
 
 interface TikTokCaptionProps {
     words: CaptionWord[];
@@ -34,7 +35,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
     font: directFont,
     highlightColor: directHighlightColor,
     fontSize: directFontSize,
-    letterSpacing: directLetterSpacing,  // Add letterSpacing destructuring
+    letterSpacing: directLetterSpacing,
     frame: overrideFrame,
 }) => {
     const currentFrame = useCurrentFrame();
@@ -42,66 +43,37 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
     const { fps } = useVideoConfig();
     const currentTime = (frame / fps) + startOffset;
 
-    // Get theme (default to gold-bold)
-    const theme: CaptionTheme = themeName ? getTheme(themeName) : CAPTION_THEMES['gold-bold'];
+    // Memoize theme and effective style (only recalculate when theme props change)
+    const { theme, effectiveStyle } = useMemo(() => {
+        const selectedTheme: CaptionTheme = themeName ? getTheme(themeName) : CAPTION_THEMES['clean-minimal'];
+        const rawStyle = (typeof style === 'object' ? style : {}) as any || {};
 
-    // Merge theme with direct props (direct props override theme)
-    const rawStyle = (typeof style === 'object' ? style : {}) as any || {};
-
-    const effectiveStyle = {
-        fontFamily: directFont || rawStyle.fontFamily || "Montserrat", // Use imported Titan One font as default
-        fontSize: directFontSize || rawStyle.fontSize || theme.style.fontSize,
-        fontWeight: theme.style.fontWeight,
-        textTransform: theme.style.textTransform || 'none',
-        letterSpacing: directLetterSpacing || rawStyle.letterSpacing || theme.style.letterSpacing || 0,
-        textColor: rawStyle.color || theme.style.textColor,
-        activeColor: directHighlightColor || rawStyle.highlightColor || theme.style.activeColor,
-        strokeColor: theme.style.strokeColor || '#000000',
-        strokeWidth: theme.style.strokeWidth || 0,
-        shadowColor: theme.style.shadowColor || 'rgba(0,0,0,0.5)',
-        activeBgColor: theme.style.activeBgColor,
-        activeBorderRadius: theme.style.activeBorderRadius || 8,
-        activePadding: theme.style.activePadding || '4px 12px',
-        containerBg: theme.style.containerBg,
-        containerPadding: theme.style.containerPadding || '8px 16px',
-        containerBorderRadius: theme.style.containerBorderRadius || 0,
-        position: directPosition || rawStyle.position || 'bottom',
-    };
-
-    // Find currently active words
-    const wordsPerLine = 4;
-    const activeWordIndex = words.findIndex(
-        (word) => currentTime >= word.start && currentTime <= word.end
-    );
-
-    if (activeWordIndex === -1 && words.length > 0) {
-        return null;
-    }
-
-    // Heuristic: If the active word is unusually long (> 1.5s) and short text,
-    // it likely includes leading silence. Don't show it immediately.
-    if (activeWordIndex !== -1) {
-        const activeWord = words[activeWordIndex];
-        const duration = activeWord.end - activeWord.start;
-        // Logic: if duration is long (>1.5s), only show in the last 1.5s
-        // Exception: if the word itself is long (many chars), allowing 0.1s per char
-        const estimatedReadingTime = activeWord.word.length * 0.1;
-        const threshold = Math.max(1.5, estimatedReadingTime);
-
-        if (duration > threshold) {
-            const effectiveStart = activeWord.end - threshold;
-            if (currentTime < effectiveStart) {
-                return null;
+        return {
+            theme: selectedTheme,
+            effectiveStyle: {
+                fontFamily: directFont || rawStyle.fontFamily || "Montserrat",
+                fontSize: directFontSize || rawStyle.fontSize || selectedTheme.style.fontSize,
+                fontWeight: selectedTheme.style.fontWeight,
+                textTransform: selectedTheme.style.textTransform || 'none',
+                letterSpacing: directLetterSpacing || rawStyle.letterSpacing || selectedTheme.style.letterSpacing || 0,
+                textColor: rawStyle.color || selectedTheme.style.textColor,
+                activeColor: directHighlightColor || rawStyle.highlightColor || selectedTheme.style.activeColor,
+                strokeColor: selectedTheme.style.strokeColor || '#000000',
+                strokeWidth: selectedTheme.style.strokeWidth || 0,
+                shadowColor: selectedTheme.style.shadowColor || 'rgba(0,0,0,0.5)',
+                activeBgColor: selectedTheme.style.activeBgColor,
+                activeBorderRadius: selectedTheme.style.activeBorderRadius || 8,
+                activePadding: selectedTheme.style.activePadding || '4px 12px',
+                containerBg: selectedTheme.style.containerBg,
+                containerPadding: selectedTheme.style.containerPadding || '8px 16px',
+                containerBorderRadius: selectedTheme.style.containerBorderRadius || 0,
+                position: directPosition || rawStyle.position || 'bottom',
             }
-        }
-    }
+        };
+    }, [themeName, style, directFont, directFontSize, directLetterSpacing, directHighlightColor, directPosition]);
 
-    // Get context words around the active word
-    const startIndex = Math.max(0, activeWordIndex - Math.floor(wordsPerLine / 2));
-    const endIndex = Math.min(words.length, startIndex + wordsPerLine);
-    const displayWords = words.slice(startIndex, endIndex);
-
-    const getPositionStyle = (): React.CSSProperties => {
+    // Memoize position style (never changes during render)
+    const positionStyle = useMemo((): React.CSSProperties => {
         switch (effectiveStyle.position) {
             case 'top':
                 return { top: '15%', justifyContent: 'flex-start' };
@@ -113,18 +85,19 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
             default:
                 return { bottom: '8%', justifyContent: 'flex-end' };
         }
-    };
+    }, [effectiveStyle.position]);
 
-    // Generate text shadow based on stroke
-    const getTextShadow = (isActive: boolean): string => {
+    // Memoize text shadows (expensive to calculate)
+    const { normalShadow, activeShadow } = useMemo(() => {
         const shadows: string[] = [];
         const strokeW = effectiveStyle.strokeWidth;
         const strokeC = effectiveStyle.strokeColor;
 
+        // Optimized stroke generation
         if (strokeW > 0) {
-            // Create stroke effect with multiple shadows
-            for (let x = -strokeW; x <= strokeW; x++) {
-                for (let y = -strokeW; y <= strokeW; y++) {
+            const step = Math.max(1, Math.floor(strokeW / 2)); // Reduce shadow count for performance
+            for (let x = -strokeW; x <= strokeW; x += step) {
+                for (let y = -strokeW; y <= strokeW; y += step) {
                     if (x !== 0 || y !== 0) {
                         shadows.push(`${x}px ${y}px 0 ${strokeC}`);
                     }
@@ -132,73 +105,92 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
             }
         }
 
-        // Add drop shadow
-        shadows.push(`3px 3px 6px ${effectiveStyle.shadowColor}`);
+        // Drop shadow
+        const baseShadow = [...shadows, `3px 3px 6px ${effectiveStyle.shadowColor}`].join(', ');
 
-        // Neon glow effect for neon theme
-        if (themeName === 'neon-glow' && isActive) {
+        // Neon glow for active
+        let glowShadow = baseShadow;
+        if (themeName === 'neon-glow') {
             const glowColor = effectiveStyle.activeColor;
-            shadows.push(`0 0 10px ${glowColor}`);
-            shadows.push(`0 0 20px ${glowColor}`);
-            shadows.push(`0 0 40px ${glowColor}`);
+            glowShadow = [...shadows, `0 0 10px ${glowColor}`, `0 0 20px ${glowColor}`, `0 0 40px ${glowColor}`].join(', ');
         }
 
-        return shadows.join(', ');
-    };
+        return { normalShadow: baseShadow, activeShadow: glowShadow };
+    }, [effectiveStyle.strokeWidth, effectiveStyle.strokeColor, effectiveStyle.shadowColor, effectiveStyle.activeColor, themeName]);
 
-    // Animation helpers
-    const getWordAnimation = (word: CaptionWord, isActive: boolean, wordIndex: number) => {
-        const wordDuration = Math.max(word.end - word.start, 0.01);
+    // Find active word and display window (MUST be after all hooks)
+    const { activeWordIndex, displayWords, startIndex } = useMemo(() => {
+        const wordsPerLine = 4;
+        const activeIdx = words.findIndex(
+            (word) => currentTime >= word.start && currentTime <= word.end
+        );
+
+        if (activeIdx === -1) {
+            return { activeWordIndex: -1, displayWords: [], startIndex: 0 };
+        }
+
+        const start = Math.max(0, activeIdx - Math.floor(wordsPerLine / 2));
+        const end = Math.min(words.length, start + wordsPerLine);
+
+        return {
+            activeWordIndex: activeIdx,
+            displayWords: words.slice(start, end),
+            startIndex: start
+        };
+    }, [words, currentTime]);
+
+    // Early return AFTER all hooks
+    if (activeWordIndex === -1) {
+        return null;
+    }
+
+    // Simplified animation calculation (called per word, so keep it lean)
+    const getWordAnimation = (word: CaptionWord, isActive: boolean) => {
+        if (!isActive) {
+            return { scale: 1, translateY: 0, opacity: 0.7 };
+        }
+
         const animDuration = theme.animation.duration || 0.1;
+        const progress = Math.min((currentTime - word.start) / animDuration, 1);
 
-        let scale = 1;
-        let translateY = 0;
-        let opacity = isActive ? 1 : 0.7;
+        switch (theme.animation.type) {
+            case 'scale':
+                return {
+                    scale: interpolate(progress, [0, 0.5, 1], [1, theme.animation.scaleAmount || 1.15, theme.animation.scaleAmount || 1.15], { extrapolateRight: 'clamp' }),
+                    translateY: 0,
+                    opacity: 1
+                };
 
-        if (isActive) {
-            const progress = Math.min((currentTime - word.start) / animDuration, 1);
+            case 'drop':
+                return {
+                    scale: 1,
+                    translateY: interpolate(progress, [0, 1], [-(theme.animation.dropDistance || 50), 0], { extrapolateRight: 'clamp' }),
+                    opacity: interpolate(progress, [0, 0.5], [0, 1], { extrapolateRight: 'clamp' })
+                };
 
-            switch (theme.animation.type) {
-                case 'scale':
-                    const scaleAmount = theme.animation.scaleAmount || 1.15;
-                    scale = interpolate(progress, [0, 0.5, 1], [1, scaleAmount, scaleAmount], {
-                        extrapolateRight: 'clamp',
-                    });
-                    break;
+            case 'bounce':
+                const springValue = spring({
+                    frame: (currentTime - word.start) * fps,
+                    fps,
+                    config: { damping: 10, stiffness: 200 },
+                });
+                return {
+                    scale: 1 + (theme.animation.scaleAmount || 1.2 - 1) * springValue,
+                    translateY: 0,
+                    opacity: 1
+                };
 
-                case 'drop':
-                    const dropDist = theme.animation.dropDistance || 50;
-                    translateY = interpolate(progress, [0, 1], [-dropDist, 0], {
-                        extrapolateRight: 'clamp',
-                    });
-                    opacity = interpolate(progress, [0, 0.5], [0, 1], {
-                        extrapolateRight: 'clamp',
-                    });
-                    break;
+            case 'fade':
+                return {
+                    scale: 1,
+                    translateY: 0,
+                    opacity: interpolate(progress, [0, 1], [0.5, 1], { extrapolateRight: 'clamp' })
+                };
 
-                case 'bounce':
-                    const bounceScale = theme.animation.scaleAmount || 1.2;
-                    const springValue = spring({
-                        frame: (currentTime - word.start) * fps,
-                        fps,
-                        config: { damping: 10, stiffness: 200 },
-                    });
-                    scale = 1 + (bounceScale - 1) * springValue;
-                    break;
-
-                case 'fade':
-                    opacity = interpolate(progress, [0, 1], [0.5, 1], {
-                        extrapolateRight: 'clamp',
-                    });
-                    break;
-
-                case 'none':
-                default:
-                    break;
-            }
+            case 'none':
+            default:
+                return { scale: 1, translateY: 0, opacity: 1 };
         }
-
-        return { scale, translateY, opacity };
     };
 
     return (
@@ -207,21 +199,20 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                ...getPositionStyle(),
+                ...positionStyle,
                 pointerEvents: 'none',
             }}
         >
-            {/* Container with optional background */}
             <div
                 style={{
                     display: 'flex',
                     flexWrap: 'wrap',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    width: '80%', // Fixed width to prevent jumping
+                    width: '80%',
                     maxWidth: '1000px',
                     gap: '16px',
-                    textAlign: 'center', // Ensure center alignment
+                    textAlign: 'center',
                     ...(effectiveStyle.containerBg && {
                         backgroundColor: effectiveStyle.containerBg,
                         padding: effectiveStyle.containerPadding,
@@ -229,13 +220,11 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                     }),
                 }}
             >
-                {/* Always render a fixed number of lines/words to keep layout stable */}
                 {displayWords.map((word, index) => {
                     const wordIndex = startIndex + index;
                     const isActive = wordIndex === activeWordIndex;
-                    const { scale, translateY, opacity } = getWordAnimation(word, isActive, wordIndex);
+                    const { scale, translateY, opacity } = getWordAnimation(word, isActive);
 
-                    // Word style
                     const wordStyle: React.CSSProperties = {
                         fontFamily: effectiveStyle.fontFamily,
                         fontSize: effectiveStyle.fontSize,
@@ -243,23 +232,18 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                         textTransform: effectiveStyle.textTransform as any,
                         letterSpacing: effectiveStyle.letterSpacing,
                         color: isActive ? effectiveStyle.activeColor : effectiveStyle.textColor,
-                        textShadow: getTextShadow(isActive),
+                        textShadow: isActive ? activeShadow : normalShadow,
                         transform: `scale(${scale}) translateY(${translateY}px)`,
                         opacity,
                         textAlign: 'center',
                         lineHeight: 1.4,
-                        transition: 'color 0.15s ease-out', // Smoother color transition
-                        whiteSpace: 'nowrap', // Prevent single words from breaking
-                        // Fix layout jitter by ensuring words have stable collection
+                        whiteSpace: 'nowrap',
                         display: 'inline-block',
-
-                        // Active background (for red-box style)
                         ...(isActive && effectiveStyle.activeBgColor && {
                             backgroundColor: effectiveStyle.activeBgColor,
                             padding: effectiveStyle.activePadding,
                             borderRadius: effectiveStyle.activeBorderRadius,
                         }),
-                        // Non-active padding to maintain spacing
                         ...(!isActive && effectiveStyle.activeBgColor && {
                             padding: effectiveStyle.activePadding,
                         }),

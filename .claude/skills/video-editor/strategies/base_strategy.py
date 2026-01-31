@@ -229,6 +229,7 @@ class BaseStrategy(ABC):
         resources: Dict[str, Any],
         duration_sec: float,
         fade_in_sec: float = 2.0,
+        fade_out_sec: float = 2.0,
         volume: float = 0.2
     ) -> Optional[otio.schema.Clip]:
         """
@@ -259,6 +260,7 @@ class BaseStrategy(ABC):
 
         # Add fade-in and volume metadata
         clip.metadata['audio_fade_in'] = str(fade_in_sec)
+        clip.metadata['audio_fade_out'] = str(fade_out_sec)
         clip.metadata['volume'] = str(volume)
 
         return clip

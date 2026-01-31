@@ -35,6 +35,7 @@ def add_effect(
     # Create clip metadata for LayerEffect component
     clip_metadata = {
         "remotion_component": "LayerEffect",
+        "globalTimelineStart": str(at_second),
         "props": {
             "effectType": effect_type,
             "intensity": intensity

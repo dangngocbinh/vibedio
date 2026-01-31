@@ -54,6 +54,7 @@ For voice-over projects with narration:
 For voice/audio configuration:
 ```json
 {
+  "enabled": true,    // Set to false to disable voice track and subtitles completely
   "provider": null,   // e.g., "elevenlabs", "google-tts", or null for pre-recorded
   "voiceId": null     // Voice identifier for TTS providers
 }
@@ -63,7 +64,7 @@ For voice/audio configuration:
 For background music configuration:
 ```json
 {
-  "enabled": false,
+  "enabled": false,      // Set to true to enable background music
   "query": "",           // Music search query
   "mood": "neutral",     // e.g., "calm", "energetic", "melancholic"
   "genre": "background", // e.g., "ambient", "cinematic", "lofi"
@@ -74,15 +75,34 @@ For background music configuration:
 ```
 
 #### subtitle
-For subtitle/caption styling:
+For subtitle/caption styling (TikTok-style captions):
 ```json
 {
-  "style": "default",           // e.g., "highlight-word", "full-line"
-  "position": "center",         // e.g., "top", "center", "bottom"
-  "font": "Arial",
-  "highlightColor": "#FFEB3B"
+  "theme": "clean-minimal",     // Theme name (see Caption Themes below)
+  "position": "bottom",         // Position: "top", "center", "bottom", "bottom-high" (default: "bottom")
+  "font": "Montserrat",         // Optional: Override theme font
+  "highlightColor": "#22c55e"   // Optional: Override theme highlight color
 }
 ```
+
+**Available Caption Themes:**
+- `clean-minimal` (default) - White rounded background, black text, professional and readable
+- `gold-bold` - Bold yellow text with thick black outline, attention-grabbing
+- `drop-green` - Words drop with green highlight, dynamic and energetic
+- `red-box` - Active word has red background box, great for emphasis
+- `impact-yellow` - Maximum impact with large yellow text, perfect for hooks
+- `neon-glow` - Glowing neon text, great for tech/night content
+- `story-elegant` - Soft elegant style for storytelling
+- `minimal-dark` - Simple dark text, clean and aesthetic
+
+**Theme Auto-Selection:**
+Themes can be auto-selected based on content keywords. For example:
+- Educational/tutorial content → `clean-minimal`
+- Shocking/dramatic content → `gold-bold` or `impact-yellow`
+- Action/gaming content → `drop-green`
+- Important points/CTA → `red-box`
+- Tech/futuristic → `neon-glow`
+- Stories/emotional → `story-elegant`
 
 ## voice.json Structure
 
