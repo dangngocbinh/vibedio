@@ -6,6 +6,7 @@ import {
   interpolate,
   spring,
   Easing,
+  random,
 } from 'remotion';
 import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
@@ -30,6 +31,29 @@ export interface LayerTitleProps {
   showAccentLine?: boolean;   // Hiển thị đường viền accent (mặc định: true)
   fontFamily?: string;        // Google Font name
 }
+
+const DEFAULT_FONTS = [
+  'Playwrite New Zealand Basic',
+  'Roboto Condensed',
+  'Arimo',
+  'Bungee',
+  'Merriweather',
+  'Mulish',
+  'Be Vietnam Pro',
+  'Nunito',
+  'Montserrat',
+  'Lexend',
+  'Oswald',
+  'Anton',
+  'Lobster',
+  'Pacifico',
+  'Dancing Script',
+  'Quicksand',
+  'Comfortaa',
+  'Patrick Hand',
+  'Josefin Sans',
+  'VT323'
+];
 
 // ============ STYLE PRESETS ============
 // Hàm trả về CSS preset cho mỗi kiểu style (tương tự như trong Vue, đây là computed styles)
@@ -209,11 +233,15 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
   enterDuration: enterDurationProp,
   exitDuration: exitDurationProp,
   showAccentLine = true,
-  fontFamily,
+  fontFamily: propFontFamily,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const { scalePixel, scaleFontSize, isPortrait, uniformScale } = useResponsiveScale();
+
+  // Select a random default font based on the title to ensure consistency for the same content
+  const defaultFont = DEFAULT_FONTS[Math.floor(random(title || 'layer-title') * DEFAULT_FONTS.length)];
+  const fontFamily = propFontFamily || defaultFont;
 
   // Responsive scaled values
   const scaledFontSize = scaleFontSize(fontSize);
@@ -312,7 +340,7 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
               fontSize: style === 'full-screen' ? scaledFontSize * 1.5 : style === 'centered' ? scaledFontSize * 1.2 : scaledFontSize,
               fontWeight: 900,
               margin: 0,
-              fontFamily: fontFamily || 'Inter, system-ui, sans-serif',
+              fontFamily: fontFamily,
               letterSpacing: style === 'full-screen' ? '0.02em' : undefined,
               lineHeight: 1.3,
               textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
@@ -330,7 +358,7 @@ export const LayerTitle: React.FC<LayerTitleProps> = ({
                 fontSize: style === 'full-screen' ? scaledSubtitleSize * 1.3 : scaledSubtitleSize,
                 fontWeight: 500,
                 margin: '8px 0 0',
-                fontFamily: fontFamily || 'Inter, system-ui, sans-serif',
+                fontFamily: fontFamily,
                 opacity: animation === 'typewriter' && displaySubtitle === '' ? 0 : 1,
               }}
             >

@@ -38,6 +38,7 @@
             margin: 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -108,6 +109,16 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.1em;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .prompt-box {
@@ -197,25 +208,25 @@
             {
                 category: '⭐ Cinematic & Premium (Sang trọng)',
                 items: [
-                    { id: 'cinematic-intro', name: 'Cinematic Intro', tag: 'Intro / Film', desc: 'Thiết kế sang trọng, chữ mảnh, phong cách điện ảnh.' },
-                    { id: 'luxury-gold', name: 'Luxury Gold', tag: 'Premium', desc: 'Chữ nhũ vàng kim rực rỡ trên nền tối.' },
-                    { id: 'space-odyssey', name: 'Space Odyssey', tag: 'Sci-Fi', desc: 'Không gian vũ trụ sâu thẳm, chữ thưa tinh tế.' }
+                    { id: 'cinematic-intro', name: 'Cinematic Intro', tag: 'Intro / Film', desc: 'Thiết kế sang trọng, chữ mảnh, phong cách điện ảnh.', image: 'assets/fullscreen/cinematic-intro.jpg' },
+                    { id: 'luxury-gold', name: 'Luxury Gold', tag: 'Premium', desc: 'Chữ nhũ vàng kim rực rỡ trên nền tối.', image: 'assets/fullscreen/luxury-gold.jpg' },
+                    { id: 'space-odyssey', name: 'Space Odyssey', tag: 'Sci-Fi', desc: 'Không gian vũ trụ sâu thẳm, chữ thưa tinh tế.', image: 'assets/fullscreen/space-odyssey.jpg' }
                 ]
             },
             {
                 category: '⚡ Modern & Hype (Năng động)',
                 items: [
-                    { id: 'bold-statement', name: 'Bold Statement', tag: 'Impact', desc: 'Tiêu đề in hoa kích thước lớn, gây ấn tượng mạnh.' },
-                    { id: 'neon-night', name: 'Neon Night', tag: 'Gaming / Club', desc: 'Đèn Neon rực rỡ nhấp nháy trên nền đêm.' },
-                    { id: 'retro-pop', name: 'Retro Pop Art', tag: 'Fun', desc: 'Bùng nổ màu sắc phong cách 90s.' }
+                    { id: 'bold-statement', name: 'Bold Statement', tag: 'Impact', desc: 'Tiêu đề in hoa kích thước lớn, gây ấn tượng mạnh.', image: 'assets/fullscreen/bold-statement.jpg' },
+                    { id: 'neon-night', name: 'Neon Night', tag: 'Gaming / Club', desc: 'Đèn Neon rực rỡ nhấp nháy trên nền đêm.', image: 'assets/fullscreen/neon-night.jpg' },
+                    { id: 'retro-pop', name: 'Retro Pop Art', tag: 'Fun', desc: 'Bùng nổ màu sắc phong cách 90s.', image: 'assets/fullscreen/retro-pop.jpg' }
                 ]
             },
             {
                 category: '📝 Content & Narrative (Nội dung)',
                 items: [
-                    { id: 'minimal-chapter', name: 'Minimal Chapter', tag: 'Vlog / Clean', desc: 'Tối giản tuyệt đối cho các đoạn phân cảnh.' },
-                    { id: 'quote-hero', name: 'Quote Hero', tag: 'Education', desc: 'Dành riêng để trích dẫn những câu nói hay.' },
-                    { id: 'breaking-news-full', name: 'Breaking News', tag: 'Event', desc: 'Giao diện bản tin nóng toàn màn hình.' }
+                    { id: 'minimal-chapter', name: 'Minimal Chapter', tag: 'Vlog / Clean', desc: 'Tối giản tuyệt đối cho các đoạn phân cảnh.', image: 'assets/fullscreen/minimal-chapter.jpg' },
+                    { id: 'quote-hero', name: 'Quote Hero', tag: 'Education', desc: 'Dành riêng để trích dẫn những câu nói hay.', image: 'assets/fullscreen/quote-hero.jpg' },
+                    { id: 'breaking-news-full', name: 'Breaking News', tag: 'Event', desc: 'Giao diện bản tin nóng toàn màn hình.', image: 'assets/fullscreen/breaking-news-full.jpg' }
                 ]
             }
         ];
@@ -241,6 +252,7 @@
                 const prompt = `Thêm Fullscreen Title mẫu "${item.id}" làm [Intro/Chapter] với tiêu đề: "[Tên]" và phụ đề: "[Mô tả]". Thời lượng [5] giây.`;
 
                 card.innerHTML = `
+                <img src="${item.image}" class="preview-image" alt="${item.name}" onerror="this.src='https://placehold.co/800x450/1e293b/FFFFFF?text=${item.name.replace(' ', '+')}'" />
                 <div class="tag">${item.tag}</div>
                 <div class="info">
                     <div class="name">${item.name}</div>

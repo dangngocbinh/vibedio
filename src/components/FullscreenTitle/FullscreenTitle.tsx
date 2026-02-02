@@ -7,6 +7,7 @@ import {
     spring,
     Easing,
     Img,
+    random,
 } from 'remotion';
 import { GradientPresets, PatternPresets } from './BackgroundPresets';
 import { useBackgroundAnimation } from './useBackgroundAnimation'; // Import hook chuyển động
@@ -32,6 +33,29 @@ export type FullscreenTemplate =
     | 'urban-graffiti' | 'frozen-pixel' | 'royal-velvet' | 'eco-green'
     | 'data-stream' | 'pop-shock' | 'shadow-play' | 'geometric-grid'
     | 'watercolor-bleed' | 'glassmorphism-pro';
+
+const DEFAULT_FONTS = [
+    'Playwrite New Zealand Basic',
+    'Roboto Condensed',
+    'Arimo',
+    'Bungee',
+    'Merriweather',
+    'Mulish',
+    'Be Vietnam Pro',
+    'Nunito',
+    'Montserrat',
+    'Lexend',
+    'Oswald',
+    'Anton',
+    'Lobster',
+    'Pacifico',
+    'Dancing Script',
+    'Quicksand',
+    'Comfortaa',
+    'Patrick Hand',
+    'Josefin Sans',
+    'VT323'
+];
 
 export interface FullscreenTitleProps {
     // Nội dung
@@ -365,7 +389,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
     accentColor = '#00d4ff',
     titleSize = 96,
     subtitleSize = 36,
-    fontFamily = 'Inter, Montserrat, system-ui, sans-serif',
+    fontFamily: propFontFamily,
     verticalAlign = 'center',
     horizontalAlign = 'center',
     padding = 60,
@@ -378,6 +402,10 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
 }) => {
     const frame = useCurrentFrame();
     const { fps, durationInFrames, width } = useVideoConfig();
+
+    // Random default font
+    const defaultFont = DEFAULT_FONTS[Math.floor(random(title || 'fullscreen-title') * DEFAULT_FONTS.length)];
+    const fontFamily = propFontFamily || defaultFont;
 
     React.useEffect(() => {
         if (fontFamily && !fontFamily.includes(',') && !fontFamily.includes('system-ui')) {

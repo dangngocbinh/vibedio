@@ -29,73 +29,40 @@
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-28T04:23:15.706Z",
-    "timestamp": 1769574195706
+    "modifiedAt": "2026-01-31T17:10:59.291Z",
+    "timestamp": 1769879459291
   },
   {
-    "id": "nguoi-luc-nao-cung-ban",
-    "name": "nguoi-luc-nao-cung-ban",
-    "path": "projects/nguoi-luc-nao-cung-ban",
+    "id": "duong-vuot-bien-can-gio-vung-tau",
+    "name": "duong-vuot-bien-can-gio-vung-tau",
+    "path": "projects/duong-vuot-bien-can-gio-vung-tau",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-28T04:11:55.281Z",
-    "timestamp": 1769573515281
+    "modifiedAt": "2026-01-28T14:54:53.931Z",
+    "timestamp": 1769612093931
   },
   {
-    "id": "nguoi-que",
-    "name": "nguoi-que",
-    "path": "projects/nguoi-que",
+    "id": "may-bay-yak130-roi-dak-lak",
+    "name": "may-bay-yak130-roi-dak-lak",
+    "path": "projects/may-bay-yak130-roi-dak-lak",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-27T10:35:01.642Z",
-    "timestamp": 1769510101642
+    "modifiedAt": "2026-01-28T12:32:48.757Z",
+    "timestamp": 1769603568757
   },
   {
-    "id": "the-unfinished-painting",
-    "name": "the-unfinished-painting",
-    "path": "projects/the-unfinished-painting",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-01-26T14:21:36.258Z",
-    "timestamp": 1769437296258
-  },
-  {
-    "id": "vibe-video-capcut",
-    "name": "vibe-video-capcut",
-    "path": "projects/vibe-video-capcut",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-26T06:49:07.794Z",
-    "timestamp": 1769410147794
-  },
-  {
-    "id": "10-su-that-thu-vi-ve-giong-noi",
-    "name": "10-su-that-thu-vi-ve-giong-noi",
-    "path": "projects/10-su-that-thu-vi-ve-giong-noi",
+    "id": "lao-dong-tieng-trung",
+    "name": "lao-dong-tieng-trung",
+    "path": "projects/lao-dong-tieng-trung",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-24T17:22:49.540Z",
-    "timestamp": 1769275369540
-  },
-  {
-    "id": "vietnam",
-    "name": "vietnam",
-    "path": "projects/vietnam",
-    "hasScript": false,
-    "hasOtio": true,
-    "otioFile": "vietnam_vibes.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-24T16:16:19.254Z",
-    "timestamp": 1769271379254
+    "modifiedAt": "2026-01-28T04:08:28.803Z",
+    "timestamp": 1769573308803
   }
 ]

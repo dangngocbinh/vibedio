@@ -38,6 +38,7 @@
             margin: 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -107,6 +108,16 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .prompt-box {
@@ -196,25 +207,25 @@
             {
                 category: '📱 Social Media (Mạng xã hội)',
                 items: [
-                    { id: 'classic-youtube', name: 'YouTube Subscribe', tag: 'YouTube', desc: 'Nút Subscribe cổ điển kèm chuông thông báo.' },
-                    { id: 'social-tiktok', name: 'TikTok Follow', tag: 'TikTok', desc: 'Hiệu ứng Glitch đặc trưng của TikTok.' },
-                    { id: 'social-instagram', name: 'IG Follow', tag: 'Instagram', desc: 'Giao diện bo tròn kèm màu sắc Gradient IG.' }
+                    { id: 'classic-youtube', name: 'YouTube Subscribe', tag: 'YouTube', desc: 'Nút Subscribe cổ điển kèm chuông thông báo.', image: 'assets/cta/classic-youtube.jpg' },
+                    { id: 'social-tiktok', name: 'TikTok Follow', tag: 'TikTok', desc: 'Hiệu ứng Glitch đặc trưng của TikTok.', image: 'assets/cta/social-tiktok.jpg' },
+                    { id: 'social-instagram', name: 'IG Follow', tag: 'Instagram', desc: 'Giao diện bo tròn kèm màu sắc Gradient IG.', image: 'assets/cta/social-instagram.jpg' }
                 ]
             },
             {
                 category: '🛒 Commercial & Traffic (Kinh doanh)',
                 items: [
-                    { id: 'shop-now', name: 'Shop Now', tag: 'Sales', desc: 'Nút mua hàng kèm icon giỏ xách sinh động.' },
-                    { id: 'app-store', name: 'Download App', tag: 'Store', desc: 'Nút tải app phong cách App Store chuẩn.' },
-                    { id: 'website-visit', name: 'Website Visit', tag: 'Traffic', desc: 'Thanh địa chỉ web hiện đại, dễ chú ý.' }
+                    { id: 'shop-now', name: 'Shop Now', tag: 'Sales', desc: 'Nút mua hàng kèm icon giỏ xách sinh động.', image: 'assets/cta/shop-now.jpg' },
+                    { id: 'app-store', name: 'Download App', tag: 'Store', desc: 'Nút tải app phong cách App Store chuẩn.', image: 'assets/cta/app-store.jpg' },
+                    { id: 'website-visit', name: 'Website Visit', tag: 'Traffic', desc: 'Thanh địa chỉ web hiện đại, dễ chú ý.', image: 'assets/cta/website-visit.jpg' }
                 ]
             },
             {
                 category: '✨ Special Effects (Hiệu ứng đặc biệt)',
                 items: [
-                    { id: 'neon-pulse', name: 'Neon Pulse', tag: 'Cyber', desc: 'Khung phát sáng Neon nhấp nháy thu hút ánh nhìn.' },
-                    { id: 'glassmorphism', name: 'Glass CTA', tag: 'Modern', desc: 'Hiệu ứng kính mờ tối giản và sang trọng.' },
-                    { id: 'speech-bubble', name: 'Comic Bubble', tag: 'Fun', desc: 'Dạng bóng hội thoại vui nhộn kiểu truyện tranh.' }
+                    { id: 'neon-pulse', name: 'Neon Pulse', tag: 'Cyber', desc: 'Khung phát sáng Neon nhấp nháy thu hút ánh nhìn.', image: 'assets/cta/neon-pulse.jpg' },
+                    { id: 'glassmorphism', name: 'Glass CTA', tag: 'Modern', desc: 'Hiệu ứng kính mờ tối giản và sang trọng.', image: 'assets/cta/glassmorphism.jpg' },
+                    { id: 'speech-bubble', name: 'Comic Bubble', tag: 'Fun', desc: 'Dạng bóng hội thoại vui nhộn kiểu truyện tranh.', image: 'assets/cta/speech-bubble.jpg' }
                 ]
             }
         ];
@@ -240,6 +251,7 @@
                 const prompt = `Thêm Call To Action mẫu "${item.id}" với nội dung chính là "[Chữ]" và phụ đề "[@username]" vào cuối video.`;
 
                 card.innerHTML = `
+                <img src="${item.image}" class="preview-image" alt="${item.name}" onerror="this.src='https://placehold.co/600x200/1e293b/FFFFFF?text=${item.name.replace(' ', '+')}'" />
                 <div class="tag">${item.tag}</div>
                 <div class="info">
                     <div class="name">${item.name}</div>

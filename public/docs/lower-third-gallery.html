@@ -38,6 +38,7 @@
             margin: 0 0 10px 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.02em;
         }
@@ -108,6 +109,16 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.1em;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .prompt-box {
@@ -197,25 +208,25 @@
             {
                 category: '💎 Modern & Clean (Hiện đại)',
                 items: [
-                    { id: 'modern-skew', name: 'Modern Skew', tag: 'Vlog / Modern', desc: 'Thiết kế nghiêng cá tính, năng động.' },
-                    { id: 'minimal-bold', name: 'Minimal Bold', tag: 'Clean', desc: 'Tối giản, chữ đậm cực kỳ rõ ràng.' },
-                    { id: 'glass-modern', name: 'Glassmorphism', tag: 'Luxury', desc: 'Hiệu ứng kính mờ trong suốt thời thượng.' }
+                    { id: 'modern-skew', name: 'Modern Skew', tag: 'Vlog / Modern', desc: 'Thiết kế nghiêng cá tính, năng động.', image: 'assets/lower-third/modern-skew.jpg' },
+                    { id: 'minimal-bold', name: 'Minimal Bold', tag: 'Clean', desc: 'Tối giản, chữ đậm cực kỳ rõ ràng.', image: 'assets/lower-third/minimal-bold.jpg' },
+                    { id: 'glass-modern', name: 'Glassmorphism', tag: 'Luxury', desc: 'Hiệu ứng kính mờ trong suốt thời thượng.', image: 'assets/lower-third/glass-modern.jpg' }
                 ]
             },
             {
                 category: '📺 Broadcast & News (Truyền hình)',
                 items: [
-                    { id: 'breaking-news', name: 'Breaking News', tag: 'News', desc: 'Phong cách bản tin nóng kinh điển.' },
-                    { id: 'classic-tv', name: 'Classic TV', tag: 'Retro', desc: 'Mẫu tiêu đề truyền hình thập niên 90.' },
-                    { id: 'cyberpunk-hud', name: 'Cyber HUD', tag: 'Gaming / Tech', desc: 'Giao diện công nghệ tương lai màu Neon.' }
+                    { id: 'breaking-news', name: 'Breaking News', tag: 'News', desc: 'Phong cách bản tin nóng kinh điển.', image: 'assets/lower-third/breaking-news.jpg' },
+                    { id: 'classic-tv', name: 'Classic TV', tag: 'Retro', desc: 'Mẫu tiêu đề truyền hình thập niên 90.', image: 'assets/lower-third/classic-tv.jpg' },
+                    { id: 'cyberpunk-hud', name: 'Cyber HUD', tag: 'Gaming / Tech', desc: 'Giao diện công nghệ tương lai màu Neon.', image: 'assets/lower-third/cyberpunk-hud.jpg' }
                 ]
             },
             {
                 category: '🎨 Creative & Artistic (Sáng tạo)',
                 items: [
-                    { id: 'comic-pop', name: 'Comic Pop', tag: 'Fun', desc: 'Phong cách truyện tranh siêu anh hùng.' },
-                    { id: 'ink-bleed', name: 'Ink Bleed', tag: 'Art', desc: 'Chữ hiện ra từ các vết mực loang.' },
-                    { id: 'hand-drawn', name: 'Hand Drawn', tag: 'Creative', desc: 'Nét vẽ tay nguệch ngoạc thân thiện.' }
+                    { id: 'comic-pop', name: 'Comic Pop', tag: 'Fun', desc: 'Phong cách truyện tranh siêu anh hùng.', image: 'assets/lower-third/comic-pop.jpg' },
+                    { id: 'ink-bleed', name: 'Ink Bleed', tag: 'Art', desc: 'Chữ hiện ra từ các vết mực loang.', image: 'assets/lower-third/ink-bleed.jpg' },
+                    { id: 'hand-drawn', name: 'Hand Drawn', tag: 'Creative', desc: 'Nét vẽ tay nguệch ngoạc thân thiện.', image: 'assets/lower-third/hand-drawn.jpg' }
                 ]
             }
         ];
@@ -241,6 +252,7 @@
                 const prompt = `Thêm tiêu đề Lower Third mẫu "${item.id}" với nội dung chính là "[Tên]" và phụ đề là "[Chức danh]" vào giây thứ [giây]. Màu chủ đạo là [màu].`;
 
                 card.innerHTML = `
+                <img src="${item.image}" class="preview-image" alt="${item.name}" onerror="this.src='https://placehold.co/600x400/1e293b/FFFFFF?text=${item.name.replace(' ', '+')}'" />
                 <div class="tag">${item.tag}</div>
                 <div class="info">
                     <div class="name">${item.name}</div>

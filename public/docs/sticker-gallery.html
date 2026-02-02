@@ -38,6 +38,7 @@
             margin: 0 0 10px 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.02em;
         }
@@ -107,6 +108,16 @@
             align-items: center;
             justify-content: center;
             font-size: 40px;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 10px;
         }
 
         .name {
@@ -211,23 +222,23 @@
             {
                 category: '🔥 Sticker Chuyển Động (Lottie Animation)',
                 items: [
-                    { id: 'lottie-fire', name: 'Ngọn lửa', emoji: '🔥', tag: 'Hot' },
-                    { id: 'lottie-rocket', name: 'Tên lửa', emoji: '🚀', tag: 'Speed' },
-                    { id: 'lottie-heart-eyes', name: 'Mắt trái tim', emoji: '😍', tag: 'Love' },
-                    { id: 'lottie-party', name: 'Tiệc tùng', emoji: '🥳', tag: 'Fun' },
-                    { id: 'lottie-money', name: 'Tiền bay', emoji: '💰', tag: 'Rich' },
-                    { id: 'lottie-hundred', name: '100 điểm', emoji: '💯', tag: 'Top' },
-                    { id: 'lottie-thumbs-up', name: 'Like', emoji: '👍', tag: 'Social' },
-                    { id: 'lottie-mind-blown', name: 'Bất ngờ', emoji: '🤯', tag: 'Shock' }
+                    { id: 'lottie-fire', name: 'Ngọn lửa', emoji: '🔥', tag: 'Hot', image: 'assets/stickers/lottie-fire.gif' },
+                    { id: 'lottie-rocket', name: 'Tên lửa', emoji: '🚀', tag: 'Speed', image: 'assets/stickers/lottie-rocket.gif' },
+                    { id: 'lottie-heart-eyes', name: 'Mắt trái tim', emoji: '😍', tag: 'Love', image: 'assets/stickers/lottie-heart-eyes.gif' },
+                    { id: 'lottie-party', name: 'Tiệc tùng', emoji: '🥳', tag: 'Fun', image: 'assets/stickers/lottie-party.gif' },
+                    { id: 'lottie-money', name: 'Tiền bay', emoji: '💰', tag: 'Rich', image: 'assets/stickers/lottie-money.gif' },
+                    { id: 'lottie-hundred', name: '100 điểm', emoji: '💯', tag: 'Top', image: 'assets/stickers/lottie-hundred.gif' },
+                    { id: 'lottie-thumbs-up', name: 'Like', emoji: '👍', tag: 'Social', image: 'assets/stickers/lottie-thumbs-up.gif' },
+                    { id: 'lottie-mind-blown', name: 'Bất ngờ', emoji: '🤯', tag: 'Shock', image: 'assets/stickers/lottie-mind-blown.gif' }
                 ]
             },
             {
                 category: '😊 Cảm Xúc & Phản Hồi (Static)',
                 items: [
-                    { id: 'face-laughing', name: 'Cười lớn', emoji: '😂', tag: 'Funny' },
-                    { id: 'face-cool', name: 'Ngầu', emoji: '😎', tag: 'Cool' },
-                    { id: 'face-thinking', name: 'Suy nghĩ', emoji: '🤔', tag: 'Logic' },
-                    { id: 'shush', name: 'Giữ bí mật', emoji: '🤫', tag: 'Secret' }
+                    { id: 'face-laughing', name: 'Cười lớn', emoji: '😂', tag: 'Funny', image: 'assets/stickers/face-laughing.png' },
+                    { id: 'face-cool', name: 'Ngầu', emoji: '😎', tag: 'Cool', image: 'assets/stickers/face-cool.png' },
+                    { id: 'face-thinking', name: 'Suy nghĩ', emoji: '🤔', tag: 'Logic', image: 'assets/stickers/face-thinking.png' },
+                    { id: 'shush', name: 'Giữ bí mật', emoji: '🤫', tag: 'Secret', image: 'assets/stickers/shush.png' }
                 ]
             }
         ];
@@ -253,8 +264,13 @@
 
                 const prompt = `Thêm sticker "${item.name}" (template: ${item.id}) tại [vị trí] từ giây thứ [giây]. Dùng hiệu ứng [pop/elastic/shake].`;
 
+                const imageHtml = item.image
+                    ? `<img src="${item.image}" class="preview-image" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+                       <div class="sticker-preview" style="display: none">${item.emoji}</div>`
+                    : `<div class="sticker-preview">${item.emoji}</div>`;
+
                 card.innerHTML = `
-                <div class="sticker-preview">${item.emoji}</div>
+                ${imageHtml}
                 <div class="tag">${item.tag}</div>
                 <div class="info">
                     <div class="name">${item.name}</div>
