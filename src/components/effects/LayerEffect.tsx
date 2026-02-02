@@ -11,6 +11,7 @@ import {
     staticFile
 } from 'remotion';
 import { Lottie, LottieAnimationData } from '@remotion/lottie';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 // ============ TYPES ============
 export type LayerEffectType =
@@ -395,6 +396,11 @@ export const LayerEffect: React.FC<LayerEffectProps> = ({
 }) => {
     const frame = useCurrentFrame();
     const { durationInFrames } = useVideoConfig();
+    const { scalePixel, uniformScale } = useResponsiveScale();
+
+    // Scale dimensions responsively
+    const scaledWidth = scalePixel(width as number);
+    const scaledHeight = scalePixel(height as number);
 
     const enterDuration = enterDurationProp ?? 15;
     const exitDuration = exitDurationProp ?? 15;
@@ -464,11 +470,20 @@ export const LayerEffect: React.FC<LayerEffectProps> = ({
         }
     }, [src, isLottie]);
 
+    // Scale positions if they're numbers
+    const scaledTop = typeof top === 'number' ? scalePixel(top) : top;
+    const scaledLeft = typeof left === 'number' ? scalePixel(left) : left;
+    const scaledRight = typeof right === 'number' ? scalePixel(right) : right;
+    const scaledBottom = typeof bottom === 'number' ? scalePixel(bottom) : bottom;
+
     const posStyle: React.CSSProperties = {
-        position: 'absolute', width, height,
-        top: top ?? (bottom ? undefined : '50%'),
-        left: left ?? (right ? undefined : '50%'),
-        right, bottom,
+        position: 'absolute',
+        width: scaledWidth,
+        height: scaledHeight,
+        top: scaledTop ?? (scaledBottom ? undefined : '50%'),
+        left: scaledLeft ?? (scaledRight ? undefined : '50%'),
+        right: scaledRight,
+        bottom: scaledBottom,
         transform: (!top && !bottom && !left && !right) ? `translate(-50%, -50%) ${transform}` : transform,
         opacity: baseOpacity * animOpacity,
         zIndex: 9999, pointerEvents: 'none',

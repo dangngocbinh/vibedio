@@ -1,55 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sticker Animation Gallery</title>
+    <title>Sticker Gallery - Thư viện Sticker thông minh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --primary: #ffd700;
-            --bg: #1a1a1a;
-            --card-bg: #2a2a2a;
-            --text: #ffffff;
+            --bg: #0b0f1a;
+            --card-bg: #161e31;
+            --primary: #f59e0b;
+            --secondary: #ef4444;
+            --success: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 40px;
+            padding: 0;
+        }
+
+        .header {
+            padding: 60px 20px;
+            text-align: center;
+            background: radial-gradient(circle at top, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
         }
 
         h1 {
-            text-align: center;
-            margin-bottom: 40px;
+            font-weight: 800;
             font-size: 3rem;
-            background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
         }
 
-        .grid {
+        .guide-section {
+            max-width: 900px;
+            margin: -30px auto 50px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 30px;
-            max-width: 1400px;
-            margin: 0 auto;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .guide-step {
+            text-align: center;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin: 0 auto 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
         }
 
         .card {
-            background-color: var(--card-bg);
-            border-radius: 20px;
+            background: var(--card-bg);
+            border-radius: 16px;
             padding: 20px;
-            height: 300px;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.2s;
+            gap: 12px;
+            text-align: center;
         }
 
         .card:hover {
@@ -57,432 +97,180 @@
             border-color: var(--primary);
         }
 
-        .preview-area {
-            flex: 1;
-            width: 100%;
-            position: relative;
+        .sticker-preview {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+            justify-content: center;
+            font-size: 40px;
         }
 
-        .sticker {
-            font-size: 80px;
-            filter: drop-shadow(0px 5px 15px rgba(0, 0, 0, 0.3));
+        .name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
         }
 
-        .label {
-            margin-top: 15px;
-            background-color: rgba(0, 0, 0, 0.3);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 600;
+        .tag {
+            font-size: 0.65rem;
             color: var(--primary);
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.9rem;
         }
 
-        .meta {
+        .prompt-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .prompt-label {
+            font-size: 0.6rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .prompt-text {
+            font-style: italic;
             font-size: 0.8rem;
-            color: #888;
-            margin-top: 5px;
-            font-family: monospace;
+            color: #cbd5e1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* Animations */
-        @keyframes pop {
-            0% {
-                transform: scale(0);
-                opacity: 0;
-            }
-
-            80% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes elastic {
-            0% {
-                transform: scale(0);
-            }
-
-            50% {
-                transform: scale(1.5);
-            }
-
-            70% {
-                transform: scale(0.85);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
         }
 
-        @keyframes shake {
-            0% {
-                transform: scale(0) rotate(0deg);
-                opacity: 0;
-            }
-
-            40% {
-                transform: scale(1) rotate(0deg);
-                opacity: 1;
-            }
-
-            50% {
-                transform: rotate(-15deg);
-            }
-
-            60% {
-                transform: rotate(15deg);
-            }
-
-            70% {
-                transform: rotate(-10deg);
-            }
-
-            80% {
-                transform: rotate(10deg);
-            }
-
-            100% {
-                transform: rotate(0deg);
-            }
-        }
-
-        @keyframes rotate {
-            0% {
-                transform: scale(0) rotate(-180deg);
-                opacity: 0;
-            }
-
-            100% {
-                transform: scale(1) rotate(0deg);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slide-up {
-            0% {
-                transform: translateY(100px);
-                opacity: 0;
-            }
-
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slide-down {
-            0% {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
-
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fade {
-            0% {
-                opacity: 0;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
-        /* Triggers */
-        .card:hover .sticker {
-            animation: none;
-            /* Reset */
-        }
-
-        .card:hover .sticker.anim-pop {
-            animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
-        }
-
-        .card:hover .sticker.anim-elastic {
-            animation: elastic 0.8s ease-in-out infinite;
-        }
-
-        .card:hover .sticker.anim-shake {
-            animation: shake 1s ease-in-out infinite;
-        }
-
-        .card:hover .sticker.anim-rotate {
-            animation: rotate 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
-        }
-
-        .card:hover .sticker.anim-slide-up {
-            animation: slide-up 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
-        }
-
-        .card:hover .sticker.anim-slide-down {
-            animation: slide-down 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
-        }
-
-        .card:hover .sticker.anim-fade {
-            animation: fade 1s ease-in-out infinite;
-        }
-
-        .hint {
-            text-align: center;
-            color: #666;
-            margin-bottom: 40px;
+        .section-title {
+            grid-column: 1 / -1;
+            margin-top: 40px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            font-size: 1.4rem;
+            font-weight: 800;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Sticker Library & Animations</h1>
-    <p class="hint">Discover over 80 built-in sticker templates. Hover to preview animations.</p>
+    <div id="toast" class="toast">✨ Đã sao chép!</div>
 
-    <!-- CATEGORY: LOTTIE -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">✨ Animated Lottie Stickers (New)</h2>
-    <div class="grid" id="lottie-grid"></div>
+    <div class="header">
+        <h1>Sticker & Emoji Library</h1>
+        <p style="color: var(--text-muted)">Hàng trăm Sticker chuyển động Lottie và Emoji chất lượng cao.</p>
+    </div>
 
-    <!-- CATEGORY: FACES -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">😊 Faces & Emotions</h2>
-    <div class="grid" id="faces-grid"></div>
+    <div class="guide-section">
+        <div class="guide-step">
+            <div class="step-num">1</div>
+            <h3>Tìm Sticker</h3>
+            <p>Chọn mẫu sticker hoặc hiệu ứng chuyển động bạn thích.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">2</div>
+            <h3>Copy Prompt</h3>
+            <p>Bấm vào ô câu lệnh mẫu để copy cho AI.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">3</div>
+            <h3>Tùy chỉnh vị trí</h3>
+            <p>AI sẽ tự động đặt sticker lên nội dung video của bạn.</p>
+        </div>
+    </div>
 
-    <!-- CATEGORY: HEARTS -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">❤️ Hearts & Love</h2>
-    <div class="grid" id="hearts-grid"></div>
+    <div class="container" id="gallery"></div>
 
-    <!-- CATEGORY: SOCIAL -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">🔥 Social & Reactions</h2>
-    <div class="grid" id="social-grid"></div>
-
-    <!-- CATEGORY: NATURE -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">🌿 Nature & Elements</h2>
-    <div class="grid" id="nature-grid"></div>
-
-    <!-- CATEGORY: FOOD -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">🍕 Celebration & Food</h2>
-    <div class="grid" id="food-grid"></div>
-
-    <!-- CATEGORY: HANDS -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">✌️ Hands & Gestures</h2>
-    <div class="grid" id="hands-grid"></div>
-
-    <!-- CATEGORY: ANIMALS -->
-    <h2 style="text-align: center; color: var(--primary); margin-top: 50px;">🦄 Animals & Avatars</h2>
-    <div class="grid" id="animals-grid"></div>
-
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <script>
-        const stickerData = {
-            'lottie-grid': [
-                { id: 'lottie-heart-eyes', hex: '1f60d' },
-                { id: 'lottie-laughing', hex: '1f602' },
-                { id: 'lottie-party', hex: '1f389' },
-                { id: 'lottie-rocket', hex: '1f680' },
-                { id: 'lottie-fire', hex: '1f525' },
-                { id: 'lottie-stars', hex: '1f929' },
-                { id: 'lottie-thinking', hex: '1f914' },
-                { id: 'lottie-mind-blown', hex: '1f92f' },
-                { id: 'lottie-sweat', hex: '1f605' },
-                { id: 'lottie-cool', hex: '1f60e' },
-                { id: 'lottie-cry', hex: '1f622' },
-                { id: 'lottie-angry', hex: '1f621' },
-                { id: 'lottie-hug', hex: '1f917' },
-                { id: 'lottie-sleep', hex: '1f634' },
-                { id: 'lottie-wink', hex: '1f609' },
-                { id: 'lottie-kiss', hex: '1f618' },
-                { id: 'lottie-fear', hex: '1f631' },
-                { id: 'lottie-shush', hex: '1f92b' },
-                { id: 'lottie-drool', hex: '1f924' },
-                { id: 'lottie-money', hex: '1f911' },
-                { id: 'lottie-nerd', hex: '1f913' },
-                { id: 'lottie-ghost', hex: '1f47b' },
-                { id: 'lottie-alien', hex: '1f47d' },
-                { id: 'lottie-robot', hex: '1f916' },
-                { id: 'lottie-cat', hex: '1f63a' },
-                { id: 'lottie-dog', hex: '1f436' },
-                { id: 'lottie-unicorn', hex: '1f984' },
-                { id: 'lottie-target', hex: '1f3af' },
-                { id: 'lottie-bulb', hex: '1f4a1' },
-                { id: 'lottie-medal', hex: '1f947' },
-                { id: 'lottie-trophy', hex: '1f3c6' },
-                { id: 'lottie-clapper', hex: '1f3ac' },
-                { id: 'lottie-controller', hex: '1f3ae' },
-                { id: 'lottie-pizza', hex: '1f355' },
-                { id: 'lottie-burger', hex: '1f354' },
-                { id: 'lottie-coffee', hex: '2615' },
-                { id: 'lottie-cake', hex: '1f382' },
-                { id: 'lottie-balloon', hex: '1f388' },
-                { id: 'lottie-gift', hex: '1f381' },
-                { id: 'lottie-sun', hex: '2600_fe0f' },
-                { id: 'lottie-moon', hex: '1f319' },
-                { id: 'lottie-rainbow', hex: '1f308' },
-                { id: 'lottie-sparkles', hex: '2728' },
-                { id: 'lottie-check', hex: '2705' },
-                { id: 'lottie-cross', hex: '274c' },
-                { id: 'lottie-warning', hex: '26a0_fe0f' },
-                { id: 'lottie-hundred', hex: '1f4af' },
-                { id: 'lottie-thumbs-up', hex: '1f44d' },
-                { id: 'lottie-thumbs-down', hex: '1f44e' },
-                { id: 'lottie-clap', hex: '1f44f' },
-                { id: 'lottie-peace', hex: '270c_fe0f' },
-                { id: 'lottie-ok', hex: '1f44c' },
-                { id: 'lottie-muscle', hex: '1f4aa' },
-                { id: 'lottie-wave', hex: '1f44b' },
-                { id: 'lottie-pray', hex: '1f64f' },
-                { id: 'lottie-heart-red', hex: '2764_fe0f' },
-                { id: 'lottie-heart-broken', hex: '1f494' },
-                { id: 'lottie-heart-blue', hex: '1f499' },
-                { id: 'lottie-crown', hex: '1f451' },
-                { id: 'lottie-gem', hex: '1f48e' },
-                { id: 'lottie-diamond', hex: '1f4a0' }
-            ],
-            'faces-grid': [
-                { id: 'face-heart-eyes', img: '1f60d' },
-                { id: 'face-laughing', img: '1f602' },
-                { id: 'face-wow', img: '1f62e' },
-                { id: 'face-crying', img: '1f622' },
-                { id: 'face-angry', img: '1f621' },
-                { id: 'face-cool', img: '1f60e' },
-                { id: 'face-thinking', img: '1f914' },
-                { id: 'face-mind-blown', img: '1f92f' },
-                { id: 'face-partying', img: '1f973' },
-                { id: 'face-sweating', img: '1f605' },
-                { id: 'face-clown', img: '1f921' },
-                { id: 'face-scared', img: '1f631' },
-                { id: 'face-sleepy', img: '1f634' },
-                { id: 'face-zipper', img: '1f910' },
-                { id: 'face-nerd', img: '1f913' },
-                { id: 'face-mask', img: '1f637' },
-                { id: 'face-shush', img: '1f92b' },
-                { id: 'face-drool', img: '1f924' },
-                { id: 'face-lying', img: '1f925' },
-                { id: 'face-vomit', img: '1f92e' },
-                { id: 'face-money', img: '1f911' },
-                { id: 'skull', img: '1f480' },
-                { id: 'zombie', img: '1f9df' },
-                { id: 'face-devil', img: '1f47f' },
-                { id: 'face-ghost', img: '1f47b' }
-            ],
-            'hearts-grid': [
-                { id: 'heart-red', img: '2764_fe0f' },
-                { id: 'heart-broken', img: '1f494' },
-                { id: 'heart-fire', img: '2764_fe0f_200d_1f525' },
-                { id: 'heart-sparkle', img: '1f496' },
-                { id: 'heart-blue', img: '1f499' },
-                { id: 'sparkling-heart', img: '1f496' }
-            ],
-            'social-grid': [
-                { id: 'like-thumb', img: '1f44d' },
-                { id: 'dislike-thumb', img: '1f44e' },
-                { id: 'clap', img: '1f44f' },
-                { id: 'fire', img: '1f525' },
-                { id: 'hundred', img: '1f4af' },
-                { id: 'check-mark', img: '2705' },
-                { id: 'warning', img: '26a0_fe0f' },
-                { id: 'money-bag', img: '1f4b0' },
-                { id: 'rocket', img: '1f680' },
-                { id: 'trophy', img: '1f3c6' },
-                { id: 'gold-cup', img: '1f3c6' },
-                { id: 'target', img: '1f3af' },
-                { id: 'bulb', img: '1f4a1' },
-                { id: 'megaphone', img: '1f4e3' },
-                { id: 'money-wings', img: '1f4b8' },
-                { id: 'bomb', img: '1f4a3' }
-            ],
-            'nature-grid': [
-                { id: 'sun', img: '2600_fe0f' },
-                { id: 'moon', img: '1f319' },
-                { id: 'cloud-rain', img: '1f327_fe0f' },
-                { id: 'lightning', img: '26a1' },
-                { id: 'rainbow', img: '1f308' },
-                { id: 'sparkles', img: '2728' },
-                { id: 'flower-cherry', img: '1f338' },
-                { id: 'tree-palm', img: '1f334' },
-                { id: 'potted-plant', img: '1fab4' }
-            ],
-            'food-grid': [
-                { id: 'pizza', img: '1f355' },
-                { id: 'burger', img: '1f354' },
-                { id: 'coffee', img: '2615' },
-                { id: 'beer', img: '1f37a' },
-                { id: 'cake', img: '1f382' },
-                { id: 'confetti-ball', img: '1f38a' },
-                { id: 'balloon', img: '1f388' },
-                { id: 'gift', img: '1f381' }
-            ],
-            'hands-grid': [
-                { id: 'hand-peace', img: '270c_fe0f' },
-                { id: 'hand-rock', img: '1f918' },
-                { id: 'hand-ok', img: '1f44c' },
-                { id: 'hand-muscle', img: '1f4aa' },
-                { id: 'hand-wave', img: '1f44b' },
-                { id: 'hand-pray', img: '1f64f' },
-                { id: 'hand-pointed-up', img: '261d_fe0f' },
-                { id: 'hand-fist', img: '270a' }
-            ],
-            'animals-grid': [
-                { id: 'cat-smile', img: '1f63a' },
-                { id: 'dog-face', img: '1f436' },
-                { id: 'unicorn', img: '1f984' },
-                { id: 'monkey-no-see', img: '1f648' },
-                { id: 'monkey-no-hear', img: '1f649' },
-                { id: 'monkey-no-speak', img: '1f64a' },
-                { id: 'lucky-cat', img: '1f63a' },
-                { id: 'alien', img: '1f47d' },
-                { id: 'robot', img: '1f916' }
-            ]
-        };
+        const stickers = [
+            {
+                category: '🔥 Sticker Chuyển Động (Lottie Animation)',
+                items: [
+                    { id: 'lottie-fire', name: 'Ngọn lửa', emoji: '🔥', tag: 'Hot' },
+                    { id: 'lottie-rocket', name: 'Tên lửa', emoji: '🚀', tag: 'Speed' },
+                    { id: 'lottie-heart-eyes', name: 'Mắt trái tim', emoji: '😍', tag: 'Love' },
+                    { id: 'lottie-party', name: 'Tiệc tùng', emoji: '🥳', tag: 'Fun' },
+                    { id: 'lottie-money', name: 'Tiền bay', emoji: '💰', tag: 'Rich' },
+                    { id: 'lottie-hundred', name: '100 điểm', emoji: '💯', tag: 'Top' },
+                    { id: 'lottie-thumbs-up', name: 'Like', emoji: '👍', tag: 'Social' },
+                    { id: 'lottie-mind-blown', name: 'Bất ngờ', emoji: '🤯', tag: 'Shock' }
+                ]
+            },
+            {
+                category: '😊 Cảm Xúc & Phản Hồi (Static)',
+                items: [
+                    { id: 'face-laughing', name: 'Cười lớn', emoji: '😂', tag: 'Funny' },
+                    { id: 'face-cool', name: 'Ngầu', emoji: '😎', tag: 'Cool' },
+                    { id: 'face-thinking', name: 'Suy nghĩ', emoji: '🤔', tag: 'Logic' },
+                    { id: 'shush', name: 'Giữ bí mật', emoji: '🤫', tag: 'Secret' }
+                ]
+            }
+        ];
 
-        const animations = ['pop', 'elastic', 'shake', 'rotate', 'slide-up', 'slide-down', 'fade'];
+        const gallery = document.getElementById('gallery');
+        const toast = document.getElementById('toast');
 
-        Object.keys(stickerData).forEach(gridId => {
-            const grid = document.getElementById(gridId);
-            const isLottieGrid = gridId === 'lottie-grid';
+        function notify(msg) {
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
 
-            stickerData[gridId].forEach((item, index) => {
-                const anim = animations[index % animations.length];
+        stickers.forEach(section => {
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.innerText = section.category;
+            gallery.appendChild(title);
+
+            section.items.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                let content = '';
-                if (isLottieGrid) {
-                    const lottieUrl = `https://fonts.gstatic.com/s/e/notoemoji/latest/${item.hex}/lottie.json`;
-                    content = `
-                        <div class="preview-area">
-                            <lottie-player src="${lottieUrl}" background="transparent" speed="1" style="width: 100px; height: 100px;" loop autoplay class="sticker anim-${anim}"></lottie-player>
-                        </div>
-                    `;
-                } else {
-                    content = `
-                        <div class="preview-area">
-                            <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/${item.img}/512.webp" class="sticker anim-${anim}" style="width: 80px;">
-                        </div>
-                    `;
-                }
+                const prompt = `Thêm sticker "${item.name}" (template: ${item.id}) tại [vị trí] từ giây thứ [giây]. Dùng hiệu ứng [pop/elastic/shake].`;
 
                 card.innerHTML = `
-                    ${content}
-                    <div class="label">${item.id}</div>
-                    <div class="meta">anim: ${anim}</div>
-                `;
-                grid.appendChild(card);
+                <div class="sticker-preview">${item.emoji}</div>
+                <div class="tag">${item.tag}</div>
+                <div class="info">
+                    <div class="name">${item.name}</div>
+                </div>
+                
+                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify('✨ Đã copy câu lệnh Prompt!')">
+                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
+                    <div class="prompt-text">"${prompt}"</div>
+                </div>
+                <div style="font-size: 0.65rem; color: var(--text-muted)">ID: ${item.id}</div>
+            `;
+                gallery.appendChild(card);
             });
         });
     </script>
+
 </body>
 
 </html>

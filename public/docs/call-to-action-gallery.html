@@ -4,684 +4,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Call To Action Templates Gallery - 120 Styles</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Montserrat:wght@700&display=swap"
+    <title>Call To Action Gallery - Lời kêu gọi hành động</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --accent: #3b82f6;
+            --bg: #0b0f1a;
+            --card-bg: #161e31;
+            --primary: #ef4444;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 40px;
+            padding: 0;
         }
 
-        header {
+        .header {
+            padding: 60px 20px;
             text-align: center;
-            margin-bottom: 60px;
+            background: radial-gradient(circle at top, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
         }
 
-        header h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            background: linear-gradient(to right, #60a5fa, #a855f7);
+        h1 {
+            font-weight: 800;
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
-        .gallery {
+        .guide-section {
+            max-width: 900px;
+            margin: -30px auto 50px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
         }
 
-        .template-card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+        .guide-step {
+            text-align: center;
         }
 
-        .template-card:hover {
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin: 0 auto 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 25px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .card:hover {
             transform: translateY(-5px);
-            border-color: var(--accent);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border-color: var(--primary);
         }
 
-        .preview-area {
-            height: 180px;
-            background-color: #111;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            background-image: radial-gradient(#333 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        .info-area {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            background: #1e293b;
-        }
-
-        .info-area h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: #f1f5f9;
-        }
-
-        .template-id {
-            background: #334155;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 5px;
-            display: inline-block;
-            font-family: monospace;
-        }
-
-        /* --- ORIGINAL STYLES --- */
-        .classic-youtube {
-            background: #fff;
-            padding: 10px 25px;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            color: #000;
-        }
-
-        .yt-icon {
-            width: 30px;
-            height: 30px;
-            background: #ddd;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .yt-btn {
-            background: #c00;
-            color: #fff;
-            padding: 5px 15px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 10px;
-            margin-left: 15px;
-        }
-
-        .minimal-subscribe {
-            background: #000;
-            color: #fff;
-            padding: 10px 30px;
-            border-radius: 30px;
-            font-weight: 900;
-            letter-spacing: -1px;
-            border: 1px solid #333;
-        }
-
-        .social-instagram {
-            background: #fff;
-            color: #000;
-            padding: 10px 20px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-        }
-
-        .ig-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
-            background: linear-gradient(45deg, #f09433, #bc1888);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 10px;
-            font-size: 10px;
-        }
-
-        .social-tiktok {
-            background: #000;
-            color: #fff;
-            padding: 10px 25px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            text-shadow: 2px 2px 0 #00f2ea, -2px -2px 0 #ff0050;
-            font-weight: bold;
-        }
-
-        .social-facebook {
-            background: #1877f2;
-            color: #fff;
-            padding: 10px 25px;
-            border-radius: 6px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-        }
-
-        .notification-bell {
-            background: #fff;
-            color: #333;
-            padding: 10px 20px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-        }
-
-        .app-store {
-            background: #000;
-            border: 1px solid #fff;
-            padding: 8px 15px;
-            border-radius: 8px;
-            color: #fff;
-            display: flex;
-            align-items: center;
-        }
-
-        .play-store {
-            background: #000;
-            border: 1px solid #fff;
-            padding: 8px 15px;
-            border-radius: 8px;
-            color: #fff;
-            display: flex;
-            align-items: center;
-        }
-
-        .discount-badge {
-            background: #ffeb3b;
-            color: #f44336;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 3px dashed #f44336;
-            font-weight: 900;
-            transform: rotate(-10deg);
-        }
-
-        .generic-blue {
-            background: #007bff;
-            color: #fff;
-            padding: 10px 30px;
-            border-radius: 6px;
-            font-weight: bold;
-        }
-
-        .generic-gradient {
-            background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%);
-            color: #fff;
-            padding: 10px 30px;
-            border-radius: 30px;
-            font-weight: bold;
-        }
-
-        .generic-outline {
-            border: 2px solid #fff;
-            color: #fff;
-            padding: 8px 25px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .generic-3d {
-            background: #ffcc00;
-            color: #000;
-            padding: 10px 30px;
-            border-radius: 6px;
-            font-weight: 900;
-            border-bottom: 4px solid #c7a000;
-            border-right: 4px solid #c7a000;
-        }
-
-        .neon-pulse {
-            border: 2px solid #0ff;
-            color: #fff;
-            padding: 10px 30px;
-            box-shadow: 0 0 10px #0ff;
-            text-shadow: 0 0 10px #0ff;
-            font-weight: bold;
-        }
-
-        .cyberpunk-glitch {
-            background: #000;
-            color: #f0f;
-            padding: 10px 20px;
-            font-family: monospace;
-            border-left: 3px solid #0ff;
-            font-weight: bold;
-        }
-
-        .retro-pixel {
-            background: #000;
-            border: 2px solid #fff;
-            color: #0f0;
-            padding: 10px 20px;
-            font-family: monospace;
-        }
-
-        .hand-drawn {
-            border: 2px solid #000;
-            background: #fff;
-            color: #000;
-            padding: 10px 25px;
-            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-            font-family: cursive;
-            font-weight: bold;
-        }
-
-        .glassmorphism {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 30px;
-            border-radius: 10px;
+        .name {
+            font-weight: 700;
+            font-size: 1.25rem;
             color: #fff;
         }
 
-        .live-badge {
-            background: #f00;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            font-size: 12px;
-        }
-
-        .live-dot {
-            width: 6px;
-            height: 6px;
-            background: #fff;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-
-        /* --- NEW STYLES (80+) --- */
-        /* E-commerce */
-        .flash-sale {
-            background: linear-gradient(45deg, #ff0000, #ff8800);
-            color: #fff;
-            padding: 15px 40px;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
-            font-weight: 900;
-        }
-
-        .add-to-cart {
-            background: #4CAF50;
-            color: #fff;
-            padding: 10px 30px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-        }
-
-        .buy-one-get-one {
-            background: #E91E63;
-            color: #fff;
-            padding: 15px;
-            border-radius: 50%;
-            width: 100px;
-            height: 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border: 3px dashed #fff;
-            transform: rotate(-10deg);
-            font-weight: 900;
-        }
-
-        /* Tech */
-        .start-free-trial {
-            background: #2563eb;
-            color: #fff;
-            padding: 15px 40px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .download-now {
-            background: #333;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-        }
-
-        .ai-feature {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            padding: 10px 25px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-        }
-
-        /* Health */
-        .book-appointment {
-            background: #009688;
-            color: #fff;
-            padding: 15px 30px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .healthy-choice {
-            border: 2px solid #8BC34A;
-            color: #8BC34A;
-            padding: 10px 25px;
-            border-radius: 50px;
-            font-weight: bold;
-            background: #fff;
-        }
-
-        /* Education */
-        .enroll-now {
-            background: #FF5722;
-            color: #fff;
-            padding: 15px 40px;
-            border-radius: 4px;
-            font-weight: bold;
-            box-shadow: 0 4px 0 #E64A19;
-        }
-
-        .teacher-approved {
-            width: 80px;
-            height: 80px;
-            border: 3px solid #F44336;
-            border-radius: 50%;
-            color: #F44336;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            transform: rotate(-20deg);
-            background: rgba(255, 255, 255, 0.8);
-        }
-
-        /* Finance */
-        .crypto-buy {
-            background: linear-gradient(to right, #F7931A, #F7931A);
-            color: #fff;
-            padding: 10px 30px;
-            border-radius: 30px;
-            font-weight: bold;
-        }
-
-        .invest-now {
-            background: #00695C;
-            color: #fff;
-            padding: 15px 40px;
-            border-radius: 4px;
+        .tag {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 0.05em;
         }
 
-        /* Real Estate */
-        .sold-badge {
-            background: #D32F2F;
-            color: #fff;
-            padding: 10px 40px;
-            transform: rotate(-15deg);
-            font-weight: bold;
-            border: 4px solid #fff;
+        .prompt-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
         }
 
-        .open-house {
-            background: #000;
-            color: #fff;
+        .prompt-label {
+            font-size: 0.65rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .prompt-text {
+            font-style: italic;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: white;
             padding: 15px 30px;
-            border: 1px solid #fff;
+            border-radius: 50px;
+            font-weight: 700;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Travel */
-        .book-flight {
-            background: #2196F3;
-            color: #fff;
-            padding: 10px 30px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
         }
 
-        .passport-stamp {
-            width: 100px;
-            height: 100px;
-            border: 4px double #d32f2f;
-            border-radius: 50%;
-            color: #d32f2f;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transform: rotate(-15deg);
-            font-weight: bold;
-            opacity: 0.8;
-        }
-
-        /* Food */
-        .order-delivery {
-            background: #FF5722;
-            color: #fff;
-            padding: 10px 30px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-        }
-
-        .vegan-badge {
-            width: 60px;
-            height: 60px;
-            background: #4CAF50;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-            font-weight: bold;
-            border: 2px solid #fff;
+        .section-title {
+            grid-column: 1 / -1;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            font-size: 1.5rem;
+            font-weight: 800;
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <h1>Call To Action Gallery</h1>
-        <p>120 High-Conversion Templates for Engagement</p>
-    </header>
 
-    <div id="gallery-container" class="gallery"></div>
+    <div id="toast" class="toast">✨ Đã copy Prompt mẫu!</div>
+
+    <div class="header">
+        <h1>Call To Action (CTA)</h1>
+        <p style="color: var(--text-muted)">Các mẫu nút bấm và thông báo kêu gọi hành động chuyên nghiệp cho mạng xã
+            hội.</p>
+    </div>
+
+    <div class="guide-section">
+        <div class="guide-step">
+            <div class="step-num">1</div>
+            <h3>Chọn kênh</h3>
+            <p>Chọn mẫu phù hợp với nền tảng (YouTube, TikTok, Instagram...).</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">2</div>
+            <h3>Copy Prompt</h3>
+            <p>Bấm vào khung Prompt để copy lệnh gửi cho AI.</p>
+        </div>
+        <div class="guide-step">
+            <div class="step-num">3</div>
+            <h3>Dán cho AI</h3>
+            <p>AI sẽ tự động chèn nút kêu gọi vào đúng thời điểm bạn muốn.</p>
+        </div>
+    </div>
+
+    <div class="container" id="gallery"></div>
 
     <script>
-        const templates = [
-            // SOCIAL
-            { id: "classic-youtube", name: "Classic YouTube", html: "<div class='classic-youtube'><div class='yt-icon'></div><div><b>Channel</b></div><div class='yt-btn'>SUBSCRIBE</div></div>" },
-            { id: "minimal-subscribe", name: "Minimal Subscribe", html: "<div class='minimal-subscribe'>SUBSCRIBE</div>" },
-            { id: "social-instagram", name: "Instagram Follow", html: "<div class='social-instagram'><div class='ig-icon'>IG</div><div><b>Follow</b><br><small>@username</small></div></div>" },
-            { id: "social-tiktok", name: "TikTok Glitch", html: "<div class='social-tiktok'>Follow Me</div>" },
-            { id: "social-facebook", name: "Facebook Like", html: "<div class='social-facebook'>👍 Like us</div>" },
-            { id: "social-twitter", name: "X Follow", html: "<div class='generic-subscribe' style='background:#000; color:#fff; padding:10px 20px; border-radius:20px; border:1px solid #333;'>𝕏 Follow</div>" },
-            { id: "notification-bell", name: "Notify Bell", html: "<div class='notification-bell'>🔔 Turn on Notifications</div>" },
-            { id: "channel-footer", name: "Channel Footer", html: "<div style='background:rgba(0,0,0,0.8); color:#fff; padding:10px; border-radius:8px; display:flex; align-items:center; width:80%;'><div style='width:30px; height:30px; background:#ddd; border-radius:50%; margin-right:10px;'></div><small>Channel Name</small><div style='background:#fff; color:#000; padding:2px 10px; border-radius:10px; font-size:10px; margin-left:auto; font-weight:bold;'>Sub</div></div>" },
-            { id: "join-discord", name: "Join Discord", html: "<div style='background:#5865F2; color:#fff; padding:10px 20px; border-radius:6px; font-weight:bold;'>Join Discord</div>" },
-            { id: "patreon-support", name: "Patreon Support", html: "<div style='background:#ff424d; color:#fff; padding:10px 20px; border-radius:20px; font-weight:bold;'>Support on Patreon</div>" },
-
-            // ACTIONS
-            { id: "swipe-up", name: "Swipe Up", html: "<div style='text-align:center; color:#fff;'><div style='font-size:20px;'>☝️</div><div style='background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:4px; font-size:12px; margin-top:5px;'>Swipe Up</div></div>" },
-            { id: "app-store", name: "App Store", html: "<div class='app-store'><span style='font-size:20px; margin-right:10px;'></span><div><small style='font-size:8px; display:block;'>Download on</small>App Store</div></div>" },
-            { id: "play-store", name: "Google Play", html: "<div class='play-store'><span style='font-size:20px; margin-right:10px;'>▶️</span><div><small style='font-size:8px; display:block;'>GET IT ON</small>Google Play</div></div>" },
-            { id: "website-visit", name: "Visit Website", html: "<div style='background:#fff; padding:5px 15px; border-radius:20px; color:#333; font-weight:bold; font-size:12px;'>🌎 www.site.com</div>" },
-            { id: "shop-now", name: "Shop Now", html: "<div style='background:#e91e63; color:#fff; padding:10px 25px; font-weight:bold; letter-spacing:1px;'>🛍️ SHOP NOW</div>" },
-            { id: "discount-badge", name: "Discount Badge", html: "<div class='discount-badge'><div>50%</div><small>OFF</small></div>" },
-            { id: "newsletter-signup", name: "Newsletter", html: "<div style='background:#fff; padding:5px; border-radius:4px; display:flex;'><div style='background:#eee; width:80px; height:20px; margin-right:5px;'></div><div style='background:#333; width:30px; height:20px;'></div></div>" },
-            { id: "like-comment-share", name: "Interact Row", html: "<div style='color:#fff; font-size:12px;'>👍 Like  💬 Comment</div>" },
-            { id: "qrcode-scan", name: "QR Code", html: "<div style='background:#fff; padding:10px; border-radius:8px; text-align:center;'><div style='width:50px; height:50px; background:#000; margin-bottom:5px; opacity:0.8;'></div><small style='color:#000; font-weight:bold;'>SCAN ME</small></div>" },
-            { id: "location-pin", name: "Location Pin", html: "<div style='text-align:center;'><div style='font-size:24px;'>📍</div><div style='background:#fff; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;'>Visit Us</div></div>" },
-
-            // GENERIC BUTTONS
-            { id: "generic-blue", name: "Blue Button", html: "<div class='generic-blue'>Button</div>" },
-            { id: "generic-gradient", name: "Gradient Pill", html: "<div class='generic-gradient'>Get Started</div>" },
-            { id: "generic-outline", name: "Outline", html: "<div class='generic-outline'>Learn More</div>" },
-            { id: "generic-3d", name: "Retro 3D", html: "<div class='generic-3d'>CLICK ME</div>" },
-            { id: "marketing-pill", name: "Marketing Pill", html: "<div style='background:#ff5722; color:#fff; padding:5px 15px; border-radius:20px; font-size:12px; font-weight:bold;'>SPECIAL OFFER ›</div>" },
-
-            // EFFECTS
-            { id: "neon-pulse", name: "Neon Pulse", html: "<div class='neon-pulse'>NEON TEXT</div>" },
-            { id: "cyberpunk-glitch", name: "Cyberpunk", html: "<div class='cyberpunk-glitch'>SYSTEM_OVERRIDE</div>" },
-            { id: "retro-pixel", name: "8-Bit", html: "<div class='retro-pixel'>> START GAME</div>" },
-            { id: "hand-drawn", name: "Hand Drawn", html: "<div class='hand-drawn'>Check this out!</div>" },
-            { id: "speech-bubble", name: "Speech Bubble", html: "<div style='background:#fff; padding:10px 15px; border-radius:10px; position:relative; font-weight:bold;'>Say Hello!<div style='position:absolute; bottom:-5px; left:10px; width:10px; height:10px; background:#fff; transform:rotate(45deg);'></div></div>" },
-            { id: "glassmorphism", name: "Glassmorphism", html: "<div class='glassmorphism'>Glass Effect</div>" },
-            { id: "modern-float", name: "Modern Float", html: "<div style='background:#fff; color:#333; padding:10px 25px; border-radius:30px; box-shadow:0 10px 20px rgba(0,0,0,0.5); font-weight:bold;'>Floating Btn</div>" },
-            { id: "corner-ribbon", name: "Corner Ribbon", html: "<div style='position:absolute; top:10px; right:-10px; background:#ff0000; color:#fff; padding:2px 20px; transform:rotate(45deg); font-size:10px; font-weight:bold;'>NEW</div>" },
-            { id: "search-bar", name: "Search Bar", html: "<div style='background:#fff; padding:5px 15px; border-radius:20px; color:#999; font-size:12px;'>🔍 Search...</div>" },
-            { id: "loading-complete", name: "Loading Done", html: "<div style='background:#333; padding:10px; border-radius:4px; text-align:center;'><div style='width:100px; height:4px; background:#0f0; margin-bottom:5px;'></div><small style='color:#fff; font-size:8px;'>COMPLETE</small></div>" },
-
-            // INTERACTIVE
-            { id: "mouse-cursor", name: "Mouse Click", html: "<div style='position:relative;'><div class='generic-blue'>Click Here</div><div style='position:absolute; bottom:-10px; right:-10px; font-size:20px;'>🖱️</div></div>" },
-            { id: "finger-tap", name: "Finger Tap", html: "<div style='position:relative;'><div style='border:2px solid #fff; color:#fff; padding:5px 15px; border-radius:20px; font-size:12px;'>Tap to Open</div><div style='font-size:20px; position:absolute; bottom:-15px; right:10px;'>👆</div></div>" },
-            { id: "live-badge", name: "Live Badge", html: "<div class='live-badge'><div class='live-dot'></div>LIVE NOW</div>" },
-            { id: "upcoming-event", name: "Event Card", html: "<div style='background:#fff; display:flex; border-radius:4px; overflow:hidden;'><div style='background:#f00; color:#fff; padding:5px 10px; font-size:10px; text-align:center;'><div>DEC</div><b>25</b></div><div style='padding:5px 10px; color:#333; font-size:10px; font-weight:bold; display:flex; align-items:center;'>Stream</div></div>" },
-            { id: "review-stars", name: "5 Stars", html: "<div style='text-align:center;'><div style='color:#fc0;'>★★★★★</div><small style='color:#fff;'>Rate Us</small></div>" },
-
-            // --- N E W   T E M P L A T E S ---
-
-            // E-COMMERCE
-            { id: "flash-sale", name: "Flash Sale", html: "<div class='flash-sale'>⚡ FLASH SALE ⚡</div>" },
-            { id: "add-to-cart", name: "Add to Cart", html: "<div class='add-to-cart'>🛒 ADD TO CART</div>" },
-            { id: "limited-time", name: "Limited Time", html: "<div style='border:3px solid #fff; color:#fff; padding:10px; text-align:center;'><div style='font-size:10px;'>LIMITED</div><b>OFFER</b></div>" },
-            { id: "free-shipping", name: "Free Shipping", html: "<div style='background:#333; color:#fff; padding:5px 20px; border-radius:30px; display:flex; align-items:center;'>🚚 Free Shipping</div>" },
-            { id: "buy-one-get-one", name: "BOGO", html: "<div class='buy-one-get-one'><div>BOGO</div><div style='font-size:10px;'>FREE</div></div>" },
-            { id: "promo-code", name: "Promo Code", html: "<div style='background:#eee; border:2px dashed #999; padding:5px 20px; color:#333; font-family:monospace;'>CODE: SAVE20</div>" },
-            { id: "seasonal-sale", name: "Seasonal Sale", html: "<div style='background:linear-gradient(to right, #DA22FF, #9733EE); color:#fff; padding:10px 40px; border-radius:50px;'>SPRING SALE</div>" },
-            { id: "best-seller", name: "Best Seller", html: "<div style='background:#FFD700; color:#000; padding:5px 15px; border-radius:4px; font-weight:bold; display:flex;'>⭐ #1 Best Seller</div>" },
-            { id: "new-arrival", name: "New Arrival", html: "<div style='background:#111; color:#fff; padding:10px 30px; border-top:4px solid #fff;'>NEW DROP</div>" },
-            { id: "pre-order", name: "Pre-Order", html: "<div style='border:2px solid #3b82f6; color:#3b82f6; padding:10px 30px; border-radius:30px; font-weight:bold;'>PRE-ORDER NOW</div>" },
-
-            // TECH
-            { id: "start-free-trial", name: "Free Trial", html: "<div class='start-free-trial'>Start Free Trial ›</div>" },
-            { id: "download-now", name: "Download", html: "<div class='download-now'><div style='font-size:20px; margin-right:10px;'>⬇</div><div><small>v2.0</small><br>Download</div></div>" },
-            { id: "book-demo", name: "Book Demo", html: "<div style='background:#fff; border:2px solid #3b82f6; color:#3b82f6; padding:10px 30px;'>📅 Book a Demo</div>" },
-            { id: "api-access", name: "API Key", html: "<div style='background:#1e1e1e; color:#0f0; padding:10px; font-family:monospace;'>&lt;API_KEY /&gt;</div>" },
-            { id: "cloud-upload", name: "Cloud Sync", html: "<div style='text-align:center; color:#fff;'><div style='font-size:30px;'>☁️</div><small>Syncing...</small></div>" },
-            { id: "security-verified", name: "Secure", html: "<div style='background:#e8f5e9; color:#2e7d32; padding:5px 15px; border-radius:20px; border:1px solid #2e7d32;'>🔒 Verified Secure</div>" },
-            { id: "dark-mode-toggle", name: "Dark Mode", html: "<div style='background:#333; padding:5px; border-radius:20px; width:60px; display:flex; justify-content:flex-end;'><div style='width:20px; height:20px; background:#fff; border-radius:50%;'></div></div>" },
-            { id: "ai-feature", name: "AI Powered", html: "<div class='ai-feature'>✨ AI Powered</div>" },
-            { id: "software-update", name: "Update", html: "<div style='background:rgba(255,255,255,0.1); padding:10px; border:1px solid rgba(255,255,255,0.2); border-radius:8px;'>🆕 Update Available</div>" },
-            { id: "code-snippet", name: "Code", html: "<div style='background:#282c34; color:#abb2bf; padding:10px; font-family:monospace; border-radius:4px;'>npm install vibes</div>" },
-
-            // HEALTH
-            { id: "book-appointment", name: "Book Appt", html: "<div class='book-appointment'>✚ Book Appointment</div>" },
-            { id: "telehealth-call", name: "Telehealth", html: "<div style='background:#fff; color:#333; padding:10px 20px; border-radius:30px; display:flex; align-items:center;'><div style='width:10px; height:10px; background:#4CAF50; border-radius:50%; margin-right:10px;'></div>Dr. Online</div>" },
-            { id: "healthy-choice", name: "Healthy", html: "<div class='healthy-choice'>🥗 Healthy Choice</div>" },
-            { id: "workout-join", name: "Workout", html: "<div style='background:#f44336; color:#fff; padding:10px; font-weight:900;'>JOIN CHALLENGE</div>" },
-            { id: "meditation-start", name: "Meditate", html: "<div style='background:#E1BEE7; color:#4A148C; padding:10px 30px; border-radius:30px; font-family:serif;'>🧘 Begin Journey</div>" },
-            { id: "nutrition-facts", name: "Nutrition", html: "<div style='border:2px solid #fff; background:#fff; color:#000; padding:5px;'><div style='border-bottom:2px solid #000; font-weight:bold;'>Nutrition</div><small>Calories 200</small></div>" },
-            { id: "organic-badge", name: "Organic", html: "<div style='background:#558B2F; color:#fff; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; border:2px solid #fff;'>100% Organic</div>" },
-            { id: "medical-trust", name: "FDA", html: "<div style='text-align:center; color:#2196F3;'><div style='font-size:20px;'>🛡️</div><div style='background:#fff; padding:2px; font-size:10px;'>FDA Approved</div></div>" },
-            { id: "fitness-goal", name: "Goal 80%", html: "<div style='background:#000; padding:10px; border-radius:4px; display:flex; align-items:center;'><div style='width:50px; height:6px; background:#333; margin-right:5px;'><div style='width:80%; height:100%; background:#FFC107;'></div></div><small>80%</small></div>" },
-            { id: "pharmacy-delivery", name: "Pharmacy", html: "<div style='background:#fff; padding:5px 15px; border-radius:20px; color:#000;'>💊 2h Delivery</div>" },
-
-            // EDUCATION
-            { id: "enroll-now", name: "Enroll", html: "<div class='enroll-now'>ENROLL NOW</div>" },
-            { id: "download-ebook", name: "E-Book", html: "<div style='background:#fff; padding:10px; border-radius:4px; display:flex; color:#333;'><div style='width:20px; height:30px; background:#3F51B5; margin-right:5px;'></div>Free PDF</div>" },
-            { id: "webinar-register", name: "Webinar", html: "<div style='background:#673AB7; color:#fff; padding:10px;'>🎥 Register Webinar</div>" },
-            { id: "course-certificate", name: "Certificate", html: "<div style='border:4px double #FFD700; background:#fffcf5; color:#333; padding:5px;'>Certified Digital Marketer</div>" },
-            { id: "study-group", name: "Study Group", html: "<div style='display:flex;'><div style='width:20px; height:20px; background:#ddd; border-radius:50%; border:1px solid #fff;'></div><div style='width:20px; height:20px; background:#bbb; border-radius:50%; border:1px solid #fff; margin-left:-5px;'></div><small style='margin-left:5px;'>+500</small></div>" },
-            { id: "library-access", name: "Library", html: "<div style='background:#795548; color:#fff; padding:5px 15px; border-radius:4px;'>📚 Access Library</div>" },
-            { id: "lesson-start", name: "Start Lesson", html: "<div style='width:40px; height:40px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center;'><div style='width:0; height:0; border-left:10px solid #000; border-top:5px solid transparent; border-bottom:5px solid transparent;'></div></div>" },
-            { id: "quiz-time", name: "Quiz", html: "<div style='background:#FFAB00; color:#fff; padding:5px 20px; border-radius:20px; font-weight:bold;'>? TAKE QUIZ</div>" },
-            { id: "teacher-approved", name: "A+", html: "<div class='teacher-approved'>A+</div>" },
-            { id: "student-discount", name: "Discount", html: "<div style='background:#000; color:#fff; padding:5px 15px;'>🎓 20% Off</div>" },
-
-            // FINANCE
-            { id: "crypto-buy", name: "Bitcoin", html: "<div class='crypto-buy'>₿ Buy Bitcoin</div>" },
-            { id: "stock-market-up", name: "Stocks", html: "<div style='background:#e8f5e9; color:#4CAF50; padding:5px 10px;'>AAPL ▲ 2.5%</div>" },
-            { id: "secure-payment", name: "Secure Pay", html: "<div style='background:#fff; color:#555; padding:5px; border-radius:4px;'>🔒 Secure Checkout</div>" },
-            { id: "wallet-connect", name: "Wallet", html: "<div style='background:#3f51b5; color:#fff; padding:5px 15px; border-radius:20px;'>Connect Wallet</div>" },
-            { id: "invest-now", name: "Invest", html: "<div class='invest-now'>Start Investing</div>" },
-            { id: "credit-card-apply", name: "Credit Card", html: "<div style='background:linear-gradient(45deg,#111,#444); color:#fff; width:60px; height:40px; border-radius:4px; font-size:6px; padding:5px;'>PLATINUM</div>" },
-            { id: "savings-piggy", name: "Save", html: "<div style='text-align:center;'><div style='font-size:20px;'>🐷</div><span style='background:#fff; color:#000; font-size:10px; padding:0 5px;'>Save Money</span></div>" },
-            { id: "chart-growth", name: "Growth", html: "<div style='display:flex; align-items:flex-end; height:30px; gap:2px;'><div style='width:5px; height:10px; background:#81C784;'></div><div style='width:5px; height:20px; background:#43A047;'></div><div style='width:5px; height:30px; background:#2E7D32;'></div></div>" },
-            { id: "bitcoin-accept", name: "BTC Accept", html: "<div style='background:#fff; color:#F7931A; padding:5px; border-radius:4px; font-weight:bold;'>₿ Accepted</div>" },
-            { id: "insurance-protect", name: "Insurance", html: "<div style='background:#E0F2F1; color:#00695C; padding:5px 10px; border-radius:20px;'>☔ Get Protected</div>" },
-
-            // REAL ESTATE
-            { id: "open-house", name: "Open House", html: "<div class='open-house'>🏠 OPEN HOUSE</div>" },
-            { id: "sold-badge", name: "Sold", html: "<div class='sold-badge'>SOLD</div>" },
-            { id: "virtual-tour", name: "360 Tour", html: "<div style='background:rgba(0,0,0,0.7); color:#fff; padding:5px 10px; border-radius:10px;'>360° Virtual Tour</div>" },
-            { id: "mortgage-calc", name: "Calc", html: "<div style='background:#fff; color:#333; padding:5px;'>🧮 Mortgage Calc</div>" },
-            { id: "dream-home", name: "Dream Home", html: "<div style='font-family:serif; font-style:italic;'>Your Dream Home</div>" },
-            { id: "rent-now", name: "Rent", html: "<div style='background:#FF9800; color:#fff; padding:5px 15px;'>FOR RENT</div>" },
-            { id: "agent-contact", name: "Contact Agent", html: "<div style='background:#fff; padding:5px; border-radius:20px; display:flex; align-items:center;'><div style='width:20px; height:20px; background:#ccc; border-radius:50%; margin-right:5px;'></div><small style='color:#000;'>Call Agent</small></div>" },
-            { id: "property-feature", name: "Features", html: "<div style='background:rgba(0,0,0,0.5); color:#fff; font-size:10px; padding:2px;'>3🛏 2🛁</div>" },
-            { id: "key-handover", name: "Move In", html: "<div style='text-align:center;'><div style='font-size:20px;'>🗝️</div><small>Move-in Ready</small></div>" },
-            { id: "interior-design", name: "Interior", html: "<div style='border:1px solid #fff; padding:5px; letter-spacing:1px; font-size:10px;'>INTERIOR DESIGN</div>" },
-
-            // TRAVEL
-            { id: "book-flight", name: "Flight", html: "<div class='book-flight'>✈️ Book Flight</div>" },
-            { id: "hotel-checkin", name: "Hotel", html: "<div style='background:#333; color:#D4AF37; padding:5px 10px; font-family:serif;'>Reserve Suite</div>" },
-            { id: "destination-pin", name: "Dest", html: "<div style='text-align:center;'><div style='background:#fff; color:#000; padding:2px;'>PARIS</div>⬇</div>" },
-            { id: "holiday-package", name: "Deal", html: "<div style='background:#0288D1; padding:10px; text-align:center;'><small>DEAL</small><br><b>$499</b></div>" },
-            { id: "passport-stamp", name: "Stamp", html: "<div class='passport-stamp'>APPROVED</div>" },
-            { id: "travel-guide", name: "Guide", html: "<div style='background:#FF5722; padding:5px 10px;'>📖 Guide</div>" },
-            { id: "luggage-tag", name: "Luggage", html: "<div style='background:#FFC107; color:#000; padding:5px; width:40px; text-align:center;'>TAG</div>" },
-            { id: "explore-world", name: "Explore", html: "<div style='letter-spacing:3px;'>EXPLORE</div>" },
-            { id: "beach-vibes", name: "Beach", html: "<div style='background:#fff; color:#009688; padding:5px 10px; border-radius:20px;'>Beach Vibes 🌴</div>" },
-            { id: "mountain-hike", name: "Hike", html: "<div style='border:1px solid #fff; padding:5px;'>⛰ Hiking</div>" },
-
-            // FOOD
-            { id: "order-delivery", name: "Delivery", html: "<div class='order-delivery'>🛵 Order Now</div>" },
-            { id: "menu-view", name: "Menu", html: "<div style='background:#fff; color:#000; padding:5px; border:1px solid #000;'>📜 View Menu</div>" },
-            { id: "chef-recommend", name: "Chef", html: "<div style='background:#000; color:#fff; padding:5px;'>👨‍🍳 Chef's Choice</div>" },
-            { id: "spicy-warning", name: "Spicy", html: "<div style='background:#fff; color:#F44336; padding:5px; font-weight:bold;'>🌶️ SPICY</div>" },
-            { id: "vegan-badge", name: "Vegan", html: "<div class='vegan-badge'>VEGAN</div>" },
-            { id: "coffee-break", name: "Coffee", html: "<div style='background:#795548; padding:5px 10px; border-radius:20px;'>☕ Coffee</div>" },
-            { id: "recipe-save", name: "Recipe", html: "<div style='background:#fff8e1; color:#333; border:1px dashed #000; padding:5px;'>✂ Save</div>" },
-            { id: "table-reserve", name: "Table", html: "<div style='background:#D32F2F; padding:5px;'>🍽️ Reserve</div>" },
-            { id: "fast-food-combo", name: "Combo", html: "<div style='background:#FBC02D; color:#D32F2F; border:2px solid #D32F2F; padding:5px; font-weight:bold;'>COMBO $5</div>" },
-            { id: "fresh-ingredients", name: "Fresh", html: "<div style='border:1px solid #fff; padding:5px;'>🥬 Fresh</div>" }
+        const sections = [
+            {
+                category: '📱 Social Media (Mạng xã hội)',
+                items: [
+                    { id: 'classic-youtube', name: 'YouTube Subscribe', tag: 'YouTube', desc: 'Nút Subscribe cổ điển kèm chuông thông báo.' },
+                    { id: 'social-tiktok', name: 'TikTok Follow', tag: 'TikTok', desc: 'Hiệu ứng Glitch đặc trưng của TikTok.' },
+                    { id: 'social-instagram', name: 'IG Follow', tag: 'Instagram', desc: 'Giao diện bo tròn kèm màu sắc Gradient IG.' }
+                ]
+            },
+            {
+                category: '🛒 Commercial & Traffic (Kinh doanh)',
+                items: [
+                    { id: 'shop-now', name: 'Shop Now', tag: 'Sales', desc: 'Nút mua hàng kèm icon giỏ xách sinh động.' },
+                    { id: 'app-store', name: 'Download App', tag: 'Store', desc: 'Nút tải app phong cách App Store chuẩn.' },
+                    { id: 'website-visit', name: 'Website Visit', tag: 'Traffic', desc: 'Thanh địa chỉ web hiện đại, dễ chú ý.' }
+                ]
+            },
+            {
+                category: '✨ Special Effects (Hiệu ứng đặc biệt)',
+                items: [
+                    { id: 'neon-pulse', name: 'Neon Pulse', tag: 'Cyber', desc: 'Khung phát sáng Neon nhấp nháy thu hút ánh nhìn.' },
+                    { id: 'glassmorphism', name: 'Glass CTA', tag: 'Modern', desc: 'Hiệu ứng kính mờ tối giản và sang trọng.' },
+                    { id: 'speech-bubble', name: 'Comic Bubble', tag: 'Fun', desc: 'Dạng bóng hội thoại vui nhộn kiểu truyện tranh.' }
+                ]
+            }
         ];
 
-        const container = document.getElementById('gallery-container');
-        templates.forEach(t => {
-            const card = document.createElement('div');
-            card.className = 'template-card';
-            card.innerHTML = `
-                <div class="preview-area">${t.html}</div>
-                <div class="info-area">
-                    <h3>${t.name}</h3>
-                    <span class="template-id">${t.id}</span>
+        const gallery = document.getElementById('gallery');
+        const toast = document.getElementById('toast');
+
+        function notify() {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        sections.forEach(section => {
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.innerText = section.category;
+            gallery.appendChild(title);
+
+            section.items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const prompt = `Thêm Call To Action mẫu "${item.id}" với nội dung chính là "[Chữ]" và phụ đề "[@username]" vào cuối video.`;
+
+                card.innerHTML = `
+                <div class="tag">${item.tag}</div>
+                <div class="info">
+                    <div class="name">${item.name}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">${item.desc}</div>
                 </div>
+                
+                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify()">
+                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
+                    <div class="prompt-text">"${prompt}"</div>
+                </div>
+                <div style="font-size: 0.65rem; color: var(--text-muted)">Template ID: ${item.id}</div>
             `;
-            container.appendChild(card);
+                gallery.appendChild(card);
+            });
         });
     </script>
+
 </body>
 
 </html>

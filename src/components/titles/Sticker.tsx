@@ -11,6 +11,7 @@ import {
     staticFile
 } from 'remotion';
 import { Lottie, LottieAnimationData } from '@remotion/lottie';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 // ============ TYPES ============
 export type StickerStyle =
@@ -390,6 +391,11 @@ export const Sticker: React.FC<StickerProps> = ({
 }) => {
     const frame = useCurrentFrame();
     const { fps, durationInFrames } = useVideoConfig();
+    const { scalePixel, uniformScale, isPortrait } = useResponsiveScale();
+
+    // Scale width/height responsively
+    const scaledWidth = typeof width === 'number' ? scalePixel(width) : width;
+    const scaledHeight = typeof height === 'number' ? scalePixel(height) : height;
 
     // Resolve source: template first, then srcProp, then fallback
     const src = (template ? stickerTemplates[template] : srcProp) || stickerTemplates['face-laughing'];
@@ -423,22 +429,22 @@ export const Sticker: React.FC<StickerProps> = ({
         if (right !== undefined) posStyle.right = right;
         if (bottom !== undefined) posStyle.bottom = bottom;
     } else {
-        // Preset styles
+        // Preset styles with responsive scaling
         switch (style) {
             case 'center':
                 posStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
                 break;
             case 'bottom-left':
-                posStyle = { bottom: 50, left: 50 };
+                posStyle = { bottom: scalePixel(50), left: scalePixel(50) };
                 break;
             case 'bottom-right':
-                posStyle = { bottom: 50, right: 50 };
+                posStyle = { bottom: scalePixel(50), right: scalePixel(50) };
                 break;
             case 'top-left':
-                posStyle = { top: 50, left: 50 };
+                posStyle = { top: scalePixel(50), left: scalePixel(50) };
                 break;
             case 'top-right':
-                posStyle = { top: 50, right: 50 };
+                posStyle = { top: scalePixel(50), right: scalePixel(50) };
                 break;
         }
     }
@@ -468,8 +474,8 @@ export const Sticker: React.FC<StickerProps> = ({
             <div
                 style={{
                     ...posStyle,
-                    width: width,
-                    height: height ?? 'auto',
+                    width: scaledWidth,
+                    height: scaledHeight ?? 'auto',
                     opacity,
                     transform: combinedTransform,
                     transformOrigin: 'center center',

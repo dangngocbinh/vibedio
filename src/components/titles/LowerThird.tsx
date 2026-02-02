@@ -6,6 +6,7 @@ import {
     interpolate,
     Easing,
 } from 'remotion';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 // ============ TYPES ============
 export type LowerThirdTemplate =
@@ -44,6 +45,11 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
 }) => {
     const frame = useCurrentFrame();
     const { fps, durationInFrames } = useVideoConfig();
+    const { scalePixel, scaleFontSize, isPortrait, isSquare, uniformScale, width } = useResponsiveScale();
+
+    // Responsive scaled values
+    const scaledFontSize = scaleFontSize(fontSize);
+    const responsiveScale = uniformScale;
 
     React.useEffect(() => {
         if (fontFamily) {
@@ -69,8 +75,22 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
 
     const opacity = entrance * exit;
 
+    // Responsive position calculation
+    const getResponsiveBottom = (baseBottom: number) => scalePixel(baseBottom);
+    const getResponsiveLeft = (baseLeft: number) => scalePixel(baseLeft);
+    const getResponsivePadding = (basePadding: string) => {
+        // Parse padding values and scale them
+        const parts = basePadding.split(' ').map(p => {
+            const num = parseInt(p);
+            return isNaN(num) ? p : `${scalePixel(num)}px`;
+        });
+        return parts.join(' ');
+    };
+
     const renderTemplate = () => {
         const commonStyle = fontFamily ? { fontFamily } : {};
+        // Apply responsive font size to all templates
+        const respFontSize = scaledFontSize;
         switch (template) {
             // --- ORIGINAL 10 ---
             case 'modern-skew':
@@ -456,7 +476,18 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
 
     return (
         <AbsoluteFill style={{ pointerEvents: 'none', zIndex: 100, fontFamily }}>
-            {renderTemplate()}
+            {/* Responsive wrapper - scales content for portrait/square videos */}
+            <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                top: 0,
+                transform: `scale(${responsiveScale})`,
+                transformOrigin: isPortrait ? 'center bottom' : 'left bottom',
+            }}>
+                {renderTemplate()}
+            </div>
         </AbsoluteFill>
     );
 };

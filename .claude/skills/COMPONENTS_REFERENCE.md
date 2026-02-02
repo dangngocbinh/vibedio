@@ -218,6 +218,8 @@ interface LayerTitleProps {
 - Animated reactions (pop, shake, rotate, slide)
 - 160+ templates có sẵn (Lottie animated + static webp)
 
+> **🎯 Responsive Scaling:** Width, height và positions tự động scale theo aspect ratio video. Dùng values cho 1920×1080, không cần điều chỉnh!
+
 ### Templates Available
 
 #### **Lottie Animated (60+ templates)** - prefix: `lottie-*`
@@ -342,6 +344,8 @@ interface StickerProps {
 - Thêm visual effects (tech, geometric, comic, nature)
 - Animated overlays (scan-lines, particles, neon circles, etc.)
 - Custom Lottie effects
+
+> **🎯 Responsive Scaling:** Width, height và positions tự động scale. Element luôn fit màn hình dù video ngang/dọc/vuông!
 
 ### Effect Types (50+)
 

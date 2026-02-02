@@ -8,6 +8,7 @@ import {
     Img,
     staticFile
 } from 'remotion';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 // ============ TYPES ============
 export type CallToActionTemplate =
@@ -72,6 +73,10 @@ export const CallToAction: React.FC<CallToActionProps> = ({
 }) => {
     const frame = useCurrentFrame();
     const { durationInFrames } = useVideoConfig();
+    const { uniformScale, isPortrait, isSquare, scaleFontSize } = useResponsiveScale();
+
+    // Responsive scale factor for CTA elements
+    const responsiveMultiplier = uniformScale;
 
     React.useEffect(() => {
         if (fontFamily) {
@@ -97,7 +102,8 @@ export const CallToAction: React.FC<CallToActionProps> = ({
     });
 
     const baseScale = entrance * exit;
-    const scale = baseScale * 1.6;
+    // Apply responsive multiplier to the scale factor
+    const scale = baseScale * 1.6 * responsiveMultiplier;
     const opacity = interpolate(baseScale, [0, 0.2, 1], [0, 1, 1]);
 
     const renderTemplate = () => {
@@ -942,10 +948,12 @@ export const CallToAction: React.FC<CallToActionProps> = ({
     return (
         <AbsoluteFill style={{
             justifyContent: 'center',
-            alignItems: 'center',
+            alignItems: isPortrait ? 'flex-end' : 'center',
+            paddingBottom: isPortrait ? '10%' : 0,
             zIndex: 1000,
             fontFamily,
         }}>
+            {/* Content is already scaled via the scale variable in each template */}
             {renderTemplate()}
         </AbsoluteFill>
     );

@@ -73,7 +73,137 @@ Dành cho video tạo từ ảnh AI (Gemini) hoặc stock images với:
 - **AI auto-suggest transitions** - Crossfade, Cut, Dissolve dựa trên mood
 - **TikTok highlight captions** - Word-by-word highlight
 
-## 📚 COMPONENTS REFERENCE (Overlays & Effects)
+## 📐 RESPONSIVE COMPONENT SCALING (IMPORTANT!)
+
+**TẤT CẢ các overlay components (LayerTitle, LowerThird, CallToAction, FullscreenTitle, Sticker, LayerEffect) đã hỗ trợ RESPONSIVE SCALING tự động.**
+
+### Tại sao quan trọng?
+
+Khi tạo video với các tỷ lệ khác nhau, các element overlay phải scale tự động để:
+- **Không bị overflow** - Không bị cắt ra ngoài khung hình
+- **Giữ tỷ lệ cân đối** - Không bị méo hoặc quá lớn/nhỏ
+- **Dễ đọc** - Font size phù hợp với kích thước video
+
+### Cách hoạt động
+
+Components tự động phát hiện kích thước video và điều chỉnh:
+
+| Video Aspect | Kích thước | Scale Factor | Behavior |
+|--------------|-----------|-------------|----------|
+| **Landscape (16:9)** | 1920×1080 | ~1.0 | Thiết kế gốc (reference) |
+| **Portrait (9:16)** | 1080×1920 | ~0.56 | Thu nhỏ, căn giữa/dưới |
+| **Square (1:1)** | 1080×1080 | ~0.56 | Thu nhỏ cân đối |
+| **Instagram (4:5)** | 1080×1350 | ~0.65 | Scale trung bình |
+
+### Các thành phần được scale tự động
+
+✅ **Positions** - `bottom`, `left`, `right`, `top` tự động scale
+✅ **Font sizes** - `fontSize`, `titleSize`, `subtitleSize` tự động scale  
+✅ **Dimensions** - `width`, `height` của Sticker và LayerEffect tự động scale
+✅ **Paddings** - Khoảng cách và padding tự động scale
+✅ **Max widths** - Chiều rộng tối đa điều chỉnh theo portrait/landscape
+
+## 🔊 AUDIO EFFECTS SUPPORT
+
+Skill video-editor hỗ trợ thêm hiệu ứng âm thanh (SFX) để tăng cảm xúc cho video.
+
+### ⚠️ QUY TẮC QUAN TRỌNG (UPDATED)
+
+Tham khảo tài liệu đầy đủ tại: 👉 **[docs/sfx-guide.md](docs/sfx-guide.md)**
+
+1.  **Đường dẫn (Asset Path):**
+    - BẮT BUỘC dùng đường dẫn tuyệt đối bắt đầu bằng `/audio/`.
+    - Ví dụ ĐÚNG: `/audio/whoosh.mp3`
+    - Ví dụ SAI: `public/audio/whoosh.mp3`, `../../audio/whoosh.mp3`
+
+2.  **Âm lượng (Volume):**
+    - BẮT BUỘC đặt metadata `volume: "2.0"` (200%) cho các clip SFX.
+    - Lý do: Để âm thanh hiệu ứng nghe rõ trên nền nhạc background.
+
+3.  **Cấu trúc Track:**
+    - Không trộn SFX vào track Voice hoặc Music.
+    - Nên tách thành các track riêng: `Transition SFX` (cho chuyển cảnh) và `Component SFX` (cho sticker, title).
+4.  **Định Vị (Positioning):**
+    - Sử dụng `metadata.globalTimelineStart` (tính bằng Giây) để đặt vị trí xuất hiện.
+    - `source_range.start_time` phải luôn là `0.0`.
+
+### Code Mẫu (Python OTIO)
+
+```python
+sfx_clip = otio.schema.Clip(
+    name="SFX: Whoosh",
+    metadata={ 
+        "volume": "2.0",
+        "globalTimelineStart": "5.0" # Position in Seconds
+    }, 
+    media_reference=otio.schema.ExternalReference(
+        target_url="/audio/whoosh.mp3" # Absolute path with /audio/ prefix
+    ),
+    source_range=otio.opentime.TimeRange(
+        start_time=otio.opentime.RationalTime(0.0, fps), # Always 0.0
+        duration=otio.opentime.RationalTime(duration, fps)
+    )
+)
+```
+
+### Mapping Gợi Ý
+
+| Component/Action | Suggested SFX |
+|------------------|---------------|
+| `LayerTitle` (slide/fly) | `/audio/whoosh.mp3` |
+| `Sticker` (pop) | `/audio/click.mp3` |
+| `FullscreenTitle` | `/audio/transition.mp3` |
+| `LayerEffect` (tech) | `/audio/bling1.mp3` |
+| `End Screen` | `/audio/finish.mp3` |
+
+
+### ⚠️ QUAN TRỌNG: Bạn KHÔNG CẦN thay đổi gì!
+
+**❌ KHÔNG CẦN:**
+- Đổi `fontSize` cho từng tỷ lệ video
+- Thay đổi positions (bottom, left, right)
+- Lo lắng về overflow
+
+**✅ CHỈ CẦN:**
+- Khai báo `ratio` trong `script.json` metadata
+- Sử dụng các props như bình thường (design cho 1920×1080)
+- Component tự động scale phù hợp!
+
+### Ví dụ
+
+```json
+// script.json
+{
+  "metadata": {
+    "ratio": "9:16",  // ← Chỉ cần khai báo ratio
+    "width": 1080,
+    "height": 1920
+  }
+}
+
+// project.otio - Sử dụng props như thiết kế cho 1920×1080
+{
+  "remotion_component": "LowerThird",
+  "props": {
+    "title": "SUBSCRIBE NOW",  
+    "fontSize": 42,  // ← Không cần thay đổi cho 9:16!
+    "template": "breaking-news"
+  }
+}
+```
+
+Component sẽ tự động:
+- Scale `fontSize: 42` → `~23.5px` cho video 1080×1920
+- Điều chỉnh position để không bị cắt
+- Giữ tỷ lệ cân đối
+
+### Tài liệu chi tiết
+
+👉 **[docs/responsive-guide.md](docs/responsive-guide.md)** - Hướng dẫn đầy đủ về responsive system
+
+
+
+## �📚 COMPONENTS REFERENCE (Overlays & Effects)
 
 Khi tạo OTIO timeline với overlays (titles, stickers, effects), **BẮT BUỘC** tham khảo:
 👉 **`.claude/skills/COMPONENTS_REFERENCE.md`**
@@ -660,6 +790,8 @@ LayerTitle component cho phép thêm title overlays vào bất kỳ vị trí n�
 - **Corner badges** - Status indicators (LIVE, HOT, NEW)
 - **Full-screen titles** - Intro/outro, chapter transitions
 
+> **🎯 Responsive Scaling:** Component tự động scale cho mọi tỷ lệ video (16:9, 9:16, 1:1). Sử dụng props như thiết kế cho 1920×1080, không cần điều chỉnh!
+
 ### Usage in OTIO
 
 Thêm track "Title Overlays" vào timeline:
@@ -936,6 +1068,8 @@ See [docs/fullscreen-title-guide.md](docs/fullscreen-title-guide.md) for detaile
 - **Elegant** - Luxury Gold, Wedding, Elegant Serif
 - **Context Info** - Tech Grid, Industrial Steel, Blueprint
 
+> **🎯 Responsive Scaling:** Tất cả 40 templates tự động scale cho video dọc/vuông/ngang. Không cần thay đổi `fontSize` hay positions!
+
 ### Available Templates
 
 | Group | Templates |
@@ -973,6 +1107,8 @@ See [docs/lower-third-guide.md](docs/lower-third-guide.md) for details on all te
 ### Overview
 
 `CallToAction` component cung cấp **120 mẫu** nút bấm, thông báo, social media handles để tăng tương tác người xem (Subscribe, Follow, Buy Now, Click Link).
+
+> **🎯 Responsive Scaling:** Tất cả 120+ templates tự động scale và căn chỉnh vị trí cho video portrait. Scale factor tích hợp với animation!
 
 ### Available Groups
 
