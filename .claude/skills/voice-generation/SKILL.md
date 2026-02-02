@@ -61,13 +61,27 @@ Gemini API hỗ trợ **style instruction** - mô tả tự do về cách bạn 
 - Nó sẽ bị bỏ qua với các provider khác (elevenlabs, openai, vbee)
 - Kết hợp với `voiceId` để tùy chỉnh cả giọng nói và phong cách
 
-### 4. Automatic Voice Selection Logic
-If `voiceId` is not provided, the Agent (you) or the Script should attempt to select a voice based on the `emotion` and `language` of the text.
+### 4. Voice Provider Priority Strategy (Quality First)
+When `voiceId` is not explicitly provided, or when creating a new configuration, the Agent **MUST** follow this priority order based on available API Keys in `.env`:
 
-**Recommended Mapping (Extendable in implementation):**
-- **Vietnamese**: Default to **Vbee** or **ElevenLabs** (multilingual model).
-- **English + Emotion**: Default to **ElevenLabs**.
-- **General/Cost-effective**: Default **Google**. or  **OpenAI**
+**1. ElevenLabs** (`ELEVENLABS_API_KEY`) 🥇
+   - **Why**: Best emotion, best timestamp alignment (native), highest realism.
+   - **Use when**: Key is available. ALWAYS prefer for English or high-quality Vietnamese.
+
+**2. Gemini** (`GEMINI_API_KEY` or `GOOGLE_API_KEY`) 🥈
+   - **Why**: Generative AI, very natural prosody, free/cheap.
+   - **Use when**: ElevenLabs is missing, but Google key is present.
+   - **Note**: Supports `styleInstruction`.
+
+**3. OpenAI** (`OPENAI_API_KEY`) 🥉
+   - **Why**: Standard quality, reliable, but less emotive than above.
+   - **Use when**: No ElevenLabs or Gemini keys.
+
+**4. Vbee** (`VBEE_API_KEY`) 🇻🇳
+   - **Why**: Specialized for Vietnamese News/Broadcast.
+   - **Use when**: Specifically requested for "News/Tintuc" style or no other keys available for Vietnamese.
+
+**Agent Action**: Before running generation, check `.env`. If user asks for "highest quality", jumping to ElevenLabs is mandatory if the key exists.
 
 ## 🚀 Recommended Voices by Use Case (Personas)
 

@@ -1,14 +1,15 @@
 ---
 name: video-resource-finder
-description: Tự động tìm kiếm, tải về stock resources (video, image, music, sfx) và tạo ảnh AI cho video project.
+description: Tự động tìm kiếm, tải về stock resources (video, image, music, sfx), tạo ảnh AI, và tìm ảnh trên web cho video project.
 ---
 # VIDEO RESOURCE FINDER SKILL
 
 ## MỤC ĐÍCH
 
-Tự động tìm kiếm và **tải về** FREE resources cho video production từ Pexels, Pixabay, Unsplash APIs và **Gemini AI Image Generation**:
+Tự động tìm kiếm và **tải về** FREE resources cho video production từ nhiều nguồn:
 - **Stock Videos (B-roll)** - Từ Pexels, Pixabay
 - **Stock Images** - Từ Pexels, Unsplash, Pixabay
+- **Web Images** - 🆕 Từ DuckDuckGo web search (có thể download, với cảnh báo bản quyền)
 - **AI Generated Images** - Từ Gemini Nano Banana (cho nội dung sáng tạo/minh họa)
 - **Background Music** - Từ Pixabay Music
 - **Sound Effects** - Từ Pixabay SFX
@@ -105,6 +106,55 @@ GEMINI_API_KEY=your_gemini_api_key
 **Lưu ý:** GEMINI_API_KEY có thể đặt ở:
 - File `.env` ở root project
 - File `.env` trong thư mục skill
+
+## SMART FEATURES (v1.3+)
+
+### 1. Resource Type Selection
+
+Control loại resource (image/video) cho từng scene bằng field `resourceType` trong `visualSuggestion`:
+
+```json
+{
+  "scenes": [
+    {
+      "id": "scene_1",
+      "visualSuggestion": {
+        "type": "stock",
+        "resourceType": "video",  // "image", "video", or "auto" (default)
+        "query": "parkour jumping"
+      }
+    }
+  ]
+}
+```
+
+**Values:**
+- `"video"` - Chỉ tìm video, bỏ qua images
+- `"image"` - Chỉ tìm images, bỏ qua videos
+- `"auto"` - Tự động (mặc định, tìm cả video và image)
+
+### 2. Smart Filename Matching
+
+Khi import files với pattern tên: `{sceneId}_{description}.ext`, skill tự động detect sceneId:
+
+**Examples:**
+- `scene_1_nature.mp4` → sceneId: `scene_1`
+- `item1_workspace.jpg` → sceneId: `item1`
+- `hook_intro.mp4` → sceneId: `hook`
+
+**Supported patterns:**
+- `scene_\d+`, `item\d+` (numbered scenes)
+- `hook`, `intro`, `cta`, `outro`, `conclusion` (common scene names)
+- Bất kỳ text nào trước `_` đầu tiên
+
+**Workflow:**
+1. Đặt tên file: `scene_1_my_video.mp4`
+2. Import: `local-asset-import --files scene_1_my_video.mp4`
+3. Skill tự động map vào scene với `id: "scene_1"`
+
+👉 Xem chi tiết: [Resource Type Selection Guide](../.claude/skills/video-editor/docs/resource-type-selection-guide.md)
+
+---
 
 ## OUTPUT STRUCTURE
 
@@ -550,6 +600,158 @@ Script sử dụng 3 từ đầu tiên của query để tìm kiếm. Nên dùng
 | Happy | `upbeat happy cheerful` |
 | Sad | `emotional piano melancholy` |
 | Inspiring | `motivational inspiring corporate` |
+
+## WEB IMAGE SEARCH (NEW - v1.4)
+
+Tìm kiếm ảnh trên web bằng DuckDuckGo khi user yêu cầu chủ động hoặc không tìm được ảnh phù hợp từ stock APIs.
+
+### ⚠️ COPYRIGHT WARNING
+
+**QUAN TRỌNG:** Ảnh tìm được từ web search **CÓ THỂ CÓ VẤN ĐỀ VỀ BẢN QUYỀN**.
+
+- **Luôn confirm với user** trước khi search web images
+- Nhắc nhở: "Images from web search may have copyright restrictions"
+- Khuyến nghị ưu tiên dùng stock APIs (Pexels, Pixabay, Unsplash) trước
+- Chỉ dùng web search khi:
+  - User yêu cầu chủ động search web
+  - Stock APIs không có kết quả phù hợp
+  - Cần ảnh cụ thể, niche content
+
+### Tool: search_web_images
+
+Tìm kiếm ảnh trên web bằng DuckDuckGo.
+
+**Usage:**
+
+```bash
+# Basic search
+python tools/search_web_images.py "cat playing piano" \
+  --max-results 20 \
+  --confirm-copyright
+
+# Save to JSON file
+python tools/search_web_images.py "sunset beach" \
+  --max-results 10 \
+  --output search-results.json \
+  --confirm-copyright
+
+# Search High Quality Images (No GIFs)
+python tools/search_web_images.py "cyberpunk city" \
+  --size Wallpaper \
+  --type-image photo \
+  --confirm-copyright
+```
+
+
+**Parameters:**
+- `query` (required): Search keywords
+- `--max-results`: Số lượng kết quả (default: 20)
+- `--output`: Output JSON file path (optional)
+- `--confirm-copyright`: Hiển thị cảnh báo bản quyền trước khi search
+- `--size`: Kích thước ảnh (Small, Medium, Large, Wallpaper)
+- `--type-image`: Loại ảnh (photo, clipart, gif, transparent, line)
+
+**Output Structure (Images):**
+
+```json
+{
+  "query": "cat playing piano",
+  "total": 20,
+  "source": "duckduckgo",
+  "results": [
+    {
+      "id": "ddg-1",
+      "title": "Cat Playing Piano",
+      "image_url": "https://example.com/cat-piano.jpg",
+      "thumbnail": "https://example.com/thumb.jpg",
+      "source": "example.com",
+      "width": 1920,
+      "height": 1080,
+      "rank": 1
+    }
+  ],
+  "copyright_warning": "Images may have copyright restrictions. Verify usage rights before use."
+}
+```
+
+
+### Tool: download_web_image
+
+Download ảnh từ web URL với error handling và security validation.
+
+**Usage:**
+
+```bash
+# Download single image
+python tools/download_web_image.py \
+  "https://example.com/image.jpg" \
+  --output "downloads/images/my-image.jpg" \
+  --timeout 30
+```
+
+**Parameters:**
+- `url` (required): Image URL to download
+- `--output` (required): Output file path
+- `--timeout`: Request timeout in seconds (default: 30)
+
+**Features:**
+- ✅ User-Agent header để tránh bị block
+- ✅ Filename sanitization (path traversal protection)
+- ✅ Timeout và error handling
+- ✅ Content-type validation
+- ✅ Stream download cho files lớn
+
+### Workflow: Web Image Search + Download
+
+```bash
+# Step 1: Search images
+python tools/search_web_images.py "nature landscape" \
+  --max-results 10 \
+  --output search-results.json \
+  --confirm-copyright
+
+# Step 2: Review results (manual)
+# Open search-results.json and choose images
+
+# Step 3: Download selected images
+# Option A: Manual download with download_web_image.py
+python tools/download_web_image.py \
+  "https://example.com/nature.jpg" \
+  --output "downloads/images/nature_1.jpg"
+
+# Option B: Use local-asset-import skill to import vào project
+# (Recommended - tự động đổi tên và update resources.json)
+```
+
+### Integration với local-asset-import
+
+Sau khi download ảnh, dùng skill `local-asset-import` để import vào project:
+
+```bash
+# Import downloaded images
+local-asset-import \
+  --projectDir "public/projects/my-video" \
+  --files "downloads/images/*.jpg" \
+  --type images
+```
+
+Skill sẽ:
+- Tự động đổi tên theo format: `scene_{id}_{description}.jpg`
+- Copy vào `imports/images/`
+- Update `resources.json` với `pinnedResources`
+
+### Python Dependencies
+
+Cài đặt dependencies:
+
+```bash
+cd .claude/skills/video-resource-finder
+pip install -r requirements.txt
+```
+
+**Requirements:**
+- `duckduckgo-search>=7.0.0` - DuckDuckGo search API
+- `requests>=2.31.0` - HTTP downloads
 
 ## CONVERSATION FLOW
 

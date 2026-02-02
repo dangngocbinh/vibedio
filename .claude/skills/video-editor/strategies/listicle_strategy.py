@@ -4,6 +4,7 @@ import opentimelineio as otio
 
 from strategies.base_strategy import BaseStrategy
 from templates.subtitle_generator import SubtitleGenerator
+from utils.short_layout_helper import ShortLayoutHelper
 
 
 class ListicleStrategy(BaseStrategy):
@@ -41,13 +42,30 @@ class ListicleStrategy(BaseStrategy):
             resources: Parsed resources.json
         """
         scenes = script.get('scenes', [])
-        duration = script.get('metadata', {}).get('duration', 60)
-        
+        metadata = script.get('metadata', {})
+        duration = metadata.get('duration', 60)
+
         # Add padding to total duration
         duration += self.OUTRO_PADDING
+        
+        # Set target aspect ratio for video matching
+        ratio_str = metadata.get('ratio', '16:9')
+        if ':' in ratio_str:
+            w, h = map(int, ratio_str.split(':'))
+            self.target_aspect_ratio = w / h
+        else:
+            self.target_aspect_ratio = 16 / 9  # Default landscape
 
-        # Track 1: B-Roll Video
-        video_track = self._create_broll_track(scenes, resources)
+        # Check if Short layout system needed (9:16 with landscape input)
+        should_create_bg = ShortLayoutHelper.should_create_background_track(metadata, resources)
+
+        # Track 0: Background (for Short format with landscape content)
+        if should_create_bg:
+            background_track = self._create_background_track(scenes, metadata, resources)
+            timeline.tracks.append(background_track)
+
+        # Track 1 (or 0 if no background): B-Roll Video
+        video_track = self._create_broll_track(scenes, resources, metadata)
         timeline.tracks.append(video_track)
 
         # Track 2: Item Number Graphics
@@ -77,26 +95,44 @@ class ListicleStrategy(BaseStrategy):
         # Track 6: Subtitles (Moved to end for overlay)
         if has_voice:
             subtitle_gen = SubtitleGenerator(self.fps)
+
+            # Apply layout preset positioning for Short videos
+            if ShortLayoutHelper.is_short_format(metadata):
+                layout_preset = metadata.get('layoutPreset', 'balanced')
+                caption_position = ShortLayoutHelper.get_title_position_for_preset(layout_preset, 'captions')
+
+                # Override subtitle position in script if not explicitly set
+                if 'subtitle' not in script:
+                    script['subtitle'] = {}
+                if 'position' not in script.get('subtitle', {}):
+                    script['subtitle']['position'] = caption_position
+
             subtitle_track = subtitle_gen.generate_track(voice_data, script, max_words_per_phrase=5)
             timeline.tracks.append(subtitle_track)
 
 
-    def _create_broll_track(
+    def _create_background_track(
         self,
         scenes: List[Dict[str, Any]],
+        metadata: Dict[str, Any],
         resources: Dict[str, Any]
     ) -> otio.schema.Track:
         """
-        Create B-Roll video track with scenes and transitions.
+        Create background track (Track 0) for Short format videos.
+
+        Only created for 9:16 videos with landscape content.
 
         Args:
             scenes: List of scenes from script.json
+            metadata: Metadata from script.json
             resources: Parsed resources.json
 
         Returns:
-            OTIO Track with video clips and transitions
+            OTIO Track with background clips
         """
-        track = self.create_video_track("B-Roll")
+        track = self.create_video_track("Background")
+
+        bg_type = metadata.get('backgroundType', 'auto')
 
         for i, scene in enumerate(scenes):
             scene_id = scene.get('id', '')
@@ -106,19 +142,114 @@ class ListicleStrategy(BaseStrategy):
             if i == len(scenes) - 1:
                 duration += self.OUTRO_PADDING
 
-            # Create clip from resources
-            clip = self.create_clip_from_resource(scene_id, resources, duration)
+            # Determine background type for this scene
+            if bg_type == 'auto':
+                scene_bg_type = ShortLayoutHelper.suggest_background_type(resources, scene_id)
+            else:
+                scene_bg_type = bg_type
 
-            if clip:
+            # Find background resource or generate
+            bg_url = None
+            bg_props_info = ShortLayoutHelper.get_background_props(scene_bg_type, metadata)
+
+            if scene_bg_type == 'custom-video':
+                bg_url = ShortLayoutHelper.find_background_resource(resources, scene_id, 'custom-video')
+            elif scene_bg_type == 'custom-image':
+                bg_url = ShortLayoutHelper.find_background_resource(resources, scene_id, 'custom-image')
+            elif scene_bg_type == 'blur-original':
+                # Use same source as main content (will be blurred via props)
+                clip_resource = self.create_clip_from_resource(scene_id, resources, duration)
+                if clip_resource and hasattr(clip_resource, 'media_reference'):
+                    bg_url = clip_resource.media_reference.target_url
+
+            # Create background clip
+            if bg_url:
+                bg_clip = self.create_clip_from_url(
+                    url=bg_url,
+                    name=f"Background {scene_id}",
+                    duration_sec=duration,
+                    metadata={
+                        'remotion_component': bg_props_info['component'],
+                        'props': bg_props_info['props']
+                    }
+                )
+                track.append(bg_clip)
+            else:
+                # Fallback: solid color background
+                bg_clip = self.create_component_clip(
+                    component_name='SolidColor',
+                    duration_sec=duration,
+                    props={'color': metadata.get('backgroundColor', '#000000')},
+                    clip_name=f"Background {scene_id}"
+                )
+                track.append(bg_clip)
+
+        return track
+
+    def _create_broll_track(
+        self,
+        scenes: List[Dict[str, Any]],
+        resources: Dict[str, Any],
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> otio.schema.Track:
+        """
+        Create B-Roll video track with scenes and transitions.
+
+        Args:
+            scenes: List of scenes from script.json
+            resources: Parsed resources.json
+            metadata: Optional metadata from script.json (for content positioning)
+
+        Returns:
+            OTIO Track with video clips and transitions
+        """
+        track = self.create_video_track("B-Roll")
+
+        # Get content positioning mode for Short videos
+        content_positioning = None
+        if metadata and ShortLayoutHelper.is_short_format(metadata):
+            content_positioning = metadata.get('contentPositioning', 'centered')
+
+        for i, scene in enumerate(scenes):
+            scene_id = scene.get('id', '')
+            duration = scene.get('duration', 5)
+
+            # Extend last scene to match total duration padding
+            if i == len(scenes) - 1:
+                duration += self.OUTRO_PADDING
+
+            # Create clips to fill duration (multiple clips if needed to avoid black screens)
+            clips = self.create_clips_to_fill_duration(
+                scene_id=scene_id,
+                resources=resources,
+                target_duration_sec=duration,
+                default_clip_duration=5.0  # Assume 5s per clip if metadata unavailable
+            )
+
+            # Apply content positioning for Short videos to all clips
+            if clips and content_positioning:
+                positioning_props = ShortLayoutHelper.get_content_positioning_props(
+                    content_positioning,
+                    duration
+                )
+                for clip in clips:
+                    # Merge positioning props into clip metadata (safe way)
+                    if 'props' not in clip.metadata:
+                        clip.metadata['props'] = {}
+                    clip.metadata['props'].update(positioning_props)
+
+            # Add all clips for this scene to track
+            for clip in clips:
                 track.append(clip)
 
-                # Add fade transition between items (but not after hook or before CTA)
-                is_item = scene_id.startswith('item')
-                is_not_last_item = i < len(scenes) - 2  # Not second-to-last (before CTA)
+            # Add fade transition AFTER all clips of this scene (between scenes, not between clips)
+            # Only add between item scenes (not after hook or before CTA)
+            is_item = scene_id.startswith('item')
+            is_not_last_item = i < len(scenes) - 2  # Not second-to-last (before CTA)
 
-                if is_item and is_not_last_item:
-                    transition = self.create_fade_transition(duration_sec=0.5)
-                    track.append(transition)
+            if is_item and is_not_last_item and clips:  # Only if we actually added clips
+                transition = self.create_fade_transition(duration_sec=0.5)
+                track.append(transition)
 
         return track
 
@@ -208,10 +339,10 @@ class ListicleStrategy(BaseStrategy):
             OTIO Track with music clip or None if no music found
         """
         # Get config from script, default to sensible values
-        volume = 0.2
+        volume = 0.08
         fade_in = 2.0
         if music_config:
-            volume = music_config.get('volume', 0.2)
+            volume = music_config.get('volume', 0.08)
             fade_in = music_config.get('fadeIn', 2.0)
 
         # Create music clip

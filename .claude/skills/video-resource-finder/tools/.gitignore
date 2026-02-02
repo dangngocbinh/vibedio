@@ -1,0 +1,11 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Test outputs
+downloads/
+search-results.json
+*.json
+
+# Logs
+*.log

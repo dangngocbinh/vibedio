@@ -6,10 +6,39 @@ Production CLI for topic-to-video workflow
 import argparse
 import json
 import sys
+import re
 from pathlib import Path
 from utils.script_generator import ScriptGenerator
 from utils.quality_checker import QualityChecker
 from utils.json_builder import JSONBuilder
+
+
+def slugify(text):
+    """Convert text to URL-friendly slug"""
+    # Convert to lowercase
+    text = text.lower()
+    # Remove Vietnamese accents (basic)
+    replacements = {
+        'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+        'ă': 'a', 'ắ': 'a', 'ằ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+        'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+        'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+        'ê': 'e', 'ế': 'e', 'ề': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+        'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+        'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+        'ô': 'o', 'ố': 'o', 'ồ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+        'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+        'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+        'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+        'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+        'đ': 'd'
+    }
+    for viet, latin in replacements.items():
+        text = text.replace(viet, latin)
+    # Replace spaces and special chars with hyphens
+    text = re.sub(r'[^\w\s-]', '', text)
+    text = re.sub(r'[-\s]+', '-', text)
+    return text.strip('-')
 
 
 def main():
@@ -18,9 +47,16 @@ def main():
     parser.add_argument("--type", default="facts", help="Video type (facts, listicle, story, etc.)")
     parser.add_argument("--ratio", default="9:16", help="Aspect ratio (9:16, 16:9, 1:1, 4:5)")
     parser.add_argument("--duration", type=int, default=60, help="Target duration in seconds")
-    parser.add_argument("--output", required=True, help="Output script.json path")
+    parser.add_argument("--output", help="Output script.json path (default: auto-generated from topic)")
 
     args = parser.parse_args()
+
+    # Auto-generate output path if not provided
+    if not args.output:
+        project_slug = slugify(args.topic)
+        args.output = f"public/projects/{project_slug}/script.json"
+        print(f"📝 Auto-generated project path: {project_slug}")
+
 
     print(f"🎬 Generating {args.type} video script...")
     print(f"   Topic: {args.topic}")
