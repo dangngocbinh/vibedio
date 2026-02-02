@@ -38,6 +38,7 @@
             margin: 0 0 10px 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.02em;
         }
@@ -106,6 +107,20 @@
         .card:hover {
             transform: translateY(-8px);
             border-color: var(--primary);
+        }
+
+        .preview-box {
+            width: 100%;
+            height: 150px;
+            background-color: #0d1116;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .tag {
@@ -278,6 +293,77 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
+        function getPreviewHtml(type) {
+            const common = "width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center;";
+
+            switch (type) {
+                case 'neon-circle':
+                    return `
+                        <div style="${common}">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid #00ffff; box-shadow: 0 0 15px #00ffff, inset 0 0 15px #00ffff;"></div>
+                        </div>`;
+                case 'radar-sweep':
+                    return `
+                        <div style="${common} border-radius: 50%; border: 2px solid #00ff00; background: radial-gradient(circle, rgba(0,255,0,0.1) 0%, transparent 70%); overflow: hidden;">
+                            <div style="position: absolute; width: 50%; height: 50%; top: 0; right: 0; background: conic-gradient(from 270deg, transparent 0%, #00ff00 100%); opacity: 0.5; border-bottom-left-radius: 100%;"></div>
+                        </div>`;
+                case 'scan-lines':
+                    return `
+                        <div style="${common} width: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 255, 0.2) 3px, rgba(0, 255, 255, 0.2) 4px);">
+                            <div style="color: #00ffff; font-family: monospace; font-weight: bold; text-shadow: 2px 0 0 rgba(255,0,0,0.5);">NO SIGNAL</div>
+                        </div>`;
+                case 'cyber-frame-corners':
+                    return `
+                        <div style="${common} width: 120px; height: 80px;">
+                            <div style="position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-top: 3px solid #00ffff; border-left: 3px solid #00ffff;"></div>
+                            <div style="position: absolute; top: 0; right: 0; width: 20px; height: 20px; border-top: 3px solid #00ffff; border-right: 3px solid #00ffff;"></div>
+                            <div style="position: absolute; bottom: 0; left: 0; width: 20px; height: 20px; border-bottom: 3px solid #00ffff; border-left: 3px solid #00ffff;"></div>
+                            <div style="position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; border-bottom: 3px solid #00ffff; border-right: 3px solid #00ffff;"></div>
+                            <div style="color: #00ffff; font-size: 10px; font-family: monospace;">REC [●]</div>
+                        </div>`;
+                case 'burst':
+                    return `
+                        <div style="${common}">
+                             <div style="width: 80px; height: 80px; background: radial-gradient(circle, #ffeb3b 10%, transparent 60%); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); background-color: #ff5722;"></div>
+                        </div>`;
+                case 'techno-triangle':
+                    return `
+                        <div style="${common}">
+                            <div style="width: 0; height: 0; border-left: 40px solid transparent; border-right: 40px solid transparent; border-bottom: 70px solid #c084fc; opacity: 0.5;"></div>
+                            <div style="position: absolute; width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 55px solid #0b0f1a; bottom: 20px;"></div>
+                        </div>`;
+                case 'concentric-circles':
+                    return `
+                         <div style="${common}">
+                             <div style="position: absolute; width: 80px; height: 80px; border: 2px dashed #6366f1; border-radius: 50%;"></div>
+                             <div style="position: absolute; width: 50px; height: 50px; border: 2px solid #c084fc; border-radius: 50%;"></div>
+                             <div style="position: absolute; width: 20px; height: 20px; background-color: #fff; border-radius: 50%;"></div>
+                        </div>`;
+                case 'hex-hive':
+                    return `
+                         <div style="${common} background-image: radial-gradient(#10b981 2px, transparent 2px); background-size: 20px 20px; background-color: rgba(16, 185, 129, 0.1);">
+                             <div style="width: 60px; height: 60px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); background: rgba(16, 185, 129, 0.3); border: 1px solid #10b981;"></div>
+                        </div>`;
+                case 'comic-boom':
+                    return `
+                        <div style="${common}">
+                            <div style="background: #ff0000; color: #fff; font-weight: 900; font-style: italic; font-size: 20px; padding: 10px 15px; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%); transform: rotate(-5deg); box-shadow: 5px 5px 0 #000;">BOOM!</div>
+                        </div>`;
+                case 'hand-drawn-circle':
+                    return `
+                        <div style="${common}">
+                            <div style="width: 70px; height: 70px; border: 3px solid #ff9800; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(10deg);"></div>
+                        </div>`;
+                case 'zigzag-wave':
+                    return `
+                         <div style="${common}">
+                             <div style="width: 80px; height: 20px; background: linear-gradient(135deg, #ec4899 25%, transparent 25%) -10px 0, linear-gradient(225deg, #ec4899 25%, transparent 25%) -10px 0, linear-gradient(315deg, #ec4899 25%, transparent 25%), linear-gradient(45deg, #ec4899 25%, transparent 25%); background-size: 20px 20px; background-color: transparent;"></div>
+                        </div>`;
+                default:
+                    return `<div style="${common} border: 1px dashed #fff; border-radius: 50%;"></div>`;
+            }
+        }
+
         effects.forEach(section => {
             const title = document.createElement('div');
             title.className = 'section-title';
@@ -294,7 +380,12 @@
                     props: { type: item.id, color: "#00d4ff", animation: "fade" }
                 }, null, 2);
 
+                const previewHtml = getPreviewHtml(item.id);
+
                 card.innerHTML = `
+                <div class="preview-box">
+                    ${previewHtml}
+                </div>
                 <div class="tag">${item.tag}</div>
                 <div class="info">
                     <div class="name">${item.name}</div>

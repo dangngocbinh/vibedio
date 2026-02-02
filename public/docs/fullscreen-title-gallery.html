@@ -111,14 +111,23 @@
             letter-spacing: 0.1em;
         }
 
-        .preview-image {
+        .preview-box {
             width: 100%;
             height: 200px;
-            object-fit: cover;
+            background-color: #000;
             border-radius: 12px;
-            margin-bottom: 15px;
-            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-content {
+            width: 100%;
+            text-align: center;
         }
 
         .prompt-box {
@@ -239,6 +248,100 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
+        function getPreviewHtml(template, title, subtitle) {
+            // Default "scale" for fonts relative to the small card box
+            // A fullscreen title on 1080p usually has 80-100px font.
+            // On a 200px height box (approx 1/5th scale), font should be ~16-20px.
+
+            const common = `width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;`;
+
+            switch (template) {
+                case 'cinematic-intro':
+                    return `
+                        <div style="${common} background-color: #000; color: #fff;">
+                            <div style="letter-spacing: 5px; font-size: 10px; color: #888; margin-bottom: 10px;">PRESENTS</div>
+                            <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 8px; text-transform: uppercase; margin: 0; text-shadow: 0 0 10px rgba(255,255,255,0.5);">${title}</h1>
+                            <div style="width: 50px; height: 1px; background: #fff; margin: 15px auto;"></div>
+                            <p style="font-size: 12px; color: #ccc; letter-spacing: 3px; margin: 0;">${subtitle}</p>
+                        </div>`;
+
+                case 'luxury-gold':
+                    return `
+                        <div style="${common} background-color: #0f0f0f;">
+                            <h1 style="font-size: 26px; font-weight: 900; background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip: text; color: transparent; text-transform: uppercase; margin: 0; letter-spacing: 2px;">${title}</h1>
+                            <div style="height: 1px; width: 80px; background: #bf953f; margin: 10px auto;"></div>
+                            <p style="color: #bf953f; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; margin: 0;">${subtitle}</p>
+                        </div>`;
+
+                case 'space-odyssey':
+                    return `
+                        <div style="${common} background: radial-gradient(circle, #1a1a2e 0%, #000 100%); color: #fff;">
+                            <h1 style="font-size: 32px; letter-spacing: 12px; font-weight: 100; text-transform: uppercase; text-shadow: 0 0 15px rgba(255,255,255,0.8); margin: 0;">${title}</h1>
+                            <p style="font-size: 10px; letter-spacing: 6px; opacity: 0.7; margin-top: 15px; text-transform: uppercase;">${subtitle}</p>
+                        </div>`;
+
+                case 'bold-statement':
+                    return `
+                        <div style="${common} background-color: #ffffff; color: #000;">
+                            <div style="background: #000; color: #fff; padding: 4px 12px; font-weight: bold; font-size: 10px; margin-bottom: 10px;">ATTENTION</div>
+                            <h1 style="font-size: 36px; font-weight: 900; text-transform: uppercase; line-height: 0.9; margin: 0;">${title}</h1>
+                            <p style="font-size: 14px; font-weight: 700; background-color: #ffeb3b; padding: 2px 8px; margin-top: 10px;">${subtitle}</p>
+                        </div>`;
+
+                case 'neon-night':
+                    return `
+                        <div style="${common} background-color: #050505;">
+                            <h1 style="font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 5px #f0f, 0 0 10px #f0f; border: 2px solid #f0f; padding: 10px 30px; box-shadow: 0 0 10px #f0f, inset 0 0 10px #f0f; margin: 0;">${title}</h1>
+                            <p style="font-size: 12px; color: #0ff; text-shadow: 0 0 5px #0ff; margin-top: 15px; letter-spacing: 3px;">${subtitle}</p>
+                        </div>`;
+
+                case 'retro-pop':
+                    return `
+                        <div style="${common} background-color: #60a5fa; transform: rotate(-2deg);">
+                            <div style="background: #ff0; border: 4px solid #000; padding: 10px 20px; box-shadow: 8px 8px 0 #000;">
+                                <h1 style="font-size: 28px; color: #000; font-weight: 900; margin: 0;">${title}</h1>
+                            </div>
+                            <div style="background: #f0f; border: 3px solid #000; padding: 5px 15px; display: inline-block; margin-top: 10px; transform: rotate(4deg) translateX(10px);">
+                                <p style="font-size: 12px; color: #fff; font-weight: bold; margin: 0;">${subtitle}</p>
+                            </div>
+                        </div>`;
+
+                case 'minimal-chapter':
+                    return `
+                         <div style="${common} background-color: #f1f5f9; color: #000;">
+                            <h1 style="font-size: 40px; margin: 0; font-weight: 900; letter-spacing: -2px;">01</h1>
+                            <h1 style="font-size: 24px; margin: 0; font-weight: 300; text-transform: uppercase;">${title}</h1>
+                            <p style="font-size: 12px; font-style: italic; margin-top: 10px; color: #64748b;">— ${subtitle} —</p>
+                        </div>`;
+
+                case 'quote-hero':
+                    return `
+                        <div style="${common} background-color: #1e1e1e; text-align: center;">
+                            <div style="font-size: 60px; color: #00d4ff; line-height: 0.1; font-family:serif; margin-bottom: 20px;">"</div>
+                            <h1 style="font-size: 20px; font-style: italic; font-family: serif; color: #fff; margin: 10px 0; max-width: 80%;">${title}</h1>
+                            <p style="font-size: 12px; color: #00d4ff; font-weight: bold;">— ${subtitle}</p>
+                        </div>`;
+
+                case 'breaking-news-full':
+                    return `
+                        <div style="${common} justify-content: flex-start; background-color: #f8fafc;">
+                            <div style="height: 60%; background: #c0392b; display: flex; align-items: center; justify-content: center; width: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                                <h1 style="font-size: 32px; color: #fff; font-weight: 900; text-transform: uppercase; margin: 0;">${title}</h1>
+                            </div>
+                            <div style="padding: 15px 0; text-align: center; width: 100%;">
+                                <p style="font-size: 16px; color: #c0392b; font-weight: bold; margin: 0; letter-spacing: 1px;">${subtitle}</p>
+                            </div>
+                        </div>`;
+
+                default:
+                    return `
+                        <div style="${common} background-color: #000;">
+                            <h1 style="color: #fff; font-size: 30px;">${title}</h1>
+                            <p style="color: #aaa; font-size: 14px;">${subtitle}</p>
+                        </div>`;
+            }
+        }
+
         groups.forEach(section => {
             const title = document.createElement('div');
             title.className = 'section-title';
@@ -250,9 +353,12 @@
                 card.className = 'card';
 
                 const prompt = `Thêm Fullscreen Title mẫu "${item.id}" làm [Intro/Chapter] với tiêu đề: "[Tên]" và phụ đề: "[Mô tả]". Thời lượng [5] giây.`;
+                const previewHtml = getPreviewHtml(item.id, item.name.toUpperCase(), "Subtitle Preview");
 
                 card.innerHTML = `
-                <img src="${item.image}" class="preview-image" alt="${item.name}" onerror="this.src='https://placehold.co/800x450/1e293b/FFFFFF?text=${item.name.replace(' ', '+')}'" />
+                <div class="preview-box">
+                    ${previewHtml}
+                </div>
                 <div class="tag">${item.tag}</div>
                 <div class="info">
                     <div class="name">${item.name}</div>
