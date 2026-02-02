@@ -25,7 +25,7 @@ from typing import List, Dict, Optional
 # --- CONFIGURATION ---
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 PROJECTS_DIR = BASE_DIR / "public" / "projects"
-SKILLS_DIR = BASE_DIR / ".agent" / "skills"
+SKILLS_DIR = BASE_DIR / ".claude" / "skills"
 
 # Sub-skill paths
 SCRIPT_SKILL = SKILLS_DIR / "video-script-generator"
@@ -143,7 +143,7 @@ def run_step_script(project_dir: Path, topic: str, type: str, ratio: str = "9:16
 
     # Call video-script-generator CLI
     cmd = [
-        "python3",
+        "python",
         str(SCRIPT_SKILL / "cli.py"),  # ← Changed from demo.py to cli.py
         "--topic", topic,
         "--type", type,
@@ -211,7 +211,7 @@ def run_step_multi_video_setup(project_dir: Path, ratio: str = "9:16"):
     log_info(f"Bắt đầu bước 1: Setup Multi-Video (Import & Transcribe) - Aspect Ratio: {ratio}...")
 
     cmd = [
-        "python3",
+        "python",
         str(SCRIPT_SKILL / "cli_multi.py"),
         "--project", project_dir.name,
         "--ratio", ratio  # ← Added aspect ratio parameter
@@ -253,7 +253,7 @@ def run_step_editor(project_dir: Path):
     log_info("Bắt đầu bước 4: Dựng Phim (Editing)...")
     
     cmd = [
-        "python3",
+        "python",
         str(EDITOR_SKILL / "cli.py"),
         str(project_dir)
     ]

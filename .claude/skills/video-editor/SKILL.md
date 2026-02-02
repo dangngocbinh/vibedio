@@ -103,6 +103,13 @@ Components tự động phát hiện kích thước video và điều chỉnh:
 ✅ **Paddings** - Khoảng cách và padding tự động scale
 ✅ **Max widths** - Chiều rộng tối đa điều chỉnh theo portrait/landscape
 
+### 📺 SMART ASPECT RATIO HANDLING (NEW)
+
+Hệ thống tự động phát hiện sự khác biệt giữa tỷ lệ video nguồn và project:
+- **Project Dọc + Video Ngang**: Tự động set `objectFit: contain` và nền đen để không bị crop mất content.
+- **Tùy chỉnh**: Có thể ghi đè bằng `objectFit` và `backgroundColor` trong từng scene của `script.json`.
+- Tham khảo hướng dẫn chi tiết: 👉 **[docs/aspect-ratio-guide.md](docs/aspect-ratio-guide.md)**
+
 ## 🔊 AUDIO EFFECTS SUPPORT
 
 Skill video-editor hỗ trợ thêm hiệu ứng âm thanh (SFX) để tăng cảm xúc cho video.

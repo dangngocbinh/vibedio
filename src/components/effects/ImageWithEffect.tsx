@@ -13,6 +13,7 @@ interface ImageWithEffectProps {
         type?: string;
     };
     durationInFrames: number;
+    objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
     onError?: () => void;
 }
 
@@ -26,6 +27,7 @@ export const ImageWithEffect: React.FC<ImageWithEffectProps> = ({
     effect,
     effectParams = {},
     durationInFrames,
+    objectFit = 'cover',
     onError
 }) => {
     // [Vue: useCurrentFrame()] -> Hook này giống như một computed property trong Vue
@@ -44,7 +46,7 @@ export const ImageWithEffect: React.FC<ImageWithEffectProps> = ({
         return (
             <Img
                 src={src}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit }}
                 onError={onError}
             />
         );
@@ -144,7 +146,7 @@ export const ImageWithEffect: React.FC<ImageWithEffectProps> = ({
                 style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'cover',
+                    objectFit,
                     // [Vue: CSS transform] -> Giống như :style="{ transform: ... }" trong Vue
                     transform: transformStyle,
                     // Thêm transition mượt mà (optional, Remotion đã smooth theo frame)

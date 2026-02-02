@@ -67,7 +67,8 @@ class MultiVideoEditStrategy(BaseStrategy):
         
         # 2. Track 1: Main Videos (Base Videos + Insert Title Cards)
         print(f"  Creating main videos track (Merged Insert Mode)...")
-        main_track = self._create_main_track(segments, video_logic_map)
+        target_ratio = script.get('metadata', {}).get('ratio', '16:9')
+        main_track = self._create_main_track(segments, video_logic_map, target_ratio)
         timeline.tracks.append(main_track)
         
         # 3. Track 2: Title Cards (Fill Gaps or Overlay)
@@ -101,6 +102,18 @@ class MultiVideoEditStrategy(BaseStrategy):
                 print(f"  Creating captions track with {len(timestamps)} words...")
                 caption_track = self._create_caption_track(script, transcript, video_logic_map, segments)
                 timeline.tracks.append(caption_track)
+
+        # 8. Track 7+: Overlays (LayerTitle, LowerThird, etc.)
+        print(f"  Creating overlays tracks...")
+        overlay_tracks = self._create_overlay_tracks(scenes, video_logic_map, shift_map)
+        for ot in overlay_tracks:
+            timeline.tracks.append(ot)
+
+        # 9. Track 8: Sound Effects
+        print(f"  Creating SFX track...")
+        sfx_track = self._create_sfx_track(scenes, video_logic_map, shift_map)
+        if len(sfx_track) > 0:
+            timeline.tracks.append(sfx_track)
                 
     def _build_segments(
         self,
@@ -122,7 +135,8 @@ class MultiVideoEditStrategy(BaseStrategy):
                 'path': v['path'],
                 'audioPath': v.get('audioPath'),
                 'hasAudio': v.get('hasAudio', True),
-                'duration': v['duration']
+                'duration': v['duration'],
+                'metadata': v.get('metadata', {})
             }
             pos += v['duration']
             
@@ -167,7 +181,9 @@ class MultiVideoEditStrategy(BaseStrategy):
                         'logic_start': logic_start,
                         'logic_end': logic_end,
                         'duration': v_end - v_start,
-                        'sourceVideoId': vid_id
+                        'sourceVideoId': vid_id,
+                        'objectFit': scene.get('objectFit'),
+                        'background': scene.get('background') or scene.get('backgroundColor')
                     })
             
         return segments, video_logic_map
@@ -224,7 +240,8 @@ class MultiVideoEditStrategy(BaseStrategy):
     def _create_main_track(
         self,
         segments: List[Dict],
-        video_logic_map: Dict
+        video_logic_map: Dict,
+        target_ratio: str = '16:9'
     ) -> otio.schema.Track:
         """
         Create the main video track which includes:
@@ -236,7 +253,15 @@ class MultiVideoEditStrategy(BaseStrategy):
         for seg in segments:
             if seg['type'] == 'video':
                 # Map logical range back to specific source video(s)
-                self._add_video_clips_for_range(track, seg['logic_start'], seg['logic_end'], video_logic_map)
+                self._add_video_clips_for_range(
+                    track, 
+                    seg['logic_start'], 
+                    seg['logic_end'], 
+                    video_logic_map, 
+                    target_ratio,
+                    object_fit_override=seg.get('objectFit'),
+                    bg_override=seg.get('background')
+                )
             elif seg['type'] == 'gap':
                 # This is an INSERT Title Card slot
                 insert_data = seg.get('metadata', {})
@@ -287,7 +312,16 @@ class MultiVideoEditStrategy(BaseStrategy):
                 
         return track
 
-    def _add_video_clips_for_range(self, track, start_time, end_time, video_logic_map):
+    def _add_video_clips_for_range(
+        self, 
+        track, 
+        start_time, 
+        end_time, 
+        video_logic_map, 
+        target_ratio='16:9',
+        object_fit_override=None,
+        bg_override=None
+    ):
         # Find which videos overlap with [start_time, end_time]
         sorted_videos = sorted(video_logic_map.values(), key=lambda x: x['start'])
         
@@ -315,6 +349,35 @@ class MultiVideoEditStrategy(BaseStrategy):
                     start_time=otio.opentime.from_seconds(trim_in),
                     duration=otio.opentime.from_seconds(duration)
                 )
+                
+                # Aspect Ratio aware object-fit
+                video_metadata = vid.get('metadata', {})
+                resolution = video_metadata.get('resolution', '')
+                is_landscape = False
+                if 'x' in resolution:
+                    try:
+                        w, h = map(int, resolution.split('x'))
+                        if w > h:
+                            is_landscape = True
+                    except:
+                        pass
+                
+                # If target is vertical (9:16 or 4:5) and source is landscape
+                is_target_vertical = target_ratio in ['9:16', '4:5']
+                
+                # Final calculation: override > smart logic > default
+                final_fit = object_fit_override
+                final_bg = bg_override
+                
+                if final_fit is None and is_target_vertical and is_landscape:
+                    final_fit = 'contain'
+                    if final_bg is None:
+                        final_bg = '#000000'
+                
+                if final_fit:
+                    clip.metadata['objectFit'] = final_fit
+                if final_bg:
+                    clip.metadata['background'] = final_bg
                 
                 track.append(clip)
 
@@ -615,3 +678,156 @@ class MultiVideoEditStrategy(BaseStrategy):
                      return i['results'][0].get('downloadUrl')
                      
         return None
+
+    def _create_overlay_tracks(
+        self,
+        scenes: List[Dict],
+        video_logic_map: Dict,
+        shift_map: List[Dict]
+    ) -> List[otio.schema.Track]:
+        clips_to_add = []
+        
+        for scene in scenes:
+            overlays = scene.get('overlays', [])
+            if not overlays:
+                continue
+                
+            vid_id = scene.get('sourceVideoId')
+            if not vid_id or vid_id not in video_logic_map:
+                continue
+                
+            logic_start_base = video_logic_map[vid_id]['start'] + scene.get('sourceVideoStartTime', scene.get('start', 0.0))
+            timeline_start = self._map_logic_to_timeline(logic_start_base, shift_map)
+            duration = scene.get('duration', 0.0)
+            
+            if duration <= 0:
+                continue
+
+            for overlay in overlays:
+                comp_type = overlay.get('type')
+                props = overlay.get('props', {})
+                
+                if not comp_type:
+                    continue
+                    
+                clip = self.create_component_clip(
+                    component_name=comp_type,
+                    duration_sec=duration,
+                    props=props,
+                    clip_name=f"Overlay_{comp_type}_{scene.get('id', 'unknown')}"
+                )
+                
+                clip.metadata['globalTimelineStart'] = timeline_start
+                
+                clips_to_add.append({
+                    'start': timeline_start,
+                    'end': timeline_start + duration,
+                    'clip': clip
+                })
+        
+        if not clips_to_add:
+            return []
+
+        # Partition clips into non-overlapping tracks
+        tracks_data = [] # List of lists of clips
+        
+        for item in clips_to_add:
+            placed = False
+            for track_clips in tracks_data:
+                # Check for overlap with any clip already in this track
+                # Since we want to be safe, check if this clip overlaps with the last clip in the track
+                # (Assuming we sort the incoming clips later, but here we just process one by one)
+                overlap = False
+                for existing in track_clips:
+                    if not (item['end'] <= existing['start'] or item['start'] >= existing['end']):
+                        overlap = True
+                        break
+                
+                if not overlap:
+                    track_clips.append(item)
+                    placed = True
+                    break
+            
+            if not placed:
+                tracks_data.append([item])
+                
+        # Build OTIO Tracks
+        otio_tracks = []
+        for i, track_clips in enumerate(tracks_data):
+            track = self.create_video_track(name=f"Overlays_{i+1}")
+            track_clips.sort(key=lambda x: x['start'])
+            current_time = 0.0
+            
+            for item in track_clips:
+                gap_duration = item['start'] - current_time
+                if gap_duration > 0.01:
+                    track.append(otio.schema.Gap(duration=otio.opentime.from_seconds(gap_duration)))
+                    current_time += gap_duration
+                
+                track.append(item['clip'])
+                current_time += item['end'] - item['start']
+                
+            otio_tracks.append(track)
+            
+        return otio_tracks
+
+    def _create_sfx_track(
+        self,
+        scenes: List[Dict],
+        video_logic_map: Dict,
+        shift_map: List[Dict]
+    ) -> otio.schema.Track:
+        track = self.create_audio_track(name="SFX")
+        clips_to_add = []
+        
+        for scene in scenes:
+            scene_sfx = scene.get('sfx', [])
+            if not scene_sfx:
+                continue
+                
+            vid_id = scene.get('sourceVideoId')
+            if not vid_id or vid_id not in video_logic_map:
+                continue
+                
+            logic_start_base = video_logic_map[vid_id]['start'] + scene.get('sourceVideoStartTime', scene.get('start', 0.0))
+            
+            for s in scene_sfx:
+                sfx_path = s.get('path', '')
+                if not sfx_path: continue
+                
+                # Sanitize path
+                if self.asset_resolver:
+                    sfx_path = self.asset_resolver.sanitize_for_otio(sfx_path)
+                
+                sfx_start = logic_start_base + s.get('startTime', 0)
+                timeline_start = self._map_logic_to_timeline(sfx_start, shift_map)
+                
+                duration = s.get('duration', 1.0)
+                clip = self.create_clip_from_url(
+                    url=sfx_path,
+                    name=f"SFX_{scene.get('id', 'unknown')}",
+                    duration_sec=duration
+                )
+                clip.metadata['globalTimelineStart'] = timeline_start
+                clip.metadata['volume'] = str(s.get('volume', 2.0))
+                
+                clips_to_add.append({
+                    'start': timeline_start,
+                    'end': timeline_start + duration,
+                    'clip': clip
+                })
+        
+        # Sort and Fill with Gaps
+        clips_to_add.sort(key=lambda x: x['start'])
+        current_time = 0.0
+        
+        for item in clips_to_add:
+            gap_duration = item['start'] - current_time
+            if gap_duration > 0.01:
+                track.append(otio.schema.Gap(duration=otio.opentime.from_seconds(gap_duration)))
+                current_time += gap_duration
+            
+            track.append(item['clip'])
+            current_time += item['end'] - item['start']
+            
+        return track

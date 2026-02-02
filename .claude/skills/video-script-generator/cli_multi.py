@@ -24,7 +24,7 @@ def main():
     print(f"🎬 Initializing Multi-Video Setup for: {args.project}")
     
     # Initialize Generator
-    generator = MultiVideoEditGenerator(projects_dir)
+    generator = MultiVideoEditGenerator(project_dir)
     
     # If videos are passed, resolve them
     # NOTE: Director might have already imported them to resources/videos.

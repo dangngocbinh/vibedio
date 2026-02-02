@@ -11,7 +11,7 @@ import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 // ============ TYPES ============
 // LayerTitleStyle: Định nghĩa các kiểu hiển thị title overlay (tương tự như các preset trong video editor)
-export type LayerTitleStyle = 'lower-third' | 'centered' | 'corner-badge' | 'full-screen';
+export type LayerTitleStyle = 'lower-third' | 'centered' | 'corner-badge' | 'full-screen' | 'top-center' | 'bottom-center';
 export type AnimationType = 'fade' | 'slide-up' | 'slide-left' | 'typewriter' | 'scale';
 
 // Props cho LayerTitle component - dùng để tạo title overlays trong OTIO timeline
@@ -59,6 +59,22 @@ const getStylePreset = (
       position: 'absolute',
       top: scalePixel(40),
       right: scalePixel(40),
+    },
+    'top-center': {
+      position: 'absolute',
+      top: scalePixel(100),
+      left: '5%',
+      right: '5%',
+      display: 'flex',
+      justifyContent: 'center',
+    },
+    'bottom-center': {
+      position: 'absolute',
+      bottom: scalePixel(100),
+      left: '5%',
+      right: '5%',
+      display: 'flex',
+      justifyContent: 'center',
     },
     'full-screen': {
       position: 'absolute',

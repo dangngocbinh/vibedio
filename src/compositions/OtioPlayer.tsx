@@ -327,6 +327,7 @@ export const OtioClip: React.FC<{
                         effect={clip.metadata?.effect}
                         effectParams={clip.metadata?.effect_params}
                         durationInFrames={durationFrames}
+                        objectFit={(clip.metadata?.objectFit as any) || (clip.metadata?.style?.objectFit as any) || 'cover'}
                         onError={() => { console.error(`Failed to load image: ${src}`); setHasError(true); }}
                     />
                 ) : isAudio ? (
@@ -339,7 +340,12 @@ export const OtioClip: React.FC<{
                 ) : isVideo ? (
                     <Video
                         src={src!}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: (clip.metadata?.objectFit as any) || (clip.metadata?.style?.objectFit as any) || 'cover',
+                            background: clip.metadata?.background || clip.metadata?.backgroundColor || (clip.metadata?.style?.background as any) || (clip.metadata?.style?.backgroundColor as any) || 'transparent'
+                        }}
                         volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume}
                         muted={(clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume) === 0}
                         startFrom={startFromFrames}

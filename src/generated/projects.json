@@ -1,5 +1,27 @@
 [
   {
+    "id": "automation-n8n",
+    "name": "automation-n8n",
+    "path": "projects/automation-n8n",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "ratio": "9:16",
+    "modifiedAt": "2026-02-02T04:15:46.956Z",
+    "timestamp": 1770005746956
+  },
+  {
+    "id": "bien-va-em",
+    "name": "bien-va-em",
+    "path": "projects/bien-va-em",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "ratio": "9:16",
+    "modifiedAt": "2026-02-02T03:23:29.239Z",
+    "timestamp": 1770002609239
+  },
+  {
     "id": "noi-long-con-xa-que",
     "name": "noi-long-con-xa-que",
     "path": "projects/noi-long-con-xa-que",
