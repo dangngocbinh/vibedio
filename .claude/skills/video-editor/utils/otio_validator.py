@@ -7,7 +7,8 @@ def validate_otio(file_path):
     Validates an OTIO file for common Remotion compatibility issues:
     1. Consecutive transitions (Not allowed in TransitionSeries)
     2. Transition duration > Clip duration (Crash in Remotion)
-    3. Empty tracks or malformed structure
+    3. Absolute paths in media references (Browser cannot load)
+    4. Empty tracks or malformed structure
     """
     print(f"Validating {file_path}...")
     try:
@@ -16,6 +17,7 @@ def validate_otio(file_path):
         return False, f"Failed to read OTIO file: {e}"
 
     errors = []
+    warnings = []
 
     for track_index, track in enumerate(timeline.tracks):
         if track.kind != otio.schema.TrackKind.Video:
@@ -46,9 +48,24 @@ def validate_otio(file_path):
                     clip_frames = items[i+1].duration().value
                     if trans_frames > clip_frames:
                         errors.append(f"Track '{track.name}': Transition at index {i} ({trans_frames}f) is longer than next clip ({clip_frames}f)")
+            
+            # Rule 3: Check for absolute paths in media references
+            if isinstance(item, otio.schema.Clip):
+                if hasattr(item, 'media_reference') and item.media_reference:
+                    if hasattr(item.media_reference, 'target_url'):
+                        url = item.media_reference.target_url
+                        # Check if it's an absolute path (starts with / or C:\ etc)
+                        import re
+                        if url and (url.startswith('/') or re.match(r'^[a-zA-Z]:\\', url)):
+                            # Allow file:// URLs but warn about absolute paths
+                            if not url.startswith('file://'):
+                                errors.append(f"Track '{track.name}': Clip '{item.name}' has absolute path: {url[:50]}... (Browser cannot load)")
 
     if errors:
         return False, "\n".join(errors)
+    
+    if warnings:
+        print("Warnings:\n" + "\n".join(warnings))
     
     return True, "Validation successful"
 

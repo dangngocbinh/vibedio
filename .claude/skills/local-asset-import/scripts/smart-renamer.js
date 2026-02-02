@@ -13,10 +13,40 @@ class SmartRenamer {
   }
 
   /**
+   * Extract sceneId from filename if it follows pattern: {sceneId}_{description}.ext
+   * Examples:
+   * - "scene_1_peaceful_nature.mp4" → "scene_1"
+   * - "item1_coding_workspace.jpg" → "item1"
+   * - "hook_amazing_intro.mp4" → "hook"
+   * @param {string} filename - Original filename
+   * @returns {string|null} Extracted sceneId or null
+   */
+  extractSceneId(filename) {
+    const nameWithoutExt = path.basename(filename, path.extname(filename));
+
+    // Try common scene patterns
+    const patterns = [
+      /^(scene_\d+)/i,        // scene_1, scene_2, etc.
+      /^(item\d+)/i,          // item1, item2, etc.
+      /^(hook|intro|cta|outro|conclusion)/i,  // common scene names
+      /^([a-z0-9_-]+?)_/i     // anything before first underscore
+    ];
+
+    for (const pattern of patterns) {
+      const match = nameWithoutExt.match(pattern);
+      if (match) {
+        return match[1].toLowerCase();
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Generate a descriptive import filename
    * @param {string} originalPath - Original file path
    * @param {Object} context - Import context
-   * @param {string} [context.sceneId] - Scene ID to associate with
+   * @param {string} [context.sceneId] - Scene ID to associate with (auto-detected if not provided)
    * @param {string} [context.label] - Descriptive label
    * @param {string} [context.contentType] - Content type (video, image, etc.)
    * @returns {{ filename: string, parts: Object }}
@@ -24,7 +54,16 @@ class SmartRenamer {
   rename(originalPath, context = {}) {
     const ext = path.extname(originalPath).toLowerCase();
     const basename = path.basename(originalPath, ext);
-    const { sceneId, label } = context;
+    let { sceneId, label } = context;
+
+    // Smart sceneId detection if not provided
+    if (!sceneId) {
+      const detectedSceneId = this.extractSceneId(originalPath);
+      if (detectedSceneId) {
+        sceneId = detectedSceneId;
+        console.log(`[SmartRenamer] Auto-detected sceneId: "${sceneId}" from filename`);
+      }
+    }
 
     // Clean the original name
     const cleanedName = this.cleanName(basename);

@@ -221,6 +221,125 @@ Skill này áp dụng quy trình **Safe-Save** để bảo vệ project khỏi c
 
 Luôn sử dụng `otio_validator.py` khi viết các script can thiệp vào timeline.
 
+## ⚠️ CRITICAL RULES FOR DEVELOPERS
+
+**Khi modify strategies hoặc tạo timeline logic mới, BẮT BUỘC tuân thủ:**
+
+### Rule 1: NO Consecutive Transitions
+```python
+# ❌ WRONG - Will crash Remotion
+track.append(clip1)
+track.append(transition1)
+track.append(transition2)  # ERROR: 2 transitions in a row!
+
+# ✅ CORRECT - Transition between clips only
+track.append(clip1)
+track.append(transition1)
+track.append(clip2)
+```
+
+**Common Mistake**: Khi thêm nhiều clips cho 1 scene, đừng thêm transition trong vòng lặp clips!
+
+```python
+# ❌ WRONG
+for clip in clips:
+    track.append(clip)
+    if should_add_transition:
+        track.append(transition)  # Sai! Sẽ tạo nhiều transitions
+
+# ✅ CORRECT
+for clip in clips:
+    track.append(clip)
+# Add transition AFTER all clips of scene
+if should_add_transition:
+    track.append(transition)
+```
+
+### Rule 2: Transition Duration Must Be Smaller Than Adjacent Clips
+```python
+# ❌ WRONG
+clip = create_clip(duration=1.0)  # 1 second clip
+transition = create_transition(duration=2.0)  # 2 second transition - TOO LONG!
+
+# ✅ CORRECT
+clip = create_clip(duration=5.0)
+transition = create_transition(duration=0.5)  # Transition < clip duration
+```
+
+### Rule 3: Always Use Safe Save
+```python
+# ❌ WRONG - Direct save, no validation
+otio.adapters.write_to_file(timeline, "project.otio")
+
+# ✅ CORRECT - Validated save
+from utils.otio_validator import safe_save_otio
+safe_save_otio(timeline, "project.otio")
+```
+
+### Rule 4: When Adding Multiple Clips Per Scene
+**Problem**: Nếu scene cần nhiều clips (để fill duration), phải cẩn thận với transitions.
+
+**Solution**: Dùng `create_clips_to_fill_duration()` và chỉ thêm transition **SAU** tất cả clips của scene:
+
+```python
+# Get multiple clips for scene
+clips = self.create_clips_to_fill_duration(
+    scene_id=scene_id,
+    resources=resources,
+    target_duration_sec=duration
+)
+
+# Add all clips first
+for clip in clips:
+    track.append(clip)
+
+# Then add ONE transition between scenes (not between clips)
+if should_transition_to_next_scene:
+    track.append(transition)
+```
+
+**Why?** Remotion's `<TransitionSeries>` expects: `Clip → Transition → Clip`, NOT `Clip → Transition → Transition`.
+
+### Rule 5: Always Use Relative Paths (Never Absolute Paths)
+**Problem**: Browser cannot load absolute file paths like `/Users/name/project/video.mp4`.
+
+**Solution**: ALWAYS use relative paths from project directory:
+
+```python
+# ❌ WRONG - Absolute path
+clip = create_clip_from_url(
+    url="/Users/binhpc/code/automation-video/public/projects/my-project/downloads/video.mp4",
+    ...
+)
+
+# ✅ CORRECT - Relative path
+clip = create_clip_from_url(
+    url="downloads/videos/video.mp4",  # Relative to project folder
+    ...
+)
+```
+
+**Best Practice**: 
+- Use `AssetResolver.sanitize_for_otio()` for ALL local paths
+- Prefer local downloaded files over remote URLs
+- Remote URLs are OK, but local files are better (faster, portable, offline-friendly)
+
+```python
+# Get local path and sanitize it
+if 'localPath' in result and result['localPath']:
+    # Convert absolute → relative
+    relative_path = self.asset_resolver.sanitize_for_otio(result['localPath'])
+    urls.append(relative_path)
+```
+
+**Why?**
+- ✅ Browser can load relative paths via web server
+- ✅ Project is portable (works on any machine)
+- ✅ Faster (no network requests)
+- ✅ Offline-friendly
+
+Luôn sử dụng `otio_validator.py` khi viết các script can thiệp vào timeline.
+
 ## INPUT REQUIREMENTS
 
 ### 1. script.json (Required)
@@ -242,6 +361,99 @@ Luôn sử dụng `otio_validator.py` khi viết các script can thiệp vào ti
 Video editor sẽ đọc `metadata.ratio` và ghi vào `project.otio` metadata để OtioPlayer/Remotion render đúng kích thước.
 
 Nếu `ratio` không có trong script.json, mặc định là `9:16` (1080×1920).
+
+#### Short Video Layout (9:16) - Landscape Content Support
+
+For **9:16 Short format** videos (TikTok, Reels, Shorts) using **landscape source content** (16:9 videos/images), the video-editor skill provides an advanced **2-track layout system**.
+
+**The Challenge**: Landscape content doesn't fill a 9:16 vertical frame, leaving empty space on top/bottom.
+
+**The Solution**: Automatic background track creation + smart content positioning + layout presets.
+
+##### Background Track System (Track 0)
+
+When creating 9:16 videos with landscape input, the system automatically creates a **background track** (Track 0 - bottom layer):
+
+```
+Track 0: Background          ← Custom video/image OR auto-generated blur/gradient
+Track 1: Main Content        ← Landscape content (centered, cropped, or zoomed)
+Track 2: Title Overlays
+Track 3: Captions
+Track 4: Voice (audio)
+Track 5: Music (audio)
+```
+
+**6 Background Types**:
+1. **custom-video** - User-provided background video from `resources.backgroundResources.videos`
+2. **custom-image** - User-provided background image from `resources.backgroundResources.images`
+3. **blur-original** - Auto-generated blurred version of main content (recommended default)
+4. **gradient** - Auto-generated gradient background
+5. **solid-color** - Solid color fill (use `metadata.backgroundColor`)
+6. **auto** - Smart detection (default)
+
+##### Content Positioning (Track 1)
+
+**4 positioning modes** for main content:
+- **centered** (default) - Maintains aspect ratio, centered, max-width 90% (shows background on sides)
+- **crop-to-fill** - Smart crop to fill 9:16 frame (no background visible)
+- **zoom** - Zoom to fill (may lose quality)
+- **ken-burns** - Animated pan+zoom (images only)
+
+##### Layout Presets
+
+**4 layout presets** control text overlay positioning:
+- **header-footer** (default) - Main title at top, captions middle, CTA bottom
+- **minimal** - Clean aesthetic, captions only at bottom
+- **text-heavy** - Multiple text layers staggered (for tips/facts)
+- **balanced** - Flexible positioning based on content
+
+##### Safe Zones
+
+Automatically respects platform UI safe zones:
+- **Top danger** (0-180px) - Pause/sound/menu buttons
+- **Header safe** (180-350px) - Main title area
+- **Content zone** (350-1400px) - Video + overlays
+- **Footer safe** (1400-1720px) - Descriptions, CTAs
+- **Bottom danger** (1720-1920px) - Progress bar
+- **Right danger** (920-1080px) - Social icons
+
+##### Configuration
+
+All fields are **optional** with smart auto-detection:
+
+```json
+{
+  "metadata": {
+    "ratio": "9:16",
+    "layoutPreset": "header-footer",        // Layout template
+    "backgroundType": "auto",               // Background source (auto-detect)
+    "contentPositioning": "centered",       // Main content positioning
+    "backgroundColor": "#000000"            // Solid color (if backgroundType: "solid-color")
+  },
+  "resources": {
+    "backgroundResources": {
+      "videos": [
+        {
+          "sceneId": "scene_1",
+          "localPath": "backgrounds/animated-pattern.mp4",
+          "type": "custom-background"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Minimum configuration** (auto-detection handles rest):
+```json
+{
+  "metadata": {
+    "ratio": "9:16"
+  }
+}
+```
+
+See **[docs/short-video-layout-guide.md](docs/short-video-layout-guide.md)** for comprehensive guide with visual examples and best practices.
 
 #### For Listicle Type:
 ```json

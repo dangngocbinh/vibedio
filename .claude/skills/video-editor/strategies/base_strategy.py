@@ -26,6 +26,8 @@ class BaseStrategy(ABC):
         self.fps = fps
         self.timing = TimingCalculator(fps)
         self.asset_resolver = AssetResolver(project_dir) if project_dir else None
+        self.target_aspect_ratio = 16 / 9  # Default landscape, will be updated from script metadata
+
 
     @abstractmethod
     def populate_tracks(
@@ -115,43 +117,266 @@ class BaseStrategy(ABC):
         self,
         scene_id: str,
         resources: Dict[str, Any],
-        duration_sec: float
+        duration_sec: float,
+        prefer_type: str = 'auto'
     ) -> Optional[otio.schema.Clip]:
         """
         Create video clip from resources.json for a specific scene.
+        
+        Uses aspect ratio matching to select best video/image for the project.
 
         Args:
             scene_id: Scene identifier (e.g., "hook", "item1")
             resources: Parsed resources.json
             duration_sec: Clip duration in seconds
+            prefer_type: Preferred resource type ('video', 'image', or 'auto')
 
         Returns:
             OTIO Clip or None if resource not found
         """
-        if not self.asset_resolver:
-            return None
-
-        # Try to find video first
-        video_url = self.asset_resolver.resolve_video_from_scene(scene_id, resources)
-
-        if video_url:
-            return self.create_clip_from_url(
-                url=video_url,
-                name=f"{scene_id} Video",
-                duration_sec=duration_sec
-            )
+        # Try to find video first (unless explicitly prefer image)
+        if prefer_type != 'image':
+            videos = self._get_scene_videos(scene_id, resources)
+            if videos:
+                # Use first video (already sorted by aspect ratio match)
+                return self.create_clip_from_url(
+                    url=videos[0],
+                    name=f"{scene_id} Video",
+                    duration_sec=duration_sec
+                )
 
         # Fallback to image
-        image_url = self.asset_resolver.resolve_image_from_scene(scene_id, resources)
-
-        if image_url:
-            return self.create_clip_from_url(
-                url=image_url,
-                name=f"{scene_id} Image",
-                duration_sec=duration_sec
-            )
+        if prefer_type != 'video':
+            images = self._get_scene_images(scene_id, resources)
+            if images:
+                # Use first image (already sorted by aspect ratio match)
+                return self.create_clip_from_url(
+                    url=images[0],
+                    name=f"{scene_id} Image",
+                    duration_sec=duration_sec
+                )
 
         return None
+
+    def create_clips_to_fill_duration(
+        self,
+        scene_id: str,
+        resources: Dict[str, Any],
+        target_duration_sec: float,
+        prefer_type: str = 'auto',
+        default_clip_duration: float = 5.0
+    ) -> list:
+        """
+        Create multiple clips to fill target duration, avoiding black screens.
+        
+        If a single video is shorter than target duration, this will:
+        1. Loop the same video, OR
+        2. Use additional videos from the same scene's resources
+        
+        ⚠️ IMPORTANT: When using this method, add transitions AFTER all clips:
+        ```python
+        clips = self.create_clips_to_fill_duration(...)
+        for clip in clips:
+            track.append(clip)
+        # Add transition HERE (after all clips), NOT inside the loop!
+        if should_add_transition:
+            track.append(transition)
+        ```
+        
+        Args:
+            scene_id: Scene identifier (e.g., "hook", "item1")
+            resources: Parsed resources.json
+            target_duration_sec: Total duration to fill
+            prefer_type: Preferred resource type ('video', 'image', or 'auto')
+            default_clip_duration: Assumed duration for clips when metadata unavailable
+            
+        Returns:
+            List of OTIO Clips that fill the target duration
+        """
+        if not self.asset_resolver:
+            return []
+        
+        clips = []
+        remaining_duration = target_duration_sec
+        clip_index = 0
+        
+        # Get all available resources for this scene
+        available_videos = self._get_scene_videos(scene_id, resources)
+        available_images = self._get_scene_images(scene_id, resources)
+        
+        # Prefer videos over images
+        available_resources = available_videos if (prefer_type != 'image' and available_videos) else available_images
+        
+        if not available_resources:
+            # Fallback to single clip if no resources found
+            single_clip = self.create_clip_from_resource(scene_id, resources, target_duration_sec, prefer_type)
+            return [single_clip] if single_clip else []
+        
+        # Fill duration with clips
+        resource_index = 0
+        while remaining_duration > 0.1:  # Small threshold to avoid tiny clips
+            # Get next resource (loop if needed)
+            resource_url = available_resources[resource_index % len(available_resources)]
+            
+            # Use default duration or remaining duration (whichever is smaller)
+            clip_duration = min(default_clip_duration, remaining_duration)
+            
+            # Create clip
+            is_image = resource_url in available_images
+            clip = self.create_clip_from_url(
+                url=resource_url,
+                name=f"{scene_id} {'Image' if is_image else 'Video'} {clip_index + 1}",
+                duration_sec=clip_duration
+            )
+            
+            if clip:
+                clips.append(clip)
+                remaining_duration -= clip_duration
+                clip_index += 1
+            
+            resource_index += 1
+            
+            # Safety: prevent infinite loop
+            if clip_index > 20:
+                break
+        
+        return clips
+    
+    def _get_scene_videos(self, scene_id: str, resources: Dict[str, Any]) -> list:
+        """
+        Get all LOCAL video paths for a scene (only downloaded files).
+        
+        Videos are sorted by aspect ratio match with target project ratio:
+        - For 16:9 project → prioritize landscape videos (width > height)
+        - For 9:16 project → prioritize portrait videos (height > width)
+        
+        This enforces using relative paths for portability and performance.
+        Remote URLs are skipped - only downloaded files are used.
+        """
+        videos = resources.get('resources', {}).get('videos', [])
+        for video_group in videos:
+            if video_group.get('sceneId') == scene_id:
+                results = video_group.get('results', [])
+                video_entries = []
+                
+                for result in results:
+                    # ONLY use local downloaded files (relative paths)
+                    if 'localPath' in result and result['localPath']:
+                        # Sanitize absolute path → relative path for browser
+                        if self.asset_resolver:
+                            relative_path = self.asset_resolver.sanitize_for_otio(result['localPath'])
+                        else:
+                            relative_path = result['localPath']
+                        
+                        # Get video dimensions for aspect ratio matching
+                        width = result.get('width', 1920)
+                        height = result.get('height', 1080)
+                        
+                        video_entries.append({
+                            'path': relative_path,
+                            'width': width,
+                            'height': height,
+                            'aspect_ratio': width / height if height > 0 else 1.0
+                        })
+                
+                # Sort by aspect ratio match (if we have target ratio info)
+                # This is done in create_clips_to_fill_duration by passing sorted list
+                return self._sort_videos_by_aspect_ratio(video_entries)
+        
+        return []
+    
+    def _sort_videos_by_aspect_ratio(self, video_entries: list) -> list:
+        """
+        Sort videos by aspect ratio match with project target.
+        
+        For landscape projects (16:9): prioritize landscape videos
+        For portrait projects (9:16): prioritize portrait videos
+        """
+        if not video_entries:
+            return []
+        
+        # Use target aspect ratio from strategy (set from script metadata)
+        target_ratio = self.target_aspect_ratio
+        
+        # Sort by distance from target ratio
+        def aspect_ratio_score(entry):
+            video_ratio = entry['aspect_ratio']
+            # Calculate distance from target
+            distance = abs(video_ratio - target_ratio)
+            return distance
+        
+        sorted_entries = sorted(video_entries, key=aspect_ratio_score)
+        
+        # Return just the paths
+        return [entry['path'] for entry in sorted_entries]
+
+    
+    def _get_scene_images(self, scene_id: str, resources: Dict[str, Any]) -> list:
+        """
+        Get all LOCAL image paths for a scene (only downloaded files).
+        
+        Images are sorted by aspect ratio match with target project ratio:
+        - For 16:9 project → prioritize landscape images (width > height)
+        - For 9:16 project → prioritize portrait images (height > width)
+        
+        This enforces using relative paths for portability and performance.
+        Remote URLs are skipped - only downloaded files are used.
+        """
+        images = resources.get('resources', {}).get('images', [])
+        for image_group in images:
+            if image_group.get('sceneId') == scene_id:
+                results = image_group.get('results', [])
+                image_entries = []
+                
+                for result in results:
+                    # ONLY use local downloaded files (relative paths)
+                    if 'localPath' in result and result['localPath']:
+                        # Sanitize absolute path → relative path for browser
+                        if self.asset_resolver:
+                            relative_path = self.asset_resolver.sanitize_for_otio(result['localPath'])
+                        else:
+                            relative_path = result['localPath']
+                        
+                        # Get image dimensions for aspect ratio matching
+                        width = result.get('width', 1920)
+                        height = result.get('height', 1080)
+                        
+                        image_entries.append({
+                            'path': relative_path,
+                            'width': width,
+                            'height': height,
+                            'aspect_ratio': width / height if height > 0 else 1.0
+                        })
+                
+                # Sort by aspect ratio match (same logic as videos)
+                return self._sort_images_by_aspect_ratio(image_entries)
+        
+        return []
+    
+    def _sort_images_by_aspect_ratio(self, image_entries: list) -> list:
+        """
+        Sort images by aspect ratio match with project target.
+        
+        Uses same logic as _sort_videos_by_aspect_ratio.
+        """
+        if not image_entries:
+            return []
+        
+        # Use target aspect ratio from strategy (set from script metadata)
+        target_ratio = self.target_aspect_ratio
+        
+        # Sort by distance from target ratio
+        def aspect_ratio_score(entry):
+            image_ratio = entry['aspect_ratio']
+            # Calculate distance from target
+            distance = abs(image_ratio - target_ratio)
+            return distance
+        
+        sorted_entries = sorted(image_entries, key=aspect_ratio_score)
+        
+        # Return just the paths
+        return [entry['path'] for entry in sorted_entries]
+
 
     def create_component_clip(
         self,
@@ -209,7 +434,7 @@ class BaseStrategy(ABC):
             OTIO Clip for voice audio
         """
         if self.asset_resolver:
-            voice_url = self.asset_resolver.resolve_voice_path()
+            voice_url = self.asset_resolver.resolve_voice_path(voice_data)
         else:
             voice_url = "voice.mp3"
 
@@ -230,7 +455,7 @@ class BaseStrategy(ABC):
         duration_sec: float,
         fade_in_sec: float = 2.0,
         fade_out_sec: float = 2.0,
-        volume: float = 0.2
+        volume: float = 0.08
     ) -> Optional[otio.schema.Clip]:
         """
         Create background music clip from resources.

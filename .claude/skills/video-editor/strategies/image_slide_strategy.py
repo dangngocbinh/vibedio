@@ -14,6 +14,7 @@ from templates.subtitle_generator import SubtitleGenerator
 from templates.title_generator import TitleGenerator
 from utils.voice_timing_sync import VoiceTimingSync, VoiceTiming
 from utils.effect_suggester import EffectSuggester, EffectSuggestion, TransitionSuggestion
+from utils.short_layout_helper import ShortLayoutHelper
 
 
 class ImageSlideStrategy(BaseStrategy):
@@ -71,6 +72,7 @@ class ImageSlideStrategy(BaseStrategy):
             resources: Parsed resources.json
         """
         scenes = script.get('scenes', [])
+        metadata = script.get('metadata', {})
 
         # Step 1: Sync scenes with voice timing
         scene_timings = self.voice_sync.map_scenes_to_voice(scenes, voice_data)
@@ -84,18 +86,32 @@ class ImageSlideStrategy(BaseStrategy):
         # Step 4: Calculate total duration from voice
         total_duration = self.voice_sync.get_total_voice_duration(voice_data)
         if total_duration == 0:
-            total_duration = script.get('metadata', {}).get('duration', 60)
-        
+            total_duration = metadata.get('duration', 60)
+
         # Add padding to allow music/video to fade out naturally
         total_duration += self.OUTRO_PADDING
 
-        # Track 1: Images with effects (synced to voice)
+        # Check if Short layout system needed (9:16 with landscape input)
+        should_create_bg = ShortLayoutHelper.should_create_background_track(metadata, resources)
+
+        # Track 0: Background (for Short format with landscape content)
+        if should_create_bg:
+            background_track = self._create_background_track(
+                scenes=scenes,
+                metadata=metadata,
+                resources=resources,
+                scene_timings=scene_timings
+            )
+            timeline.tracks.append(background_track)
+
+        # Track 1 (or 0 if no background): Images with effects (synced to voice)
         image_track = self._create_image_track_synced(
             scenes=scenes,
             resources=resources,
             scene_timings=scene_timings,
             effect_suggestions=effect_suggestions,
-            transition_suggestions=transition_suggestions
+            transition_suggestions=transition_suggestions,
+            metadata=metadata
         )
         
         # [FIX] Compensate for transition overlaps to match total duration
@@ -156,17 +172,114 @@ class ImageSlideStrategy(BaseStrategy):
                     first_scene['duration'] = voice_offset
                     # Update local timing map if needed (though visual track is generated later)
 
+            # Apply layout preset positioning for Short videos
+            if ShortLayoutHelper.is_short_format(metadata):
+                layout_preset = metadata.get('layoutPreset', 'balanced')
+                caption_position = ShortLayoutHelper.get_title_position_for_preset(layout_preset, 'captions')
+
+                # Override subtitle position in script if not explicitly set
+                if 'subtitle' not in script:
+                    script['subtitle'] = {}
+                if 'position' not in script.get('subtitle', {}):
+                    script['subtitle']['position'] = caption_position
+
             subtitle_gen = SubtitleGenerator(self.fps)
             # Pass offset to generator so it shifts timestamps internally
             subtitle_track = subtitle_gen.generate_track(
                 voice_data, script, max_words_per_phrase=5, offset=voice_offset
             )
-            
-            # NOTE: We do NOT insert a Gap here anymore. 
-            # The SubtitleGenerator has shifted the timestamps, so SubtitleTrack.tsx will 
+
+            # NOTE: We do NOT insert a Gap here anymore.
+            # The SubtitleGenerator has shifted the timestamps, so SubtitleTrack.tsx will
             # automatically create the necessary gaps based on the shifted start times.
-                
+
             timeline.tracks.append(subtitle_track)
+
+    def _create_background_track(
+        self,
+        scenes: List[Dict[str, Any]],
+        metadata: Dict[str, Any],
+        resources: Dict[str, Any],
+        scene_timings: Dict[str, VoiceTiming]
+    ) -> otio.schema.Track:
+        """
+        Create background track (Track 0) for Short format videos.
+
+        Only created for 9:16 videos with landscape content.
+
+        Args:
+            scenes: List of scenes from script.json
+            metadata: Metadata from script.json
+            resources: Parsed resources.json
+            scene_timings: Voice timing for each scene
+
+        Returns:
+            OTIO Track with background clips
+        """
+        track = self.create_video_track("Background")
+
+        bg_type = metadata.get('backgroundType', 'auto')
+
+        for i, scene in enumerate(scenes):
+            scene_id = scene.get('id', f'scene_{i}')
+
+            # Get voice-synced timing
+            timing = scene_timings.get(scene_id)
+            if not timing:
+                duration = scene.get('duration', 5)
+            else:
+                duration = timing.duration
+
+            # Extend last scene to match total duration padding
+            if i == len(scenes) - 1:
+                duration += self.OUTRO_PADDING
+
+            # Determine background type for this scene
+            if bg_type == 'auto':
+                scene_bg_type = ShortLayoutHelper.suggest_background_type(resources, scene_id)
+            else:
+                scene_bg_type = bg_type
+
+            # Find background resource or generate
+            bg_url = None
+            bg_props_info = ShortLayoutHelper.get_background_props(scene_bg_type, metadata)
+
+            if scene_bg_type == 'custom-video':
+                bg_url = ShortLayoutHelper.find_background_resource(resources, scene_id, 'custom-video')
+            elif scene_bg_type == 'custom-image':
+                bg_url = ShortLayoutHelper.find_background_resource(resources, scene_id, 'custom-image')
+            elif scene_bg_type in ('blur-original', 'gradient'):
+                # For images, gradient is better default than blur
+                # Try to get main content URL for blur
+                image_url = self._get_scene_image_url(scene_id, scene, resources)
+                if image_url and scene_bg_type == 'blur-original':
+                    bg_url = image_url
+                # else gradient will be created via component
+
+            # Create background clip
+            if bg_url:
+                bg_clip = self.create_clip_from_url(
+                    url=bg_url,
+                    name=f"Background {scene_id}",
+                    duration_sec=duration,
+                    metadata={
+                        'remotion_component': bg_props_info['component'],
+                        'props': bg_props_info['props']
+                    }
+                )
+                track.append(bg_clip)
+            else:
+                # Fallback: gradient or solid color background
+                component_name = bg_props_info['component']
+                bg_clip = self.create_component_clip(
+                    component_name=component_name,
+                    duration_sec=duration,
+                    props=bg_props_info['props'],
+                    clip_name=f"Background {scene_id}"
+                )
+                track.append(bg_clip)
+
+        return track
 
     def _create_image_track_synced(
         self,
@@ -174,7 +287,8 @@ class ImageSlideStrategy(BaseStrategy):
         resources: Dict[str, Any],
         scene_timings: Dict[str, VoiceTiming],
         effect_suggestions: Dict[str, EffectSuggestion],
-        transition_suggestions: Dict[str, TransitionSuggestion]
+        transition_suggestions: Dict[str, TransitionSuggestion],
+        metadata: Optional[Dict[str, Any]] = None
     ) -> otio.schema.Track:
         """
         Create image track with voice-synced timing and effects.
@@ -185,11 +299,17 @@ class ImageSlideStrategy(BaseStrategy):
             scene_timings: Voice timing for each scene
             effect_suggestions: Suggested effects per scene
             transition_suggestions: Suggested transitions per scene
+            metadata: Optional metadata from script.json (for content positioning)
 
         Returns:
             OTIO Track with image clips and transitions
         """
         track = self.create_video_track("Images")
+
+        # Get content positioning mode for Short videos
+        content_positioning = None
+        if metadata and ShortLayoutHelper.is_short_format(metadata):
+            content_positioning = metadata.get('contentPositioning', 'centered')
 
         for i, scene in enumerate(scenes):
             scene_id = scene.get('id', f'scene_{i}')
@@ -201,7 +321,7 @@ class ImageSlideStrategy(BaseStrategy):
                 duration = scene.get('duration', 5)
             else:
                 duration = timing.duration
-            
+
             # Extend last scene to match total duration padding
             if i == len(scenes) - 1:
                 duration += self.OUTRO_PADDING
@@ -215,7 +335,8 @@ class ImageSlideStrategy(BaseStrategy):
                 scene=scene,
                 resources=resources,
                 duration=duration,
-                effect=effect
+                effect=effect,
+                content_positioning=content_positioning
             )
 
             if clip:
@@ -234,13 +355,53 @@ class ImageSlideStrategy(BaseStrategy):
 
         return track
 
+    def _get_scene_image_url(
+        self,
+        scene_id: str,
+        scene: Dict[str, Any],
+        resources: Dict[str, Any]
+    ) -> Optional[str]:
+        """
+        Get image URL for a scene (helper for background track).
+
+        Args:
+            scene_id: Scene identifier
+            scene: Scene dict from script
+            resources: Parsed resources.json
+
+        Returns:
+            Image URL or None
+        """
+        image_url = None
+
+        # Extract resourceType preference from scene
+        visual = scene.get('visualSuggestion', {})
+        prefer_type = visual.get('resourceType', 'auto')
+
+        if self.asset_resolver:
+            # First try direct image (respecting preference)
+            image_url = self.asset_resolver.resolve_image_from_scene(scene_id, resources, prefer_type)
+
+            # If no image, try video (respecting preference)
+            if not image_url:
+                image_url = self.asset_resolver.resolve_video_from_scene(scene_id, resources, prefer_type)
+
+        # Fallback to visual suggestion
+        if not image_url:
+            visual = scene.get('visualSuggestion', {})
+            if visual.get('type') == 'ai-generated':
+                image_url = f"generated/{scene_id}.png"
+
+        return image_url
+
     def _create_scene_image_clip(
         self,
         scene_id: str,
         scene: Dict[str, Any],
         resources: Dict[str, Any],
         duration: float,
-        effect: EffectSuggestion
+        effect: EffectSuggestion,
+        content_positioning: Optional[str] = None
     ) -> Optional[otio.schema.Clip]:
         """
         Create image clip for a scene with effect metadata.
@@ -251,27 +412,13 @@ class ImageSlideStrategy(BaseStrategy):
             resources: Parsed resources.json
             duration: Clip duration in seconds
             effect: Effect suggestion for this scene
+            content_positioning: Optional positioning mode for Short videos
 
         Returns:
             OTIO Clip with effect metadata or None
         """
         # Try to get image from resources
-        image_url = None
-
-        if self.asset_resolver:
-            # First try direct image
-            image_url = self.asset_resolver.resolve_image_from_scene(scene_id, resources)
-
-            # If no image, try video (will be treated as image/still)
-            if not image_url:
-                image_url = self.asset_resolver.resolve_video_from_scene(scene_id, resources)
-
-        # Fallback to visual suggestion if specified
-        if not image_url:
-            visual = scene.get('visualSuggestion', {})
-            if visual.get('type') == 'ai-generated':
-                # Placeholder - image should have been generated already
-                image_url = f"generated/{scene_id}.png"
+        image_url = self._get_scene_image_url(scene_id, scene, resources)
 
         if not image_url:
             # Check if this is a title scene
@@ -296,11 +443,24 @@ class ImageSlideStrategy(BaseStrategy):
             effect=effect.effect,
             effect_params=effect_params
         )
-        
+
+        # [FEATURE] Apply content positioning for Short videos
+        if content_positioning:
+            positioning_props = ShortLayoutHelper.get_content_positioning_props(
+                content_positioning,
+                duration
+            )
+            # Merge positioning props into clip metadata
+            if not clip.metadata:
+                clip.metadata = {}
+            if 'props' not in clip.metadata:
+                clip.metadata['props'] = {}
+            clip.metadata['props'].update(positioning_props)
+
         # [FEATURE] Apply custom volume if specified in scene (e.g. mute specific scene)
         if 'videoVolume' in scene:
             clip.metadata['video_volume'] = str(scene['videoVolume'])
-            
+
         return clip
 
     def _create_placeholder_clip(
@@ -371,12 +531,12 @@ class ImageSlideStrategy(BaseStrategy):
         Returns:
             OTIO Track with music clip or None if no music found
         """
-        # Get volume from music config, default to 0.2 (20%)
-        volume = 0.2
+        # Get volume from music config, default to 0.08 (8%)
+        volume = 0.08
         fade_in = 2.0
         fade_out = 3.0
         if music_config:
-            volume = music_config.get('volume', 0.2)
+            volume = music_config.get('volume', 0.08)
             fade_in = music_config.get('fadeIn', 2.0)
             fade_out = music_config.get('fadeOut', 3.0)
 

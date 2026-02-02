@@ -44,7 +44,61 @@ class OtioTimelineBuilder:
             ValueError: If validation fails
         """
         self.script, self.voice_data, self.resources = self.loader.load_all()
+
+        # Auto-populate Short video layout fields for 9:16 videos
+        self._auto_populate_short_layout_fields()
+
         return True
+
+    def _auto_populate_short_layout_fields(self) -> None:
+        """
+        Auto-populate layout fields for Short (9:16) videos.
+
+        Only applies to 9:16 videos with landscape input.
+        """
+        from utils.short_layout_helper import ShortLayoutHelper
+
+        if not self.script or not self.resources:
+            return
+
+        metadata = self.script.get('metadata', {})
+        scenes = self.script.get('scenes', [])
+
+        # Only for 9:16 videos
+        if not ShortLayoutHelper.is_short_format(metadata):
+            return
+
+        # Check if landscape input detected
+        has_landscape = ShortLayoutHelper.detect_landscape_input(self.resources)
+        if not has_landscape:
+            # No landscape input, no need for special layout
+            return
+
+        # Auto-suggest layoutPreset if not provided
+        if 'layoutPreset' not in metadata:
+            suggested_preset = ShortLayoutHelper.suggest_layout_preset(scenes, metadata)
+            metadata['layoutPreset'] = suggested_preset
+            print(f"  → Auto-suggested layoutPreset: {suggested_preset}")
+
+        # Auto-suggest backgroundType if not provided
+        if 'backgroundType' not in metadata:
+            # Default to 'auto' which will smart-detect per scene
+            metadata['backgroundType'] = 'auto'
+            print(f"  → Auto-set backgroundType: auto (smart detection)")
+
+        # Auto-suggest contentPositioning if not provided
+        if 'contentPositioning' not in metadata:
+            # Default to 'centered' (most common case)
+            metadata['contentPositioning'] = 'centered'
+            print(f"  → Auto-set contentPositioning: centered")
+
+        # Ensure backgroundColor has default if using solid-color
+        if metadata.get('backgroundType') == 'solid-color' and 'backgroundColor' not in metadata:
+            metadata['backgroundColor'] = '#000000'
+            print(f"  → Auto-set backgroundColor: #000000 (black)")
+
+        # Update the script metadata
+        self.script['metadata'] = metadata
 
     def build_timeline(self, strategy: BaseStrategy) -> otio.schema.Timeline:
         """
@@ -103,7 +157,7 @@ class OtioTimelineBuilder:
 
     def save(self, output_path: Optional[str] = None) -> str:
         """
-        Save timeline to OTIO file.
+        Save timeline to OTIO file with validation.
 
         Args:
             output_path: Optional custom output path (default: project_dir/project.otio)
@@ -112,7 +166,7 @@ class OtioTimelineBuilder:
             Path to saved file
 
         Raises:
-            RuntimeError: If timeline hasn't been built yet
+            RuntimeError: If timeline hasn't been built yet or validation fails
         """
         if not self.timeline:
             raise RuntimeError("Must call build_timeline() before save()")
@@ -123,8 +177,13 @@ class OtioTimelineBuilder:
         else:
             out_path = self.project_dir / "project.otio"
 
-        # Write timeline to file
-        otio.adapters.write_to_file(self.timeline, str(out_path))
+        # Use safe save with validation
+        from utils.otio_validator import safe_save_otio
+        
+        success = safe_save_otio(self.timeline, str(out_path))
+        
+        if not success:
+            raise RuntimeError("Timeline validation failed. Check errors above.")
 
         return str(out_path)
 

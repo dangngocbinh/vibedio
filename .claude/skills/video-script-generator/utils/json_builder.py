@@ -6,6 +6,24 @@ Build final JSON output theo schema chuẩn
 from typing import Dict, List, Optional
 from datetime import datetime
 import json
+import os
+from pathlib import Path
+
+# Load .env file from project root
+try:
+    from dotenv import load_dotenv
+    # Find project root: utils/ -> video-script-generator/ -> skills/ -> .claude/ -> project/
+    current_dir = Path(__file__).resolve().parent  # utils/
+    skill_root = current_dir.parent  # video-script-generator/
+    skills_dir = skill_root.parent  # skills/
+    claude_dir = skills_dir.parent  # .claude/
+    project_root = claude_dir.parent  # project root
+    env_path = project_root / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    # dotenv not installed, skip
+    pass
 
 class JSONBuilder:
     def __init__(self):
@@ -279,36 +297,147 @@ class JSONBuilder:
         return defaults.get(scene_type, defaults['body'])
     
     def _build_voice_config(self, video_type: str, metadata: Dict) -> Dict:
-        """Build voice configuration"""
-        # Voice suggestions by video type
+        """
+        Build voice configuration with smart provider selection
+        
+        Priority (for Vietnamese):
+        1. Gemini (if GEMINI_API_KEY) - Most natural, free
+        2. ElevenLabs (if ELEVENLABS_API_KEY) - Multilingual
+        3. Vbee (if VBEE_API_KEY) - Vietnamese specialist
+        4. OpenAI - Fallback
+        """
+        import os
+        
+        # Check available providers from env
+        has_gemini = bool(os.getenv('GEMINI_API_KEY'))
+        has_elevenlabs = bool(os.getenv('ELEVENLABS_API_KEY'))
+        has_vbee = bool(os.getenv('VBEE_API_KEY'))
+        
+        # Select provider based on priority
+        if has_gemini:
+            provider = 'gemini'
+        elif has_elevenlabs:
+            provider = 'elevenlabs'
+        elif has_vbee:
+            provider = 'vbee'
+        else:
+            provider = 'openai'
+        
+        # Voice configurations by provider and video type
         voice_configs = {
-            'facts': {
-                'provider': 'elevenlabs',
-                'voiceId': 'vietnamese-male-professional',
-                'speed': 1.0,
-                'notes': 'Male voice, professional tone, clear enunciation'
+            'gemini': {
+                'facts': {
+                    'provider': 'gemini',
+                    'voiceId': 'Charon',  # Deep, authoritative, informative
+                    'speed': 1.0,
+                    'styleInstruction': 'Rõ ràng – chuyên nghiệp – tự tin',
+                    'notes': 'Gemini voice, professional tone for facts'
+                },
+                'listicle': {
+                    'provider': 'gemini',
+                    'voiceId': 'Puck',  # Energetic, mischievous, YouTuber vibe
+                    'speed': 1.05,
+                    'styleInstruction': 'Năng động – nhiệt tình – sôi nổi',
+                    'notes': 'Gemini voice, energetic tone for listicle'
+                },
+                'motivation': {
+                    'provider': 'gemini',
+                    'voiceId': 'Aoede',  # Expressive, emotional, storytelling
+                    'speed': 0.95,
+                    'styleInstruction': 'Trầm – ấm – chậm – truyền cảm hứng',
+                    'notes': 'Gemini voice, inspiring tone for motivation'
+                },
+                'story': {
+                    'provider': 'gemini',
+                    'voiceId': 'Aoede',  # Breezy, expressive
+                    'speed': 1.0,
+                    'styleInstruction': 'Kể chuyện – cảm xúc – hấp dẫn',
+                    'notes': 'Gemini voice, storytelling tone'
+                }
             },
-            'listicle': {
-                'provider': 'elevenlabs',
-                'voiceId': 'vietnamese-male-energetic',
-                'speed': 1.05,
-                'notes': 'Energetic male voice, upbeat tone'
+            'elevenlabs': {
+                'facts': {
+                    'provider': 'elevenlabs',
+                    'voiceId': 'pNInz6obpgDQGcFmaJgB',  # Adam - Deep, authoritative
+                    'speed': 1.0,
+                    'notes': 'ElevenLabs multilingual voice, professional'
+                },
+                'listicle': {
+                    'provider': 'elevenlabs',
+                    'voiceId': 'ErXwobaYiN019PkySvjV',  # Antoni - Energetic
+                    'speed': 1.05,
+                    'notes': 'ElevenLabs multilingual voice, energetic'
+                },
+                'motivation': {
+                    'provider': 'elevenlabs',
+                    'voiceId': 'VR6AewLTigWG4xSOukaG',  # Arnold - Strong, inspiring
+                    'speed': 0.95,
+                    'notes': 'ElevenLabs multilingual voice, inspiring'
+                },
+                'story': {
+                    'provider': 'elevenlabs',
+                    'voiceId': 'pNInz6obpgDQGcFmaJgB',  # Adam - Storytelling
+                    'speed': 1.0,
+                    'notes': 'ElevenLabs multilingual voice, storytelling'
+                }
             },
-            'motivation': {
-                'provider': 'elevenlabs',
-                'voiceId': 'vietnamese-male-deep',
-                'speed': 0.95,
-                'notes': 'Deep male voice, dramatic tone, slower pace'
+            'vbee': {
+                'facts': {
+                    'provider': 'vbee',
+                    'voiceId': 'hn_male_manh_dung_news_48k-h',  # Standard news voice
+                    'speed': 1.0,
+                    'notes': 'Vbee Vietnamese news voice'
+                },
+                'listicle': {
+                    'provider': 'vbee',
+                    'voiceId': 'hn_male_manh_dung_news_48k-h',
+                    'speed': 1.05,
+                    'notes': 'Vbee Vietnamese news voice'
+                },
+                'motivation': {
+                    'provider': 'vbee',
+                    'voiceId': 'hn_male_manh_dung_news_48k-h',
+                    'speed': 0.95,
+                    'notes': 'Vbee Vietnamese news voice'
+                },
+                'story': {
+                    'provider': 'vbee',
+                    'voiceId': 'hn_male_manh_dung_news_48k-h',
+                    'speed': 1.0,
+                    'notes': 'Vbee Vietnamese news voice'
+                }
             },
-            'story': {
-                'provider': 'elevenlabs',
-                'voiceId': 'vietnamese-male-storyteller',
-                'speed': 1.0,
-                'notes': 'Storytelling voice, emotional range'
+            'openai': {
+                'facts': {
+                    'provider': 'openai',
+                    'voiceId': 'onyx',  # Deep, serious
+                    'speed': 1.0,
+                    'notes': 'OpenAI voice, professional tone'
+                },
+                'listicle': {
+                    'provider': 'openai',
+                    'voiceId': 'nova',  # Energetic, friendly
+                    'speed': 1.05,
+                    'notes': 'OpenAI voice, energetic tone'
+                },
+                'motivation': {
+                    'provider': 'openai',
+                    'voiceId': 'echo',  # Warm, soft
+                    'speed': 0.95,
+                    'notes': 'OpenAI voice, inspiring tone'
+                },
+                'story': {
+                    'provider': 'openai',
+                    'voiceId': 'fable',  # Narrative, British
+                    'speed': 1.0,
+                    'notes': 'OpenAI voice, storytelling tone'
+                }
             }
         }
         
-        return voice_configs.get(video_type, voice_configs['facts'])
+        # Get config for selected provider and video type
+        provider_configs = voice_configs.get(provider, voice_configs['openai'])
+        return provider_configs.get(video_type, provider_configs['facts'])
     
     def _build_music_config(self, video_type: str) -> Dict:
         """Build music configuration"""

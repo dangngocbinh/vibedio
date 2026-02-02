@@ -21,6 +21,7 @@ import { LowerThird } from '../components/titles/LowerThird';
 import { CallToAction } from '../components/CallToAction/CallToAction';
 import { Sticker } from '../components/titles/Sticker';
 import { LayerEffect } from '../components/effects/LayerEffect';
+import { VideoWithEffects } from '../components/VideoWithEffects';
 
 
 // Helpers cho Transition
@@ -312,7 +313,12 @@ export const OtioClip: React.FC<{
             name={clip.name}
         >
             <AbsoluteFill style={customStyle}>
-                {isImage ? (
+                {clip.metadata?.remotion_component === 'VideoWithEffects' ? (
+                    <VideoWithEffects
+                        src={src!}
+                        {...(clip.metadata.props || {})}
+                    />
+                ) : isImage ? (
                     <ImageWithEffect
                         src={src!}
                         effect={clip.metadata?.effect}
@@ -330,7 +336,12 @@ export const OtioClip: React.FC<{
                 ) : isVideo ? (
                     <Video
                         src={src!}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{
+                            width: clip.metadata?.props?.maxWidth || '100%',
+                            height: clip.metadata?.props?.maxHeight || '100%',
+                            objectFit: clip.metadata?.props?.objectFit || clip.metadata?.props?.scaleMode || 'cover',
+                            ...clip.metadata?.props?.style
+                        }}
                         volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume}
                         muted={(clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume) === 0}
                         startFrom={startFromFrames}

@@ -163,11 +163,25 @@ class ResourceMatcher {
 
   /**
    * Fetch video resources for a query
-   * @param {Object} queryObj - Query object with sceneId, query, etc.
+   * @param {Object} queryObj - Query object with sceneId, query, resourceType, etc.
    * @returns {Promise<Object>} Video results
    */
   async fetchVideo(queryObj) {
-    const { sceneId, sceneText, query } = queryObj;
+    const { sceneId, sceneText, query, resourceType = 'auto' } = queryObj;
+
+    // Skip if user explicitly wants images only
+    if (resourceType === 'image') {
+      console.log(`[ResourceMatcher] Skipping video search for "${sceneId}" (resourceType=image)`);
+      return {
+        sceneId,
+        sceneText,
+        query,
+        source: null,
+        results: [],
+        skipped: true,
+        reason: 'resourceType preference: image'
+      };
+    }
     let results = [];
     let source = null;
 
@@ -220,11 +234,25 @@ class ResourceMatcher {
 
   /**
    * Fetch image resources for a query
-   * @param {Object} queryObj - Query object
+   * @param {Object} queryObj - Query object with sceneId, query, resourceType, etc.
    * @returns {Promise<Object>} Image results
    */
   async fetchImage(queryObj) {
-    const { sceneId, sceneText, query } = queryObj;
+    const { sceneId, sceneText, query, resourceType = 'auto' } = queryObj;
+
+    // Skip if user explicitly wants videos only
+    if (resourceType === 'video') {
+      console.log(`[ResourceMatcher] Skipping image search for "${sceneId}" (resourceType=video)`);
+      return {
+        sceneId,
+        sceneText,
+        query,
+        source: null,
+        results: [],
+        skipped: true,
+        reason: 'resourceType preference: video'
+      };
+    }
     let results = [];
     let source = null;
 
@@ -708,6 +736,36 @@ class ResourceMatcher {
         rank: 1
       }]
     };
+  }
+
+  /**
+   * Extract sceneId from filename if it follows pattern: {sceneId}_{description}.ext
+   * Examples:
+   * - "scene_1_peaceful_nature.mp4" → "scene_1"
+   * - "item1_coding_workspace.jpg" → "item1"
+   * - "hook_amazing_intro.mp4" → "hook"
+   * @param {string} filename - Original filename
+   * @returns {string|null} Extracted sceneId or null
+   */
+  _extractSceneIdFromFilename(filename) {
+    const nameWithoutExt = path.basename(filename, path.extname(filename));
+
+    // Try common scene patterns
+    const patterns = [
+      /^(scene_\d+)/i,        // scene_1, scene_2, etc.
+      /^(item\d+)/i,          // item1, item2, etc.
+      /^(hook|intro|cta|outro)/i,  // common scene names
+      /^([a-z0-9_-]+?)_/i     // anything before first underscore
+    ];
+
+    for (const pattern of patterns) {
+      const match = nameWithoutExt.match(pattern);
+      if (match) {
+        return match[1].toLowerCase();
+      }
+    }
+
+    return null;
   }
 
   /**

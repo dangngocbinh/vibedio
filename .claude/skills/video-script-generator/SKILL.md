@@ -264,20 +264,61 @@ quality_report = checker.full_quality_check({
 
 ---
 
-### 6. Script Generator (for topic-based videos)
+### 6. Script Generator CLI
 
-**Location**: `demo.py`
+**⚠️ IMPORTANT: Có 2 files khác nhau:**
+
+#### A. `demo.py` - Demo/Testing Only
+**Purpose**: Chạy demo với hardcoded examples, không nhận command-line parameters.
+
+```bash
+# Chỉ để test/demo - không dùng cho production
+python3 .claude/skills/video-script-generator/demo.py
+```
+
+Output: In ra console, không lưu file.
+
+---
+
+#### B. `cli.py` - Production CLI Tool ⭐ **USE THIS**
+
+**Purpose**: Generate script từ topic với full customization.
 
 **CLI Usage**:
 ```bash
-# Generate script for topic-based videos
-python3 demo.py \
+# ✅ RECOMMENDED - Để CLI tự động tạo path từ topic
+python3 .claude/skills/video-script-generator/cli.py \
+  --topic "5 cách học tiếng Anh hiệu quả" \
+  --type listicle \
+  --duration 60 \
+  --ratio 9:16
+# → Auto-generates: public/projects/5-cach-hoc-tieng-anh-hieu-qua/script.json
+
+# ✅ ALSO CORRECT - Specify custom output path
+python3 .claude/skills/video-script-generator/cli.py \
   --topic "5 cách học tiếng Anh hiệu quả" \
   --type listicle \
   --duration 60 \
   --ratio 9:16 \
-  --output public/projects/my-video/script.json
+  --output public/projects/my-custom-name/script.json
+
+# ❌ WRONG - Dùng demo.py với parameters (demo.py không nhận params)
+python3 .claude/skills/video-script-generator/demo.py \
+  --topic "..." \
+  --type listicle
+# Error: demo.py doesn't accept command-line arguments
 ```
+
+**Parameters**:
+- `--topic` **(required)**: Chủ đề video
+- `--type` (optional): Video type (facts, listicle, story, etc.) - default: `facts`
+- `--ratio` (optional): Aspect ratio (9:16, 16:9, 1:1, 4:5) - default: `9:16`
+- `--duration` (optional): Target duration in seconds - default: `60`
+- `--output` (optional): Output file path - default: auto-generated from topic
+  - Auto-generation: `public/projects/{slugified-topic}/script.json`
+  - Example: Topic "5 sự thật về TP.HCM" → `public/projects/5-su-that-ve-tp-hcm/script.json`
+
+---
 
 **Python API**:
 ```python
@@ -373,8 +414,22 @@ Skill trả về JSON với cấu trúc sau:
     "voiceId": "suggested-voice-id",
     "speed": 1.0,
     "styleInstruction": "Trầm – ấm – chậm – rất đời",
-    "notes": "Male voice, professional tone. styleInstruction chỉ hoạt động với Gemini provider để tùy chỉnh cảm xúc và phong cách giọng đọc."
+    "notes": "Male voice, professional tone. styleInstruction chỉ hoạt động với Gemini provider."
   },
+
+  ### ⚠️ AGENT RESPONSIBILITY: VOICE OPTIMIZATION
+  Sau khi tạo file `script.json` bằng CLI, Agent **PHẢI** kiểm tra lại phần `voice` config:
+  1. **Check Available Keys**: Kiểm tra file `.env` xem có `ELEVENLABS_API_KEY` hay `GEMINI_API_KEY` không.
+  2. **Optimize Provider**: Nếu CLI default ra `openai` mà user có key xịn hơn, hãy **SỬA TRỰC TIẾP** file `script.json` để dùng provider tốt nhất.
+  
+  **Priority Queue (Chất lượng giảm dần)**:
+  1. 🥇 **ElevenLabs** (Nếu có `ELEVENLABS_API_KEY`) - *Best Emotion & Native Timestamps (Word-level alignment)*
+  2. 🥈 **Gemini** (Nếu có `GEMINI_API_KEY`) - *Good & Cheap (Timestamps via Whisper)*
+  3. 🥉 **OpenAI** (Fallback) - *Standard (Timestamps via Whisper)*
+  4. 🇻🇳 **Vbee** (Chỉ dùng cho tiếng Việt nếu user yêu cầu cụ thể)
+  
+  **Ví dụ**:
+  Nếu `script.json` đang là `"provider": "openai"` nhưng Agent thấy có `GEMINI_API_KEY`, hãy sửa lại thành `"provider": "gemini"` và chọn voiceId tương ứng (vd: `Puck`, `Charon`).
   "music": {
     "query": "ambient calm peaceful",
     "mood": "calm|energetic|dramatic|uplifting|dark|happy|sad|mysterious",

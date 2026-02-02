@@ -27,19 +27,29 @@ class AssetResolver:
         self.project_dir = Path(project_dir).resolve()
         self.project_root = self.project_dir.parent.parent  # Go up to automation-video root
 
-    def resolve_voice_path(self) -> str:
+    def resolve_voice_path(self, voice_data: Optional[Dict[str, Any]] = None) -> str:
         """
         Resolve voice audio path (voice.mp3, voice.m4a, etc.).
         
+        Args:
+            voice_data: Optional parsed voice.json content
+            
         Returns:
             Relative path to the voice file
         """
-        # Check common extensions
+        # 1. Check audioFile in voice_data
+        if voice_data and "audioFile" in voice_data:
+            audio_file = voice_data["audioFile"]
+            # Check if file exists relative to project dir
+            if (self.project_dir / audio_file).exists():
+                return audio_file
+                
+        # 2. Check common extensions in root
         for ext in ['.mp3', '.m4a', '.wav', '.ogg']:
             if (self.project_dir / f"voice{ext}").exists():
                 return f"voice{ext}"
                 
-        # Fallback to .mp3 as default
+        # 3. Fallback to .mp3 as default
         return "voice.mp3"
 
     def resolve_resource_url(self, resource: Dict[str, Any]) -> str:
@@ -212,7 +222,7 @@ class AssetResolver:
 
         return None
 
-    def resolve_video_from_scene(self, scene_id: str, resources: Dict[str, Any]) -> Optional[str]:
+    def resolve_video_from_scene(self, scene_id: str, resources: Dict[str, Any], prefer_type: str = 'auto') -> Optional[str]:
         """
         Find and resolve video URL for a specific scene ID.
 
@@ -221,10 +231,15 @@ class AssetResolver:
         Args:
             scene_id: Scene identifier (e.g., "hook", "item1")
             resources: Parsed resources.json content
+            prefer_type: Preferred resource type ('video', 'image', or 'auto')
 
         Returns:
             Video URL/path or None if not found
         """
+        # Skip if preference is image-only
+        if prefer_type == 'image':
+            return None
+
         # Check pinned resources FIRST (user-provided assets take priority)
         pinned = self.resolve_pinned_from_scene(scene_id, resources)
         if pinned:
@@ -250,7 +265,7 @@ class AssetResolver:
 
         return None
 
-    def resolve_image_from_scene(self, scene_id: str, resources: Dict[str, Any]) -> Optional[str]:
+    def resolve_image_from_scene(self, scene_id: str, resources: Dict[str, Any], prefer_type: str = 'auto') -> Optional[str]:
         """
         Find and resolve image URL for a specific scene ID.
 
@@ -259,10 +274,15 @@ class AssetResolver:
         Args:
             scene_id: Scene identifier
             resources: Parsed resources.json content
+            prefer_type: Preferred resource type ('video', 'image', or 'auto')
 
         Returns:
             Image URL/path or None if not found
         """
+        # Skip if preference is video-only
+        if prefer_type == 'video':
+            return None
+
         # Check pinned resources FIRST (user-provided assets take priority)
         pinned = self.resolve_pinned_from_scene(scene_id, resources)
         if pinned:

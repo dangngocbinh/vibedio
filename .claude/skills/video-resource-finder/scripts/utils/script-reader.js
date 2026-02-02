@@ -48,7 +48,7 @@ class ScriptReader {
         continue;
       }
 
-      const { type, query, style, path, url, description } = scene.visualSuggestion;
+      const { type, query, style, path, url, description, resourceType } = scene.visualSuggestion;
 
       // Pinned resources: user-provided local path or URL
       if (type === 'pinned') {
@@ -61,6 +61,7 @@ class ScriptReader {
             description: description || '',
             style: style || null,
             query: query || null, // fallback search query
+            resourceType: resourceType || 'auto', // preferred asset type
             duration: scene.duration || 5
           });
         }
@@ -72,6 +73,7 @@ class ScriptReader {
         sceneText: scene.text,
         query: query,
         style: style || null,
+        resourceType: resourceType || 'auto', // 'image', 'video', or 'auto'
         referenceImages: scene.visualSuggestion.referenceImages || scene.visualSuggestion.references || [],
         duration: scene.duration || 5
       };

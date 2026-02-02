@@ -1,0 +1,10 @@
+# Python dependencies for video-resource-finder skill
+
+# Web image search (package renamed from duckduckgo-search to ddgs)
+ddgs>=1.0.0
+
+# HTTP requests and downloads
+requests>=2.31.0
+
+# Optional: for better performance
+urllib3>=2.0.0

@@ -47,6 +47,35 @@ def log_info(msg):
 def log_error(msg):
     print(f"❌ [Vibe Dio Error]: {msg}")
 
+def log_step_start(step_num: int, step_name: str, description: str):
+    """Log khi bắt đầu một bước trong pipeline"""
+    print("\n" + "=" * 60)
+    print(f"📍 BƯỚC {step_num}: {step_name.upper()}")
+    print(f"📝 Mô tả: {description}")
+    print("=" * 60)
+
+def log_action(action: str, detail: str = ""):
+    """Log một action cụ thể đang thực hiện"""
+    msg = f"⚙️  Đang thực hiện: {action}"
+    if detail:
+        msg += f"\n   └─ {detail}"
+    print(msg)
+
+def log_output(output_type: str, path: str, info: str = ""):
+    """Log kết quả output của một bước"""
+    msg = f"📦 Output {output_type}: {path}"
+    if info:
+        msg += f"\n   └─ {info}"
+    print(msg)
+
+def log_step_complete(step_name: str, duration: str = ""):
+    """Log khi hoàn thành một bước"""
+    msg = f"✅ Hoàn thành: {step_name}"
+    if duration:
+        msg += f" ({duration})"
+    print(msg)
+    print("")
+
 # --- STATE MANAGEMENT ---
 class ProductionState:
     DEFAULT_SCHEMA = {
@@ -199,9 +228,30 @@ def run_step_voice(project_dir: Path):
         # The script creates voice.json next to output
         src_json = output_audio.with_suffix('.json')
         dest_json = project_dir / "voice.json"
+        
         if src_json.exists():
-            shutil.copy(src_json, dest_json)
-            
+            # Fix path issue: Ensure audioFile in json is relative to project root
+            try:
+                with open(src_json, 'r', encoding='utf-8') as f:
+                    voice_data = json.load(f)
+                
+                # Update audioFile to relative path
+                # output_audio is absolute, we want "resources/audio/filename.mp3"
+                relative_audio_path = f"resources/audio/{output_audio.name}"
+                voice_data["audioFile"] = relative_audio_path
+                
+                # Write to dest_json
+                with open(dest_json, 'w', encoding='utf-8') as f:
+                    json.dump(voice_data, f, indent=2, ensure_ascii=False)
+                    
+                # Cleanup source json
+                os.remove(src_json)
+                
+            except Exception as e:
+                log_error(f"Lỗi khi xử lý voice.json: {e}")
+                # Fallback copy if something fails
+                shutil.copy(src_json, dest_json)
+
         log_info("✅ Giọng đọc đã tạo xong: resources/audio/voice.mp3")
     except subprocess.CalledProcessError:
         log_error("Lỗi khi tạo voice!")
@@ -269,6 +319,40 @@ def run_step_editor(project_dir: Path):
         log_error("Lỗi khi dựng phim!")
         sys.exit(1)
 
+def open_remotion_studio(project_name: str):
+    log_info("🎬 Đang mở Remotion Studio...")
+    
+    # 1. Check if Remotion is running on port 3000
+    try:
+        # Simple netcat check (mac/linux)
+        subprocess.run(["nc", "-z", "localhost", "3000"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        is_running = True
+    except subprocess.CalledProcessError:
+        is_running = False
+        
+    if not is_running:
+        log_info("🚀 Remotion Studio chưa chạy. Đang khởi động...")
+        # Start in background using Popen
+        # Note: This will not survive if direct.py script exits and kills children, 
+        # but for many setups it works, or we assume agent runtime keeps it.
+        # However, for robustness, we just instruct user or launch separate terminal if possible.
+        # Since we are in an agent environment, we try Popen.
+        log_info("⚠️  LƯU Ý: Nếu server không tự mở, hãy chạy lệnh: npm start")
+        subprocess.Popen(["npm", "start"], cwd=BASE_DIR, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        import time
+        time.sleep(5) # Wait for it to warmup
+        
+    # 2. Open Browser
+    url = "http://localhost:3000"
+    log_info(f"👉 Vui lòng kiểm tra video tại: {url}")
+    
+    # Try to open browser (may not work in headless agent, but good for local users)
+    import webbrowser
+    try:
+        webbrowser.open(url)
+    except:
+        pass
+
 
 # --- MAIN CLI ---
 def main():
@@ -325,6 +409,7 @@ def main():
             state.update_step("editor", "completed", "project.otio")
             
             log_info("🎉 Quy trình hoàn tất! Anh/chị có thể render video ngay.")
+            open_remotion_studio(args.project)
             
         elif args.workflow == "multi-video-edit":
             # 1. Setup (Import/Extraction/Transcription)
@@ -344,6 +429,7 @@ def main():
              run_step_editor(proj_dir)
              state.update_step("editor", "completed", "project.otio")
              log_info("🎉 Quy trình hoàn tất! Anh/chị có thể render video ngay.")
+             open_remotion_studio(args.project)
             
     elif args.command == "status":
         proj_dir = PROJECTS_DIR / args.project
