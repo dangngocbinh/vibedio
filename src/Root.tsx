@@ -161,82 +161,17 @@ export const RemotionRoot: React.FC = () => {
       />
 
 
-      {/* Gallery Previews (Direct Render) */}
+      {/* Library Dashboard */}
       <Composition
-        id="Lower-Third-Gallery"
+        id="Library"
         component={HtmlGalleryViewer as any}
         durationInFrames={1}
         fps={30}
         width={1920}
         height={1080}
         defaultProps={{
-          htmlFile: 'docs/lower-third-gallery.html',
-          title: 'Lower Third Gallery'
-        }}
-      />
-
-      <Composition
-        id="Call-To-Action-Gallery"
-        component={HtmlGalleryViewer as any}
-        durationInFrames={1}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          htmlFile: 'docs/call-to-action-gallery.html',
-          title: 'Call To Action Gallery'
-        }}
-      />
-
-      <Composition
-        id="Fullscreen-Title-Gallery"
-        component={HtmlGalleryViewer as any}
-        durationInFrames={1}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          htmlFile: 'docs/fullscreen-title-gallery.html',
-          title: 'Fullscreen Title Gallery'
-        }}
-      />
-
-      <Composition
-        id="Sticker-Gallery"
-        component={HtmlGalleryViewer as any}
-        durationInFrames={1}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          htmlFile: 'docs/sticker-gallery.html',
-          title: 'Sticker Gallery'
-        }}
-      />
-
-      <Composition
-        id="Layer-Effect-Gallery"
-        component={HtmlGalleryViewer as any}
-        durationInFrames={1}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          htmlFile: 'docs/layer-effect-gallery.html',
-          title: 'Layer Effect Gallery'
-        }}
-      />
-
-      <Composition
-        id="SFX-Gallery"
-        component={HtmlGalleryViewer as any}
-        durationInFrames={1}
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          htmlFile: 'docs/sfx-gallery.html',
-          title: 'SFX Audio Gallery'
+          htmlFile: 'docs/index.html',
+          title: 'Component Library'
         }}
       />
     </>

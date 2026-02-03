@@ -4,289 +4,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sticker Gallery - Thư viện Sticker thông minh</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
-        rel="stylesheet">
+    <title>Sticker Templates (Top 10 Free Items)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0b0f1a;
-            --card-bg: #161e31;
-            --primary: #f59e0b;
-            --secondary: #ef4444;
-            --success: #10b981;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #a855f7;
             --text: #f8fafc;
-            --text-muted: #94a3b8;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
 
         .header {
-            padding: 60px 20px;
             text-align: center;
-            background: radial-gradient(circle at top, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+            margin-bottom: 40px;
         }
 
-        h1 {
-            font-weight: 800;
-            font-size: 3rem;
-            margin: 0 0 10px 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.02em;
-        }
-
-        .guide-section {
-            max-width: 900px;
-            margin: -30px auto 50px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
-
-        .guide-step {
-            text-align: center;
-        }
-
-        .step-num {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            margin: 0 auto 15px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto 100px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 0 20px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
         }
 
         .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            text-align: center;
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #334155;
+            transition: transform 0.2s;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             border-color: var(--primary);
         }
 
-        .sticker-preview {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+        .preview-box {
+            height: 100px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
         }
 
-        .preview-image {
-            width: 100%;
-            height: 120px;
-            object-fit: contain;
-            border-radius: 12px;
-            margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-        }
-
-        .name {
-            font-weight: 700;
-            font-size: 1rem;
+        .info .name {
+            font-weight: 600;
+            font-size: 0.75rem;
             color: #fff;
+            margin-bottom: 4px;
+            text-align: center;
         }
 
-        .tag {
+        .info .id {
+            font-family: monospace;
             font-size: 0.65rem;
             color: var(--primary);
-            font-weight: 800;
-            text-transform: uppercase;
+            background: rgba(168, 85, 247, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .prompt-box {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            text-align: left;
-        }
-
-        .prompt-label {
-            font-size: 0.6rem;
-            color: var(--primary);
-            font-weight: 800;
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: bold;
             margin-bottom: 4px;
         }
 
-        .prompt-text {
-            font-style: italic;
-            font-size: 0.8rem;
-            color: #cbd5e1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .badge-lottie {
+            background: #10b981;
+            color: #fff;
         }
 
-        .toast {
+        .badge-static {
+            background: #6366f1;
+            color: #fff;
+        }
+
+        .btn-back {
             position: fixed;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--success);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: 700;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             z-index: 1000;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s;
         }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .section-title {
-            grid-column: 1 / -1;
-            margin-top: 40px;
-            margin-bottom: 10px;
-            border-left: 4px solid var(--primary);
-            padding-left: 15px;
-            font-size: 1.4rem;
-            font-weight: 800;
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-4px);
         }
     </style>
 </head>
 
 <body>
-
-    <div id="toast" class="toast">✨ Đã sao chép!</div>
-
+    <a href="index.html" class="btn-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Quay lại
+    </a>
     <div class="header">
-        <h1>Sticker & Emoji Library</h1>
-        <p style="color: var(--text-muted)">Hàng trăm Sticker chuyển động Lottie và Emoji chất lượng cao.</p>
+        <h1>Sticker Free Templates</h1>
+        <p>Top 10 Popular Stickers</p>
     </div>
 
-    <div class="guide-section">
-        <div class="guide-step">
-            <div class="step-num">1</div>
-            <h3>Tìm Sticker</h3>
-            <p>Chọn mẫu sticker hoặc hiệu ứng chuyển động bạn thích.</p>
-        </div>
-        <div class="guide-step">
-            <div class="step-num">2</div>
-            <h3>Copy Prompt</h3>
-            <p>Bấm vào ô câu lệnh mẫu để copy cho AI.</p>
-        </div>
-        <div class="guide-step">
-            <div class="step-num">3</div>
-            <h3>Tùy chỉnh vị trí</h3>
-            <p>AI sẽ tự động đặt sticker lên nội dung video của bạn.</p>
-        </div>
-    </div>
+    <div class="grid" id="gallery"></div>
 
-    <div class="container" id="gallery"></div>
+
 
     <script>
-        const stickers = [
-            {
-                category: '🔥 Sticker Chuyển Động (Lottie Animation)',
-                items: [
-                    { id: 'lottie-fire', name: 'Ngọn lửa', emoji: '🔥', tag: 'Hot', image: 'assets/stickers/lottie-fire.gif' },
-                    { id: 'lottie-rocket', name: 'Tên lửa', emoji: '🚀', tag: 'Speed', image: 'assets/stickers/lottie-rocket.gif' },
-                    { id: 'lottie-heart-eyes', name: 'Mắt trái tim', emoji: '😍', tag: 'Love', image: 'assets/stickers/lottie-heart-eyes.gif' },
-                    { id: 'lottie-party', name: 'Tiệc tùng', emoji: '🥳', tag: 'Fun', image: 'assets/stickers/lottie-party.gif' },
-                    { id: 'lottie-money', name: 'Tiền bay', emoji: '💰', tag: 'Rich', image: 'assets/stickers/lottie-money.gif' },
-                    { id: 'lottie-hundred', name: '100 điểm', emoji: '💯', tag: 'Top', image: 'assets/stickers/lottie-hundred.gif' },
-                    { id: 'lottie-thumbs-up', name: 'Like', emoji: '👍', tag: 'Social', image: 'assets/stickers/lottie-thumbs-up.gif' },
-                    { id: 'lottie-mind-blown', name: 'Bất ngờ', emoji: '🤯', tag: 'Shock', image: 'assets/stickers/lottie-mind-blown.gif' }
-                ]
-            },
-            {
-                category: '😊 Cảm Xúc & Phản Hồi (Static)',
-                items: [
-                    { id: 'face-laughing', name: 'Cười lớn', emoji: '😂', tag: 'Funny', image: 'assets/stickers/face-laughing.png' },
-                    { id: 'face-cool', name: 'Ngầu', emoji: '😎', tag: 'Cool', image: 'assets/stickers/face-cool.png' },
-                    { id: 'face-thinking', name: 'Suy nghĩ', emoji: '🤔', tag: 'Logic', image: 'assets/stickers/face-thinking.png' },
-                    { id: 'shush', name: 'Giữ bí mật', emoji: '🤫', tag: 'Secret', image: 'assets/stickers/shush.png' }
-                ]
-            }
-        ];
+        const stickerEmojis = {
+            'lottie-heart-eyes': '😍',
+            'lottie-fire': '🔥',
+            'lottie-party': '🎉',
+            'lottie-rocket': '🚀',
+            'face-laughing': '😂',
+            'face-cool': '😎',
+            'hand-wave': '👋',
+            'heart-red': '❤️',
+            'check-mark': '✅',
+            'warning': '⚠️'
+        };
 
-        const gallery = document.getElementById('gallery');
-        const toast = document.getElementById('toast');
+        function createCard(id) {
+            const emoji = stickerEmojis[id];
+            const type = id.startsWith('lottie-') ? 'lottie' : 'static';
+            const displayName = id.replace(/^(lottie-|face-|heart-|hand-)/, '').split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-        function notify(msg) {
-            toast.innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            return `
+                <div class="card">
+                    <div class="preview-box">
+                        <div style="font-size: 60px;">${emoji}</div>
+                    </div>
+                    <div class="info">
+                        <div style="text-align: center; margin-bottom: 4px;">
+                            <span class="badge ${type === 'lottie' ? 'badge-lottie' : 'badge-static'}">
+                                ${type === 'lottie' ? 'ANIMATED' : 'STATIC'}
+                            </span>
+                        </div>
+                        <div class="name">${displayName}</div>
+                        <div class="id">${id}</div>
+                    </div>
+                </div>
+            `;
         }
 
-        stickers.forEach(section => {
-            const title = document.createElement('div');
-            title.className = 'section-title';
-            title.innerText = section.category;
-            gallery.appendChild(title);
-
-            section.items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const prompt = `Thêm sticker "${item.name}" (template: ${item.id}) tại [vị trí] từ giây thứ [giây]. Dùng hiệu ứng [pop/elastic/shake].`;
-
-                const imageHtml = item.image
-                    ? `<img src="${item.image}" class="preview-image" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
-                       <div class="sticker-preview" style="display: none">${item.emoji}</div>`
-                    : `<div class="sticker-preview">${item.emoji}</div>`;
-
-                card.innerHTML = `
-                ${imageHtml}
-                <div class="tag">${item.tag}</div>
-                <div class="info">
-                    <div class="name">${item.name}</div>
-                </div>
-                
-                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify('✨ Đã copy câu lệnh Prompt!')">
-                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
-                    <div class="prompt-text">"${prompt}"</div>
-                </div>
-                <div style="font-size: 0.65rem; color: var(--text-muted)">ID: ${item.id}</div>
-            `;
-                gallery.appendChild(card);
-            });
+        const gallery = document.getElementById('gallery');
+        Object.keys(stickerEmojis).forEach(id => {
+            gallery.innerHTML += createCard(id);
         });
     </script>
-
 </body>
 
 </html>

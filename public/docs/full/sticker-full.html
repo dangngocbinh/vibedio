@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticker Templates (160+ Items)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #a855f7;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            color: #fff;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #334155;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .preview-box {
+            height: 100px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-box img {
+            max-width: 70px;
+            max-height: 70px;
+            object-fit: contain;
+        }
+
+        .info .name {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: #fff;
+            margin-bottom: 4px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .info .id {
+            font-family: monospace;
+            font-size: 0.65rem;
+            color: var(--primary);
+            background: rgba(168, 85, 247, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .badge-lottie {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .badge-static {
+            background: #6366f1;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Sticker Templates</h1>
+        <p>160+ Animated & Static Items</p>
+        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
+            <div><span class="badge badge-lottie">LOTTIE</span> 60 Animated</div>
+            <div><span class="badge badge-static">STATIC</span> 100+ Images</div>
+        </div>
+    </div>
+
+    <div class="section-title">🎬 Lottie Animations (60 items)</div>
+    <div class="grid" id="lottie-gallery"></div>
+
+    <div class="section-title">🖼️ Static Images (100+ items)</div>
+    <div class="grid" id="static-gallery"></div>
+
+    <script>
+        // Using native emoji Unicode for reliable display
+        const stickerEmojis = {
+            // LOTTIE (60 items)
+            'lottie-heart-eyes': '😍',
+            'lottie-laughing': '😂',
+            'lottie-party': '🎉',
+            'lottie-rocket': '🚀',
+            'lottie-fire': '🔥',
+            'lottie-stars': '🤩',
+            'lottie-thinking': '🤔',
+            'lottie-mind-blown': '🤯',
+            'lottie-sweat': '😅',
+            'lottie-cool': '😎',
+            'lottie-cry': '😢',
+            'lottie-angry': '😡',
+            'lottie-hug': '🤗',
+            'lottie-sleep': '😴',
+            'lottie-wink': '😉',
+            'lottie-kiss': '😘',
+            'lottie-fear': '😱',
+            'lottie-shush': '🤫',
+            'lottie-drool': '🤤',
+            'lottie-money': '🤑',
+            'lottie-nerd': '🤓',
+            'lottie-ghost': '👻',
+            'lottie-alien': '👽',
+            'lottie-robot': '🤖',
+            'lottie-cat': '😺',
+            'lottie-dog': '🐶',
+            'lottie-unicorn': '🦄',
+            'lottie-target': '🎯',
+            'lottie-bulb': '💡',
+            'lottie-medal': '🥇',
+            'lottie-trophy': '🏆',
+            'lottie-clapper': '🎬',
+            'lottie-controller': '🎮',
+            'lottie-pizza': '🍕',
+            'lottie-burger': '🍔',
+            'lottie-coffee': '☕',
+            'lottie-cake': '🎂',
+            'lottie-balloon': '🎈',
+            'lottie-gift': '🎁',
+            'lottie-sun': '☀️',
+            'lottie-moon': '🌙',
+            'lottie-rainbow': '🌈',
+            'lottie-sparkles': '✨',
+            'lottie-check': '✅',
+            'lottie-cross': '❌',
+            'lottie-warning': '⚠️',
+            'lottie-hundred': '💯',
+            'lottie-thumbs-up': '👍',
+            'lottie-thumbs-down': '👎',
+            'lottie-clap': '👏',
+            'lottie-peace': '✌️',
+            'lottie-ok': '👌',
+            'lottie-muscle': '💪',
+            'lottie-wave': '👋',
+            'lottie-pray': '🙏',
+            'lottie-heart-red': '❤️',
+            'lottie-heart-broken': '💔',
+            'lottie-heart-blue': '💙',
+            'lottie-crown': '👑',
+            'lottie-gem': '💎',
+            'lottie-diamond': '💠',
+
+            // STATIC (100+ items)
+            'face-heart-eyes': '😍',
+            'face-laughing': '😂',
+            'face-wow': '😮',
+            'face-crying': '😢',
+            'face-angry': '😡',
+            'face-cool': '😎',
+            'face-thinking': '🤔',
+            'face-mind-blown': '🤯',
+            'face-partying': '🥳',
+            'face-sweating': '😅',
+            'face-clown': '🤡',
+            'face-scared': '😱',
+            'face-sleepy': '😴',
+            'face-devil': '😈',
+            'face-ghost': '👻',
+            'heart-red': '❤️',
+            'heart-broken': '💔',
+            'heart-fire': '❤️‍🔥',
+            'heart-sparkle': '💖',
+            'heart-blue': '💙',
+            'like-thumb': '👍',
+            'dislike-thumb': '👎',
+            'clap': '👏',
+            'fire': '🔥',
+            'hundred': '💯',
+            'check-mark': '✅',
+            'warning': '⚠️',
+            'money-bag': '💰',
+            'rocket': '🚀',
+            'trophy': '🏆',
+            'sun': '☀️',
+            'moon': '🌙',
+            'cloud-rain': '🌧️',
+            'lightning': '⚡',
+            'rainbow': '🌈',
+            'sparkles': '✨',
+            'flower-cherry': '🌸',
+            'tree-palm': '🌴',
+            'pizza': '🍕',
+            'burger': '🍔',
+            'coffee': '☕',
+            'beer': '🍺',
+            'cake': '🎂',
+            'confetti-ball': '🎊',
+            'balloon': '🎈',
+            'gift': '🎁',
+            'target': '🎯',
+            'bulb': '💡',
+            'magnifier': '🔍',
+            'controller': '🎮',
+            'megaphone': '📣',
+            'medal-gold': '🥇',
+            'cat-smile': '😺',
+            'dog-face': '🐶',
+            'unicorn': '🦄',
+            'alien': '👽',
+            'robot': '🤖',
+            'monkey-no-see': '🙈',
+            'monkey-no-hear': '🙉',
+            'monkey-no-speak': '🙊',
+            'hand-peace': '✌️',
+            'hand-rock': '🤘',
+            'hand-ok': '👌',
+            'hand-muscle': '💪',
+            'hand-wave': '👋',
+            'hand-pray': '🙏',
+            'hand-pointed-up': '☝️',
+            'hand-fist': '✊',
+            'gold-cup': '🏆',
+            'soccer-ball': '⚽',
+            'basketball': '🏀',
+            'video-game': '🎮',
+            'microphone': '🎤',
+            'painting': '🎨',
+            'movie-clapper': '🎬',
+            'sparkling-heart': '💖',
+            'lucky-cat': '😺',
+            'potted-plant': '🪴',
+            'diamond': '💎',
+            'bomb': '💣',
+            'poop': '💩',
+            'money-wings': '💸',
+            'gem-stone': '💎',
+            'face-zipper': '🤐',
+            'face-nerd': '🤓',
+            'face-mask': '😷',
+            'face-shush': '🤫',
+            'face-drool': '🤤',
+            'face-lying': '🤥',
+            'face-vomit': '🤮',
+            'face-money': '🤑',
+            'skull': '💀',
+            'zombie': '🧟'
+        };
+
+        function createCard(id, type) {
+            const emoji = stickerEmojis[id];
+
+            const displayName = id.replace(/^(lottie-|face-|heart-|hand-)/, '')
+                .split('-')
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+
+            return `
+                <div class="card">
+                    <div class="preview-box">
+                        <div style="font-size: 60px;">${emoji}</div>
+                    </div>
+                    <div class="info">
+                        <div style="text-align: center; margin-bottom: 4px;">
+                            <span class="badge ${type === 'lottie' ? 'badge-lottie' : 'badge-static'}">
+                                ${type === 'lottie' ? 'ANIMATED' : 'STATIC'}
+                            </span>
+                        </div>
+                        <div class="name">${displayName}</div>
+                        <div class="id">${id}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Lottie gallery
+        const lottieGallery = document.getElementById('lottie-gallery');
+        const lottieIds = Object.keys(stickerEmojis).filter(id => id.startsWith('lottie-'));
+        lottieIds.forEach(id => {
+            lottieGallery.innerHTML += createCard(id, 'lottie');
+        });
+
+        // Render Static gallery
+        const staticGallery = document.getElementById('static-gallery');
+        const staticIds = Object.keys(stickerEmojis).filter(id => !id.startsWith('lottie-'));
+        staticIds.forEach(id => {
+            staticGallery.innerHTML += createCard(id, 'static');
+        });
+    </script>
+</body>
+
+</html>

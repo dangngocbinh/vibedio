@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullscreen Title Templates (40 Styles)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;700;800;900&family=Playfair+Display:ital,wght@1,700&family=Bungee&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #f59e0b;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .preview-box {
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info .name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .info .id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(245, 158, 11, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Fullscreen Title Templates</h1>
+        <p>40 Unique Visual Styles</p>
+    </div>
+    <div class="grid" id="gallery"></div>
+    <script>
+        const templates = [
+            'cinematic-intro', 'tech-hub', 'minimal-chapter', 'bold-statement',
+            'neon-night', 'gradient-dream', 'retro-pop', 'breaking-news-full',
+            'quote-hero', 'split-screen', 'space-odyssey', 'luxury-gold',
+            'nature-vibes', 'cyberpunk-glitch', 'vintage-film', 'liquid-motion',
+            'magazine-cover', 'industrial-steel', 'ink-wash', 'floating-bubbles',
+            'gaming-stream', 'architect-blueprint', 'comic-kaboom', 'holographic-lens',
+            'abstract-waves', 'midnight-mystery', 'paper-cutout', 'brush-stroke',
+            'strobe-light', 'sunset-serenity', 'urban-graffiti', 'frozen-pixel',
+            'royal-velvet', 'eco-green', 'data-stream', 'pop-shock',
+            'shadow-play', 'geometric-grid', 'watercolor-bleed', 'glassmorphism-pro'
+        ];
+
+        function getPreviewHtml(t) {
+            const w = "100%", h = "100%";
+            const center = "display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; width:" + w + "; height:" + h + ";";
+
+            switch (t) {
+                case 'cinematic-intro': return `<div style="${center} color:#fff;"><div style="font-size:8px; letter-spacing:8px; color:#aaa;">PRESENTS</div><div style="font-size:28px; letter-spacing:15px; font-weight:300; margin-top:10px;">TITLE</div><div style="width:80px; height:1px; background:#fff; margin:15px 0;"></div></div>`;
+
+                case 'tech-hub': return `<div style="width:${w}; height:${h}; display:flex; align-items:center; padding-left:40px;"><div style="border-left:4px solid #0f0; padding-left:15px; color:#0f0; font-family:monospace;"><div style="font-size:10px;">&gt; SYSTEM_BOOT</div><div style="font-size:24px; font-weight:bold;">TITLE_</div></div></div>`;
+
+                case 'minimal-chapter': return `<div style="${center} background:#f8fafc; color:#000;"><div style="font-size:50px; font-weight:900; line-height:0.8;">01</div><div style="font-size:18px; font-weight:300; margin-top:10px;">CHAPTER</div></div>`;
+
+                case 'bold-statement': return `<div style="${center} color:#fff;"><div style="background:#fff; color:#000; padding:5px 20px; font-weight:bold; font-size:12px; margin-bottom:10px;">ATTENTION</div><div style="font-size:32px; font-weight:900; line-height:0.9;">BOLD<br>TITLE</div></div>`;
+
+                case 'neon-night': return `<div style="${center}"><div style="border:3px solid #f0f; padding:15px 40px; color:#fff; text-shadow:0 0 10px #f0f; box-shadow:0 0 15px #f0f; font-size:24px; font-weight:900;">NEON</div></div>`;
+
+                case 'gradient-dream': return `<div style="${center}"><div style="font-size:32px; font-weight:900; background:linear-gradient(to right, #ff9a9e, #fecfef, #99f2c8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">GRADIENT</div></div>`;
+
+                case 'retro-pop': return `<div style="${center}"><div style="background:#ff0; border:6px solid #000; padding:15px 40px; transform:rotate(-5deg); box-shadow:15px 15px 0 #000;"><div style="color:#000; font-size:24px; font-weight:900;">POP!</div></div></div>`;
+
+                case 'breaking-news-full': return `<div style="width:${w}; height:${h}; display:flex; flex-direction:column;"><div style="flex:1; background:#c0392b; display:flex; align-items:center; justify-content:center;"><div style="color:#fff; font-size:28px; font-weight:900;">BREAKING</div></div><div style="background:#fff; padding:10px; text-align:center;"><div style="color:#c0392b; font-weight:bold; font-size:12px;">LIVE NEWS</div></div></div>`;
+
+                case 'quote-hero': return `<div style="${center} color:#fff;"><div style="font-size:80px; line-height:0.3; font-family:serif; color:#f59e0b;">"</div><div style="font-size:20px; font-style:italic; font-family:serif; margin:20px 0;">Quote Text</div><div style="font-size:12px; color:#f59e0b;">— Author</div></div>`;
+
+                case 'split-screen': return `<div style="width:${w}; height:${h}; display:flex;"><div style="flex:1; background:#fff; display:flex; align-items:center; justify-content:flex-end; padding-right:20px;"><div style="color:#000; font-size:24px; font-weight:900;">SPLIT</div></div><div style="flex:1; display:flex; align-items:center; padding-left:20px;"><div style="color:#fff; font-size:14px;">Screen</div></div></div>`;
+
+                case 'space-odyssey': return `<div style="${center} color:#fff;"><div style="font-size:32px; letter-spacing:20px; font-weight:100; text-shadow:0 0 20px rgba(255,255,255,0.8);">SPACE</div></div>`;
+
+                case 'luxury-gold': return `<div style="${center}"><div style="font-size:28px; font-weight:900; background:linear-gradient(45deg, #bf953f, #fcf6ba, #aa771c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:3px;">LUXURY</div><div style="width:150px; height:1px; background:#bf953f; margin:10px 0;"></div></div>`;
+
+                case 'nature-vibes': return `<div style="${center} background:#f0fdf4; color:#2d5a27;"><div style="font-size:28px; font-family:serif; font-style:italic;">Nature</div><div style="font-size:12px; letter-spacing:3px; color:#4a7c44; margin-top:5px;">VIBES</div></div>`;
+
+                case 'cyberpunk-glitch': return `<div style="${center} color:#fff;"><div style="font-size:32px; font-weight:900; text-shadow:3px 0 #f0f, -3px 0 #0ff;">GLITCH</div><div style="background:#f0f; color:#fff; padding:3px 10px; font-size:10px; font-weight:bold; margin-top:5px;">SYSTEM</div></div>`;
+
+                case 'vintage-film': return `<div style="${center} color:#4a3728; filter:sepia(1);"><div style="font-size:24px; font-family:serif; border-bottom:3px double #4a3728; padding:0 15px;">VINTAGE</div></div>`;
+
+                case 'liquid-motion': return `<div style="${center}"><div style="font-size:32px; font-weight:900; color:#fff; mix-blend-mode:difference;">LIQUID</div></div>`;
+
+                case 'magazine-cover': return `<div style="width:${w}; height:${h}; display:flex; flex-direction:column; padding:40px; align-items:flex-start;"><div style="font-size:60px; font-weight:900; line-height:0.8; letter-spacing:-5px;">MAG</div><div style="font-size:20px; font-weight:300;">AZINE</div><div style="margin-top:auto; border-top:8px solid #fff; padding-top:10px; font-size:14px; font-weight:900;">COVER</div></div>`;
+
+                case 'industrial-steel': return `<div style="width:${w}; height:${h}; display:flex; align-items:center; padding:30px;"><div style="border:2px solid #666; padding:20px; background:rgba(0,0,0,0.3);"><div style="color:#e0e0e0; font-size:24px; font-weight:900; letter-spacing:-1px;">STEEL</div><div style="width:80px; height:8px; background:#f59e0b; margin-top:5px;"></div></div></div>`;
+
+                case 'ink-wash': return `<div style="${center} color:#000;"><div style="font-size:28px; font-family:serif; filter:blur(0.3px);">Ink Wash</div><div style="border-top:1px solid #000; margin-top:5px; padding-top:5px; font-size:12px;">墨</div></div>`;
+
+                case 'floating-bubbles': return `<div style="${center} color:#fff;"><div style="font-size:28px; font-weight:300; letter-spacing:8px;">FLOAT</div><div style="display:flex; gap:10px; margin-top:10px;"><div style="width:8px; height:8px; border-radius:50%; background:#fff; opacity:0.5;"></div><div style="width:8px; height:8px; border-radius:50%; background:#fff; opacity:0.5;"></div><div style="width:8px; height:8px; border-radius:50%; background:#fff; opacity:0.5;"></div></div></div>`;
+
+                case 'gaming-stream': return `<div style="width:${w}; height:${h}; display:flex; align-items:center; justify-content:center;"><div style="border:3px solid #f05; padding:30px; position:relative; box-shadow:0 0 20px #f05;"><div style="position:absolute; top:-12px; left:30px; background:#f05; padding:3px 15px; font-size:10px; font-weight:bold; color:#fff;">LIVE</div><div style="color:#fff; font-size:28px; font-weight:900; font-style:italic; text-shadow:3px 3px 0 #000;">GAME</div></div></div>`;
+
+                case 'architect-blueprint': return `<div style="width:${w}; height:${h}; display:flex; flex-direction:column; justify-content:center; padding:40px; color:#fff; font-family:monospace; border:1px solid rgba(255,255,255,0.3);"><div style="font-size:10px; margin-bottom:20px;">DWG_NO: 404-B</div><div style="font-size:24px; font-weight:100;">BLUEPRINT</div><div style="width:100%; height:1px; background:rgba(255,255,255,0.5); margin:10px 0;"></div></div>`;
+
+                case 'comic-kaboom': return `<div style="${center}"><div style="background:#fc0; padding:20px 40px; border:8px solid #000; border-radius:40px; transform:rotate(-3deg);"><div style="color:#000; font-size:32px; font-weight:900; -webkit-text-stroke:2px #fff;">BOOM!!</div></div></div>`;
+
+                case 'holographic-lens': return `<div style="${center} color:#fff;"><div style="font-size:28px; font-weight:900; background:linear-gradient(90deg, #f0f, #0ff, #f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">HOLO</div></div>`;
+
+                case 'abstract-waves': return `<div style="${center} color:#fff;"><div style="font-size:28px; font-weight:900;">WAVE</div><div style="background:rgba(255,255,255,0.2); padding:3px 15px; border-radius:15px; font-size:12px; margin-top:10px;">Abstract</div></div>`;
+
+                case 'midnight-mystery': return `<div style="${center} color:#fff;"><div style="font-size:28px; font-weight:100; letter-spacing:12px; text-shadow:0 0 10px rgba(255,255,255,0.5);">MYSTERY</div><div style="font-size:12px; font-style:italic; opacity:0.5; margin-top:15px;">midnight</div></div>`;
+
+                case 'paper-cutout': return `<div style="${center}"><div style="color:#ff5722; font-size:32px; font-weight:900; text-shadow:4px 4px 0 #bf360c, 8px 8px 15px rgba(0,0,0,0.3);">PAPER</div></div>`;
+
+                case 'brush-stroke': return `<div style="${center}"><div style="background:#000; padding:15px 40px; transform:rotate(-2deg); box-shadow:8px 8px 0 rgba(0,0,0,0.1);"><div style="color:#fff; font-size:24px; font-family:serif;">Brush</div></div></div>`;
+
+                case 'strobe-light': return `<div style="${center} color:#fff;"><div style="font-size:36px; font-weight:900;">STROBE</div><div style="background:#fff; color:#000; padding:3px 15px; font-size:12px; font-weight:900; margin-top:5px;">LIGHT</div></div>`;
+
+                case 'sunset-serenity': return `<div style="${center} color:#fff;"><div style="font-size:28px; font-weight:200; letter-spacing:4px;">SUNSET</div><div style="width:250px; height:2px; background:linear-gradient(90deg, transparent, #fff, transparent); margin:10px 0;"></div><div style="font-size:12px; font-style:italic;">serenity</div></div>`;
+
+                case 'urban-graffiti': return `<div style="${center} transform:rotate(-3deg);"><div style="color:#fff; font-size:32px; font-weight:900; text-shadow:4px 4px 0 #f05, -4px -4px 0 #0ff;">URBAN</div><div style="color:#fe0; font-size:18px; font-family:cursive; margin-top:5px;">graffiti</div></div>`;
+
+                case 'frozen-pixel': return `<div style="${center}"><div style="color:#0ff; font-size:28px; font-weight:900; border:5px solid #0ff; padding:15px; text-shadow:0 0 15px #0ff;">FROZEN</div></div>`;
+
+                case 'royal-velvet': return `<div style="${center} color:#ffd700;"><div style="font-size:28px; font-family:serif; letter-spacing:8px;">ROYAL</div><div style="color:#fff; font-size:12px; letter-spacing:4px; opacity:0.8; margin-top:10px;">velvet</div></div>`;
+
+                case 'eco-green': return `<div style="${center}"><div style="border:3px solid #fff; border-radius:80px 0 80px 0; padding:30px 60px;"><div style="color:#fff; font-size:28px; font-weight:900;">ECO</div><div style="color:#8bc34a; font-size:12px; font-weight:bold; margin-top:5px;">GREEN</div></div></div>`;
+
+                case 'data-stream': return `<div style="${center} color:#0f0; font-family:monospace;"><div style="font-size:28px;">DATA_STREAM</div><div style="background:#0f0; color:#000; padding:2px 8px; font-size:12px; margin-top:10px;">ID: 0x4F2A</div></div>`;
+
+                case 'pop-shock': return `<div style="${center}"><div style="background:#fe3; padding:15px 30px; transform:rotate(-2deg) skewX(-8deg); border:8px solid #000;"><div style="color:#000; font-size:28px; font-weight:900;">POP!</div></div></div>`;
+
+                case 'shadow-play': return `<div style="${center}"><div style="color:rgba(0,0,0,0.8); font-size:32px; font-weight:900; text-shadow:0 0 1px rgba(255,255,255,0.5);">SHADOW</div></div>`;
+
+                case 'geometric-grid': return `<div style="${center}"><div style="border:1px solid #fff; padding:40px; position:relative;"><div style="position:absolute; top:-8px; left:-8px; width:15px; height:15px; border:1px solid #fff;"></div><div style="position:absolute; bottom:-8px; right:-8px; width:15px; height:15px; border:1px solid #fff;"></div><div style="color:#fff; font-size:24px; font-weight:900;">GRID</div></div></div>`;
+
+                case 'watercolor-bleed': return `<div style="${center} color:#fff;"><div style="font-size:28px; font-weight:100; text-shadow:0 0 15px rgba(255,100,100,0.5);">WATERCOLOR</div><div style="color:#ffccbc; font-size:12px; font-style:italic; margin-top:5px;">bleed</div></div>`;
+
+                case 'glassmorphism-pro': return `<div style="${center}"><div style="background:rgba(255,255,255,0.1); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:40px 70px; box-shadow:0 20px 35px rgba(0,0,0,0.2);"><div style="color:#fff; font-size:24px; font-weight:900;">GLASS</div><div style="color:rgba(255,255,255,0.7); font-size:12px; letter-spacing:4px; margin-top:10px;">morphism</div></div></div>`;
+
+                default: return `<div style="${center} color:#888;"><div style="font-size:20px;">${t}</div></div>`;
+            }
+        }
+
+        const gallery = document.getElementById('gallery');
+        templates.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="preview-box">${getPreviewHtml(t)}</div>
+                <div class="info">
+                    <div class="name">${t.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
+                    <div class="id">${t}</div>
+                </div>
+            `;
+            gallery.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Gallery Index</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #3b82f6;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 40px;
+            color: var(--primary);
+            font-size: 2.5rem;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .nav-card {
+            background: var(--card);
+            border: 1px solid #334155;
+            padding: 30px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #fff;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .count {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Full Component Galleries</h1>
+    <div class="nav-grid">
+        <a href="lower-third-full.html" class="nav-card">
+            <div class="icon">📺</div>
+            <div class="title">Lower Thirds</div>
+            <div class="count">40 Templates</div>
+        </a>
+        <a href="fullscreen-title-full.html" class="nav-card">
+            <div class="icon">🎬</div>
+            <div class="title">Fullscreen Titles</div>
+            <div class="count">40 Templates</div>
+        </a>
+        <a href="call-to-action-full.html" class="nav-card">
+            <div class="icon">🔔</div>
+            <div class="title">Call To Actions</div>
+            <div class="count">120+ Templates</div>
+        </a>
+        <a href="layer-effect-full.html" class="nav-card">
+            <div class="icon">✨</div>
+            <div class="title">Layer Effects</div>
+            <div class="count">50 Items</div>
+        </a>
+        <a href="sticker-full.html" class="nav-card">
+            <div class="icon">😊</div>
+            <div class="title">Stickers</div>
+            <div class="count">150+ Items</div>
+        </a>
+    </div>
+</body>
+
+</html>

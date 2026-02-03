@@ -4,365 +4,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lower Third Gallery - Thiết kế Tiêu đề góc dưới</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+    <title>Lower Third Free Templates (Top 10)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600;700;800;900&family=Playfair+Display:ital,wght@1,700&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --bg: #0b0f1a;
-            --card-bg: #161e31;
-            --primary: #3498db;
-            --secondary: #2ecc71;
-            --success: #10b981;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #38bdf8;
             --text: #f8fafc;
-            --text-muted: #94a3b8;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
 
         .header {
-            padding: 60px 20px;
             text-align: center;
-            background: radial-gradient(circle at top, rgba(52, 152, 219, 0.15) 0%, transparent 70%);
+            margin-bottom: 40px;
         }
 
-        h1 {
-            font-weight: 800;
-            font-size: 3rem;
-            margin: 0 0 10px 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.02em;
-        }
-
-        .guide-section {
-            max-width: 900px;
-            margin: -30px auto 50px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
         }
 
-        .guide-step {
-            text-align: center;
-        }
-
-        .step-num {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            margin: 0 auto 15px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto 100px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-            padding: 0 20px;
-        }
-
         .card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.4s ease;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-        }
-
-        .name {
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: #fff;
-        }
-
-        .tag {
-            font-size: 0.7rem;
-            color: var(--primary);
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
         }
 
         .preview-box {
-            width: 100%;
-            height: 180px;
-            background-color: #0f1115;
-            /* Dark preview bg */
-            border-radius: 12px;
+            height: 140px;
+            background: #000;
+            border-radius: 8px;
             margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
             overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .info .name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .info .id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .btn-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            justify-content: center;
-            /* Grid background effect */
-            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        .prompt-text {
-            font-style: italic;
-            font-size: 0.85rem;
-            color: #cbd5e1;
-            line-height: 1.4;
-        }
-
-        .toast {
-            position: fixed;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--success);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: 700;
+            gap: 8px;
             z-index: 1000;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s;
         }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .section-title {
-            grid-column: 1 / -1;
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary);
-            padding-left: 15px;
-            font-size: 1.5rem;
-            font-weight: 800;
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-4px);
         }
     </style>
 </head>
 
 <body>
-
-    <div id="toast" class="toast">✨ Đã sao chép câu lệnh thành công!</div>
-
+    <a href="index.html" class="btn-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Quay lại
+    </a>
     <div class="header">
-        <h1>Lower Third Library</h1>
-        <p style="color: var(--text-muted)">Hơn 40 mẫu tiêu đề hiện đại dành cho giới thiệu tên, chức danh và thông báo.
-        </p>
+        <h1>Lower Third Free Templates</h1>
+        <p>Top 10 Professional Styles</p>
     </div>
+    <div class="grid" id="gallery"></div>
 
-    <div class="guide-section">
-        <div class="guide-step">
-            <div class="step-num">1</div>
-            <h3>Chọn phong cách</h3>
-            <p>Chọn mẫu tiêu đề phù hợp với nội dung video của bạn.</p>
-        </div>
-        <div class="guide-step">
-            <div class="step-num">2</div>
-            <h3>Copy Prompt</h3>
-            <p>Bấm vào ô câu lệnh mẫu để copy cho AI xử lý nhanh.</p>
-        </div>
-        <div class="guide-step">
-            <div class="step-num">3</div>
-            <h3>Gửi cho AI</h3>
-            <p>Dán vào khung chat và điền nội dung bạn muốn hiển thị.</p>
-        </div>
-    </div>
 
-    <div class="container" id="gallery"></div>
 
     <script>
         const templates = [
-            {
-                category: '💎 Modern & Clean (Hiện đại)',
-                items: [
-                    { id: 'modern-skew', name: 'Modern Skew', tag: 'Vlog / Modern', desc: 'Thiết kế nghiêng cá tính, năng động.', image: 'assets/lower-third/modern-skew.jpg' },
-                    { id: 'minimal-bold', name: 'Minimal Bold', tag: 'Clean', desc: 'Tối giản, chữ đậm cực kỳ rõ ràng.', image: 'assets/lower-third/minimal-bold.jpg' },
-                    { id: 'glass-modern', name: 'Glassmorphism', tag: 'Luxury', desc: 'Hiệu ứng kính mờ trong suốt thời thượng.', image: 'assets/lower-third/glass-modern.jpg' }
-                ]
-            },
-            {
-                category: '📺 Broadcast & News (Truyền hình)',
-                items: [
-                    { id: 'breaking-news', name: 'Breaking News', tag: 'News', desc: 'Phong cách bản tin nóng kinh điển.', image: 'assets/lower-third/breaking-news.jpg' },
-                    { id: 'classic-tv', name: 'Classic TV', tag: 'Retro', desc: 'Mẫu tiêu đề truyền hình thập niên 90.', image: 'assets/lower-third/classic-tv.jpg' },
-                    { id: 'cyberpunk-hud', name: 'Cyber HUD', tag: 'Gaming / Tech', desc: 'Giao diện công nghệ tương lai màu Neon.', image: 'assets/lower-third/cyberpunk-hud.jpg' }
-                ]
-            },
-            {
-                category: '🎨 Creative & Artistic (Sáng tạo)',
-                items: [
-                    { id: 'comic-pop', name: 'Comic Pop', tag: 'Fun', desc: 'Phong cách truyện tranh siêu anh hùng.', image: 'assets/lower-third/comic-pop.jpg' },
-                    { id: 'ink-bleed', name: 'Ink Bleed', tag: 'Art', desc: 'Chữ hiện ra từ các vết mực loang.', image: 'assets/lower-third/ink-bleed.jpg' },
-                    { id: 'hand-drawn', name: 'Hand Drawn', tag: 'Creative', desc: 'Nét vẽ tay nguệch ngoạc thân thiện.', image: 'assets/lower-third/hand-drawn.jpg' }
-                ]
-            }
+            'modern-skew', 'glass-modern', 'neon-glow',
+            'breaking-news', 'social-youtube', 'social-insta',
+            'tech-grid', 'minimal-bold', 'hand-drawn', 'luxury-gold'
         ];
 
-        const gallery = document.getElementById('gallery');
-        const toast = document.getElementById('toast');
+        function getPreviewHtml(t) {
+            const title = "John Doe";
+            const sub = "Creative Director";
+            const s = 0.7; // scale
 
-        function notify() {
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        // --- PREVIEW RENDER FUNCTION ---
-        function getPreviewHtml(template, title = "Tên Hiển Thị", subtitle = "Chức danh / Mô tả") {
-            const primary = "#3498db";
-            const secondary = "#2ecc71";
-
-            // Layout context: scaling down standard lower thirds for the preview box
-            const scale = 0.6;
-            const commonStyle = `transform: scale(${scale}); transform-origin: left bottom; position: absolute; bottom: 30px; left: 30px; white-space: nowrap;`;
-
-            switch (template) {
-                case 'modern-skew':
-                    return `
-                        <div style="${commonStyle}">
-                            <div style="background-color: #fff; padding: 10px 40px 10px 20px; display: inline-block; transform: skewX(-15deg); box-shadow: 10px 10px 30px rgba(0,0,0,0.3);">
-                                <h1 style="margin: 0; font-size: 40px; font-weight: 900; color: #1e293b; transform: skewX(15deg); text-transform: uppercase;">${title}</h1>
-                            </div>
-                            <br>
-                            <div style="background-color: ${primary}; padding: 5px 30px 5px 15px; display: inline-block; margin-top: 5px; transform: skewX(-15deg) translateX(20px);">
-                                <p style="margin: 0; font-size: 20px; color: #fff; font-weight: 600; transform: skewX(15deg);">${subtitle}</p>
-                            </div>
-                        </div>`;
-
-                case 'minimal-bold':
-                    return `
-                        <div style="${commonStyle} background-color: rgba(0,0,0,0.8); padding: 20px 40px; border-left: 8px solid ${primary};">
-                             <h1 style="margin: 0; font-size: 45px; font-weight: 900; color: #fff; text-transform: uppercase; font-family: 'Inter', sans-serif;">${title}</h1>
-                             <p style="margin: 0; font-size: 24px; color: ${primary}; font-weight: bold; margin-top: 5px;">${subtitle}</p>
-                        </div>`;
-
-                case 'glass-modern':
-                    return `
-                        <div style="${commonStyle} backdrop-filter: blur(10px); background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 20px 40px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-                            <h1 style="margin: 0; font-size: 42px; color: #fff; font-weight: 700;">${title}</h1>
-                            <p style="margin: 5px 0 0; font-size: 22px; color: rgba(255,255,255,0.8);">${subtitle}</p>
-                        </div>`;
-
-                case 'breaking-news':
-                    return `
-                        <div style="position: absolute; bottom: 20px; left: 0; right: 0; width: 100%; transform: scale(${scale}); transform-origin: center bottom;">
-                             <div style="background-color: #c0392b; color: #fff; padding: 10px 30px; display: flex; align-items: center;">
-                                <div style="background-color: #fff; color: #c0392b; padding: 2px 10px; font-weight: bold; margin-right: 20px;">BREAKING</div>
-                                <h1 style="margin: 0; font-size: 30px; font-weight: bold;">${title.toUpperCase()}</h1>
-                            </div>
-                            <div style="background-color: rgba(0,0,0,0.9); color: #fff; padding: 5px 30px; font-size: 20px;">${subtitle}</div>
-                        </div>`;
-
-                case 'classic-tv':
-                    return `
-                         <div style="position: absolute; bottom: 30px; left: 0; right: 0; width: 100%; background-color: rgba(0,0,255,0.7); color: #fff; padding: 10px 50px; text-shadow: 2px 2px #000; transform: scale(${scale}); transform-origin: left bottom;">
-                            <h1 style="margin: 0; font-size: 40px; font-weight: bold; letter-spacing: 2px; font-family: serif;">${title}</h1>
-                            <p style="margin: 0; font-size: 20px; text-transform: uppercase; color: #ffeb3b;">${subtitle}</p>
-                        </div>`;
-
-                case 'cyberpunk-hud':
-                    return `
-                        <div style="${commonStyle} font-family: 'JetBrains Mono', monospace; color: #00ffff; border: 1px solid #00ffff; padding: 20px; box-shadow: 0 0 10px #00ffff;">
-                             <div style="position: absolute; top: -10px; left: 10px; background: #000; padding: 0 5px; font-size: 10px;">SCANNING...</div>
-                             <h1 style="margin: 0; font-size: 35px; text-shadow: 0 0 5px #00ffff;">${title}</h1>
-                             <p style="margin: 0; font-size: 18px; color: #fff;">${subtitle}</p>
-                        </div>`;
-
-                case 'comic-pop':
-                    return `
-                        <div style="${commonStyle}">
-                             <div style="background-color: #ff0; border: 4px solid #000; padding: 10px 30px; transform: rotate(-3deg); box-shadow: 5px 5px 0 #000;">
-                                <h1 style="margin: 0; font-size: 40px; color: #000; font-weight: 900; text-transform: uppercase;">${title}!!</h1>
-                            </div>
-                            <div style="background-color: #f0f; color: #fff; padding: 5px 20px; border: 3px solid #000; transform: rotate(2deg) translate(20px, -10px); width: fit-content; font-weight: bold;">${subtitle}</div>
-                        </div>`;
-
-                case 'ink-bleed':
-                    return `
-                        <div style="${commonStyle}">
-                             <h1 style="margin: 0; font-size: 50px; color: #fff; filter: blur(0.5px); font-family: 'Courier New', serif; font-weight: bold;">${title}</h1>
-                             <p style="margin: 0; color: ${primary}; font-size: 24px; font-family: serif; font-style: italic;">${subtitle}</p>
-                        </div>`;
-
-                case 'hand-drawn':
-                    return `
-                        <div style="${commonStyle} transform: scale(${scale}) rotate(-2deg);">
-                            <div style="background-color: #fff; border: 3px solid #000; padding: 15px 40px; border-radius: 15px 50px 30px 10px; box-shadow: 5px 5px 0 rgba(0,0,0,0.2);">
-                                <h1 style="margin: 0; font-size: 40px; color: #000; font-family: cursive;">${title}</h1>
-                                <p style="margin: 0; font-size: 20px; color: #333;">${subtitle}</p>
-                            </div>
-                        </div>`;
-
-                default:
-                    // Fallback basic style
-                    return `
-                        <div style="${commonStyle} background: #fff; padding: 10px 20px; border-left: 5px solid ${primary};">
-                            <h1 style="margin: 0; color: #000;">${title}</h1>
-                            <p style="margin: 0; color: #555;">${subtitle}</p>
-                        </div>`;
+            switch (t) {
+                case 'modern-skew': return `<div style="transform:scale(${s});"><div style="background:#fff; padding:8px 32px 8px 16px; display:inline-block; transform:skewX(-15deg); box-shadow:8px 8px 24px rgba(0,0,0,0.1);"><div style="transform:skewX(15deg); color:#000; font-weight:900; text-transform:uppercase; font-size:16px;">${title}</div></div><br><div style="background:#38bdf8; padding:4px 24px 4px 12px; display:inline-block; margin-top:4px; transform:skewX(-15deg) translateX(16px);"><div style="transform:skewX(15deg); color:#fff; font-size:10px; font-weight:600;">${sub}</div></div></div>`;
+                case 'glass-modern': return `<div style="transform:scale(${s}); backdrop-filter:blur(8px); background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:16px 32px; box-shadow:0 6px 24px rgba(0,0,0,0.4);"><div style="color:#fff; font-weight:700; font-size:16px; margin-bottom:4px;">${title}</div><div style="color:rgba(255,255,255,0.9); font-size:10px;">${sub}</div></div>`;
+                case 'neon-glow': return `<div style="transform:scale(${s}); border-left:5px solid #38bdf8; padding:8px 20px; background:rgba(0,0,0,0.5); box-shadow:0 0 16px rgba(0,0,0,0.3);"><div style="color:#fff; text-shadow:0 0 8px #38bdf8, 0 0 16px #38bdf8; font-size:16px; margin-bottom:2px;">${title}</div><div style="color:#38bdf8; text-transform:uppercase; letter-spacing:1.5px; font-weight:bold; font-size:9px;">${sub}</div></div>`;
+                case 'minimal-bold': return `<div style="transform:scale(${s}); background:rgba(0,0,0,0.6); padding:16px 32px; border-left:6px solid #38bdf8;"><div style="color:#fff; font-size:18px; font-weight:900; text-transform:uppercase; margin-bottom:2px;">${title}</div><div style="color:#38bdf8; font-weight:bold; font-size:11px;">${sub}</div></div>`;
+                case 'tech-grid': return `<div style="transform:scale(${s}); font-family:monospace;"><div style="color:#38bdf8; font-size:10px; margin-bottom:4px;">[ SYSTEM_REPORT ]</div><div style="background:#000; color:#38bdf8; padding:4px 12px; font-size:16px; margin-bottom:4px;">${title}</div><div style="color:#fff; font-size:9px;">${sub}_</div></div>`;
+                case 'breaking-news': return `<div style="transform:scale(${s}); width:100%;"><div style="background:#e74c3c; color:#fff; padding:8px 40px; display:flex; align-items:center;"><div style="background:#fff; color:#e74c3c; padding:2px 8px; font-weight:bold; margin-right:16px; font-size:10px;">BREAKING</div><div style="font-weight:bold; font-size:16px;">${title}</div></div><div style="background:rgba(0,0,0,0.8); color:#fff; padding:4px 40px; font-size:10px;">${sub}</div></div>`;
+                case 'social-youtube': return `<div style="transform:scale(${s}); display:flex; align-items:center; background:#fff; border-radius:40px; padding:8px 24px; box-shadow:0 8px 24px rgba(0,0,0,0.2);"><div style="width:40px; height:40px; background:#e74c3c; border-radius:50%; margin-right:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:12px;">YT</div><div><div style="color:#000; font-size:13px; margin-bottom:2px;">${title}</div><div style="color:#666; font-size:9px;">${sub}</div></div></div>`;
+                case 'social-insta': return `<div style="transform:scale(${s}); display:flex; align-items:center;"><div style="padding:2.5px; background:linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); border-radius:50%;"><div style="width:50px; height:50px; background:#fff; border-radius:50%; border:2.5px solid #000;"></div></div><div style="margin-left:16px; color:#fff; text-shadow:0 2px 3px rgba(0,0,0,0.5);"><div style="font-size:14px; font-weight:bold; margin-bottom:2px;">${title}</div><div style="font-size:10px;">${sub}</div></div></div>`;
+                case 'hand-drawn': return `<div style="transform:scale(${s}) rotate(-2deg);"><div style="background:#fff; border:2.5px solid #000; padding:8px 24px; border-radius:12px 40px 24px 8px;"><div style="color:#000; font-family:cursive; font-size:16px; margin-bottom:2px;">${title}</div><div style="color:#333; font-size:10px;">${sub}</div></div></div>`;
+                case 'luxury-gold': return `<div style="transform:scale(${s});"><div style="background:linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:900; text-transform:uppercase; font-size:16px; margin-bottom:4px;">${title}</div><div style="height:2px; background:#bf953f; width:80px; margin-bottom:4px;"></div><div style="color:#bf953f; letter-spacing:2.5px; font-size:10px;">${sub}</div></div>`;
+                default: return `<div>${title}</div>`;
             }
         }
 
-        templates.forEach(section => {
-            const title = document.createElement('div');
-            title.className = 'section-title';
-            title.innerText = section.category;
-            gallery.appendChild(title);
-
-            section.items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const prompt = `Thêm tiêu đề Lower Third mẫu "${item.id}" với nội dung chính là "[Tên]" và phụ đề là "[Chức danh]" vào giây thứ [giây]. Màu chủ đạo là [màu].`;
-                const previewHtml = getPreviewHtml(item.id);
-
-                card.innerHTML = `
-                <div class="preview-box">
-                    ${previewHtml}
-                </div>
-                <div class="tag">${item.tag}</div>
+        const gallery = document.getElementById('gallery');
+        templates.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="preview-box">${getPreviewHtml(t)}</div>
                 <div class="info">
-                    <div class="name">${item.name}</div>
-                    <div class="desc">${item.desc}</div>
+                    <div class="name">${t.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
+                    <div class="id">${t}</div>
                 </div>
-                
-                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify()">
-                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
-                    <div class="prompt-text">"${prompt}"</div>
-                </div>
-                <div style="font-size: 0.65rem; color: var(--text-muted)">Template ID: ${item.id}</div>
             `;
-                gallery.appendChild(card);
-            });
+            gallery.appendChild(card);
         });
     </script>
-
 </body>
 
 </html>
