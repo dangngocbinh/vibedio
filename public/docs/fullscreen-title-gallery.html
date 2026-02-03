@@ -4,260 +4,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fullscreen Title Gallery - Tiêu đề toàn màn hình</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+    <title>Fullscreen Title Free Templates (Top 10)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;700;800;900&family=Playfair+Display:ital,wght@1,700&family=Bungee&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --bg: #0b1121;
-            --card-bg: #1e293b;
-            --primary: #fbbf24;
-            --secondary: #f43f5e;
-            --success: #10b981;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #f59e0b;
             --text: #f8fafc;
-            --text-muted: #94a3b8;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
 
         .header {
-            padding: 60px 20px;
             text-align: center;
-            background: radial-gradient(circle at top, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+            margin-bottom: 40px;
         }
 
-        h1 {
-            font-weight: 800;
-            font-size: 3rem;
-            margin: 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .guide-section {
-            max-width: 900px;
-            margin: -30px auto 50px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
-        }
-
-        .guide-step {
-            text-align: center;
-        }
-
-        .step-num {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            margin: 0 auto 15px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto 100px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 30px;
-            padding: 0 20px;
         }
 
         .card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.4s ease;
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .preview-box {
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            justify-content: center;
         }
 
-        .card:hover {
-            transform: translateY(-8px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
-        }
-
-        .name {
-            font-weight: 800;
-            font-size: 1.4rem;
-            color: #fff;
-        }
-
-        .tag {
-            font-size: 0.7rem;
-            color: var(--primary);
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .prompt-box {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            padding: 18px;
-            border-radius: 14px;
-            cursor: pointer;
-        }
-
-        .prompt-label {
-            font-size: 0.65rem;
-            color: var(--primary);
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        .prompt-text {
-            font-style: italic;
-            font-size: 0.9rem;
-            color: #cbd5e1;
-            line-height: 1.5;
-        }
-
-        .toast {
-            position: fixed;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--success);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
+        .info .name {
             font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .info .id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(245, 158, 11, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .btn-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             z-index: 1000;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s;
         }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .section-title {
-            grid-column: 1 / -1;
-            margin-top: 50px;
-            margin-bottom: 20px;
-            border-left: 5px solid var(--primary);
-            padding-left: 20px;
-            font-size: 1.8rem;
-            font-weight: 800;
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-4px);
         }
     </style>
 </head>
 
 <body>
-
-    <div id="toast" class="toast">✨ Đã copy Prompt mẫu!</div>
-
+    <a href="index.html" class="btn-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Quay lại
+    </a>
     <div class="header">
-        <h1>Fullscreen Titles</h1>
-        <p style="color: var(--text-muted)">Các siêu Template tiêu đề chuyên nghiệp dành cho Intro, Outro và phân đoạn
-            video.</p>
+        <h1>Fullscreen Title Free Templates</h1>
+        <p>Top 10 Styles</p>
     </div>
+    <div class="grid" id="gallery"></div>
 
-    <div class="guide-section">
-        <div class="guide-step">
-            <div class="step-num">1</div>
-            <h3>Chọn phong cách</h3>
-            <p>Chọn mẫu phù hợp cho Intro hoặc Chapter Divider.</p>
-        </div>
-        <div class="guide-step">
-            <div class="step-num">2</div>
-            <h3>Copy Prompt</h3>
-            <p>Bấm vào khung Prompt mẫu để copy lệnh cho AI.</p>
-        </div>
-        <div class="guide-step">
-            <div class="step-num">3</div>
-            <h3>Tùy chỉnh</h3>
-            <p>Thay đổi Title và Subtitle theo đúng nội dung của bạn.</p>
-        </div>
-    </div>
 
-    <div class="container" id="gallery"></div>
 
     <script>
-        const groups = [
-            {
-                category: '⭐ Cinematic & Premium (Sang trọng)',
-                items: [
-                    { id: 'cinematic-intro', name: 'Cinematic Intro', tag: 'Intro / Film', desc: 'Thiết kế sang trọng, chữ mảnh, phong cách điện ảnh.' },
-                    { id: 'luxury-gold', name: 'Luxury Gold', tag: 'Premium', desc: 'Chữ nhũ vàng kim rực rỡ trên nền tối.' },
-                    { id: 'space-odyssey', name: 'Space Odyssey', tag: 'Sci-Fi', desc: 'Không gian vũ trụ sâu thẳm, chữ thưa tinh tế.' }
-                ]
-            },
-            {
-                category: '⚡ Modern & Hype (Năng động)',
-                items: [
-                    { id: 'bold-statement', name: 'Bold Statement', tag: 'Impact', desc: 'Tiêu đề in hoa kích thước lớn, gây ấn tượng mạnh.' },
-                    { id: 'neon-night', name: 'Neon Night', tag: 'Gaming / Club', desc: 'Đèn Neon rực rỡ nhấp nháy trên nền đêm.' },
-                    { id: 'retro-pop', name: 'Retro Pop Art', tag: 'Fun', desc: 'Bùng nổ màu sắc phong cách 90s.' }
-                ]
-            },
-            {
-                category: '📝 Content & Narrative (Nội dung)',
-                items: [
-                    { id: 'minimal-chapter', name: 'Minimal Chapter', tag: 'Vlog / Clean', desc: 'Tối giản tuyệt đối cho các đoạn phân cảnh.' },
-                    { id: 'quote-hero', name: 'Quote Hero', tag: 'Education', desc: 'Dành riêng để trích dẫn những câu nói hay.' },
-                    { id: 'breaking-news-full', name: 'Breaking News', tag: 'Event', desc: 'Giao diện bản tin nóng toàn màn hình.' }
-                ]
-            }
+        const templates = [
+            'cinematic-intro', 'breaking-news-full', 'tech-hub',
+            'neon-night', 'bold-statement', 'luxury-gold',
+            'gaming-stream', 'glassmorphism-pro', 'nature-vibes', 'minimal-chapter'
         ];
 
-        const gallery = document.getElementById('gallery');
-        const toast = document.getElementById('toast');
+        function getPreviewHtml(t) {
+            const w = "100%", h = "100%";
+            const center = "display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; width:" + w + "; height:" + h + ";";
 
-        function notify() {
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            switch (t) {
+                case 'cinematic-intro': return `<div style="${center} color:#fff;"><div style="font-size:8px; letter-spacing:8px; color:#aaa;">PRESENTS</div><div style="font-size:28px; letter-spacing:15px; font-weight:300; margin-top:10px;">TITLE</div><div style="width:80px; height:1px; background:#fff; margin:15px 0;"></div></div>`;
+                case 'tech-hub': return `<div style="width:${w}; height:${h}; display:flex; align-items:center; padding-left:40px;"><div style="border-left:4px solid #0f0; padding-left:15px; color:#0f0; font-family:monospace;"><div style="font-size:10px;">&gt; SYSTEM_BOOT</div><div style="font-size:24px; font-weight:bold;">TITLE_</div></div></div>`;
+                case 'minimal-chapter': return `<div style="${center} background:#f8fafc; color:#000;"><div style="font-size:50px; font-weight:900; line-height:0.8;">01</div><div style="font-size:18px; font-weight:300; margin-top:10px;">CHAPTER</div></div>`;
+                case 'bold-statement': return `<div style="${center} color:#fff;"><div style="background:#fff; color:#000; padding:5px 20px; font-weight:bold; font-size:12px; margin-bottom:10px;">ATTENTION</div><div style="font-size:32px; font-weight:900; line-height:0.9;">BOLD<br>TITLE</div></div>`;
+                case 'neon-night': return `<div style="${center}"><div style="border:3px solid #f0f; padding:15px 40px; color:#fff; text-shadow:0 0 10px #f0f; box-shadow:0 0 15px #f0f; font-size:24px; font-weight:900;">NEON</div></div>`;
+                case 'breaking-news-full': return `<div style="width:${w}; height:${h}; display:flex; flex-direction:column;"><div style="flex:1; background:#c0392b; display:flex; align-items:center; justify-content:center;"><div style="color:#fff; font-size:28px; font-weight:900;">BREAKING</div></div><div style="background:#fff; padding:10px; text-align:center;"><div style="color:#c0392b; font-weight:bold; font-size:12px;">LIVE NEWS</div></div></div>`;
+                case 'luxury-gold': return `<div style="${center}"><div style="font-size:28px; font-weight:900; background:linear-gradient(45deg, #bf953f, #fcf6ba, #aa771c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:3px;">LUXURY</div><div style="width:150px; height:1px; background:#bf953f; margin:10px 0;"></div></div>`;
+                case 'nature-vibes': return `<div style="${center} background:#f0fdf4; color:#2d5a27;"><div style="font-size:28px; font-family:serif; font-style:italic;">Nature</div><div style="font-size:12px; letter-spacing:3px; color:#4a7c44; margin-top:5px;">VIBES</div></div>`;
+                case 'gaming-stream': return `<div style="width:${w}; height:${h}; display:flex; align-items:center; justify-content:center;"><div style="border:3px solid #f05; padding:30px; position:relative; box-shadow:0 0 20px #f05;"><div style="position:absolute; top:-12px; left:30px; background:#f05; padding:3px 15px; font-size:10px; font-weight:bold; color:#fff;">LIVE</div><div style="color:#fff; font-size:28px; font-weight:900; font-style:italic; text-shadow:3px 3px 0 #000;">GAME</div></div></div>`;
+                case 'glassmorphism-pro': return `<div style="${center}"><div style="background:rgba(255,255,255,0.1); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:40px 70px; box-shadow:0 20px 35px rgba(0,0,0,0.2);"><div style="color:#fff; font-size:24px; font-weight:900;">GLASS</div><div style="color:rgba(255,255,255,0.7); font-size:12px; letter-spacing:4px; margin-top:10px;">morphism</div></div></div>`;
+                default: return `<div style="${center} color:#888;"><div style="font-size:20px;">${t}</div></div>`;
+            }
         }
 
-        groups.forEach(section => {
-            const title = document.createElement('div');
-            title.className = 'section-title';
-            title.innerText = section.category;
-            gallery.appendChild(title);
-
-            section.items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const prompt = `Thêm Fullscreen Title mẫu "${item.id}" làm [Intro/Chapter] với tiêu đề: "[Tên]" và phụ đề: "[Mô tả]". Thời lượng [5] giây.`;
-
-                card.innerHTML = `
-                <div class="tag">${item.tag}</div>
+        const gallery = document.getElementById('gallery');
+        templates.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="preview-box">${getPreviewHtml(t)}</div>
                 <div class="info">
-                    <div class="name">${item.name}</div>
-                    <div style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">${item.desc}</div>
+                    <div class="name">${t.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
+                    <div class="id">${t}</div>
                 </div>
-                
-                <div class="prompt-box" onclick="navigator.clipboard.writeText('${prompt}'); notify()">
-                    <div class="prompt-label">CÂU LỆNH AI (PROMPT)</div>
-                    <div class="prompt-text">"${prompt}"</div>
-                </div>
-                <div style="font-size: 0.65rem; color: var(--text-muted)">Template ID: ${item.id}</div>
             `;
-                gallery.appendChild(card);
-            });
+            gallery.appendChild(card);
         });
     </script>
-
 </body>
 
 </html>

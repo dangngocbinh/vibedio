@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lower Third Templates (40 Styles)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600;700;800;900&family=Playfair+Display:ital,wght@1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #38bdf8;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .preview-box {
+            height: 140px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .info .name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .info .id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Lower Third Templates</h1>
+        <p>40 Unique Visual Styles</p>
+    </div>
+    <div class="grid" id="gallery"></div>
+    <script>
+        const templates = [
+            'modern-skew', 'glass-modern', 'neon-glow', 'minimal-bold', 'gradient-wave',
+            'corporate-clean', 'tech-grid', 'elegant-serif', 'playful-round', 'split-reveal',
+            'breaking-news', 'social-youtube', 'social-insta', 'gaming-glitch', 'cyberpunk-hud',
+            'hand-drawn', 'brush-stroke', 'retro-8bit', 'classic-tv', 'sports-ticker',
+            'wedding-floral', 'documentary-sidebar', 'quote-box', 'ribbon-tag', 'hologram',
+            'liquid-motion', 'confetti', 'border-animate', 'shadow-stack', 'floating-bubbles',
+            'stencil-cut', 'ink-bleed', 'comic-pop', 'industrial-steel', 'nature-eco',
+            'space-cosmos', 'luxury-gold', 'chalkboard', 'blueprint', 'origami'
+        ];
+
+        function getPreviewHtml(t) {
+            const title = "John Doe";
+            const sub = "Creative Director";
+            const s = 0.7; // scale
+
+            switch (t) {
+                // ORIGINAL 10
+                case 'modern-skew': return `<div style="transform:scale(${s});"><div style="background:#fff; padding:8px 32px 8px 16px; display:inline-block; transform:skewX(-15deg); box-shadow:8px 8px 24px rgba(0,0,0,0.1);"><div style="transform:skewX(15deg); color:#000; font-weight:900; text-transform:uppercase; font-size:16px;">${title}</div></div><br><div style="background:#38bdf8; padding:4px 24px 4px 12px; display:inline-block; margin-top:4px; transform:skewX(-15deg) translateX(16px);"><div style="transform:skewX(15deg); color:#fff; font-size:10px; font-weight:600;">${sub}</div></div></div>`;
+
+                case 'glass-modern': return `<div style="transform:scale(${s}); backdrop-filter:blur(8px); background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:16px 32px; box-shadow:0 6px 24px rgba(0,0,0,0.4);"><div style="color:#fff; font-weight:700; font-size:16px; margin-bottom:4px;">${title}</div><div style="color:rgba(255,255,255,0.9); font-size:10px;">${sub}</div></div>`;
+
+                case 'neon-glow': return `<div style="transform:scale(${s}); border-left:5px solid #38bdf8; padding:8px 20px; background:rgba(0,0,0,0.5); box-shadow:0 0 16px rgba(0,0,0,0.3);"><div style="color:#fff; text-shadow:0 0 8px #38bdf8, 0 0 16px #38bdf8; font-size:16px; margin-bottom:2px;">${title}</div><div style="color:#38bdf8; text-transform:uppercase; letter-spacing:1.5px; font-weight:bold; font-size:9px;">${sub}</div></div>`;
+
+                case 'minimal-bold': return `<div style="transform:scale(${s}); background:rgba(0,0,0,0.6); padding:16px 32px; border-left:6px solid #38bdf8;"><div style="color:#fff; font-size:18px; font-weight:900; text-transform:uppercase; margin-bottom:2px;">${title}</div><div style="color:#38bdf8; font-weight:bold; font-size:11px;">${sub}</div></div>`;
+
+                case 'gradient-wave': return `<div style="transform:scale(${s}); background:linear-gradient(90deg, transparent, #38bdf8, transparent); padding:12px 80px; text-align:center; border-radius:40px;"><div style="color:#fff; font-size:16px; margin-bottom:2px;">${title}</div><div style="color:#fff; opacity:0.9; font-size:10px;">${sub}</div></div>`;
+
+                case 'corporate-clean': return `<div style="transform:scale(${s}); display:flex; align-items:center; background:rgba(0,0,0,0.4); padding:12px 24px; backdrop-filter:blur(4px);"><div style="width:5px; height:40px; background:#38bdf8; margin-right:16px;"></div><div><div style="color:#fff; font-size:16px; font-weight:300; margin-bottom:4px;">${title}</div><div style="height:1px; background:rgba(255,255,255,0.3); margin:4px 0;"></div><div style="color:#eee; font-weight:600; font-size:9px;">${sub}</div></div></div>`;
+
+                case 'tech-grid': return `<div style="transform:scale(${s}); font-family:monospace;"><div style="color:#38bdf8; font-size:10px; margin-bottom:4px;">[ SYSTEM_REPORT ]</div><div style="background:#000; color:#38bdf8; padding:4px 12px; font-size:16px; margin-bottom:4px;">${title}</div><div style="color:#fff; font-size:9px;">${sub}_</div></div>`;
+
+                case 'elegant-serif': return `<div style="transform:scale(${s}); background:rgba(0,0,0,0.3); padding:24px; border-radius:16px; text-align:center;"><div style="font-family:serif; font-style:italic; font-size:18px; color:#d4af37; margin-bottom:8px;">${title}</div><div style="width:40px; height:1px; background:#d4af37; margin:8px auto;"></div><div style="letter-spacing:3px; font-size:11px; color:#fff; text-transform:uppercase;">${sub}</div></div>`;
+
+                case 'playful-round': return `<div style="transform:scale(${s});"><div style="background:#fff; padding:12px 24px; border-radius:0 24px 24px 24px; box-shadow:0 8px 16px rgba(0,0,0,0.1);"><div style="color:#000; font-size:16px; margin-bottom:2px;">${title}</div><div style="color:#38bdf8; font-weight:700; font-size:10px;">${sub}</div></div></div>`;
+
+                case 'split-reveal': return `<div style="transform:scale(${s}); background:rgba(0,0,0,0.5); padding:12px 24px; border-left:3px solid #38bdf8; min-width:240px;"><div style="color:#fff; font-size:16px; margin-bottom:4px;">${title}</div><div style="height:2px; background:#38bdf8; width:100%; margin:4px 0;"></div><div style="color:#eee; font-size:10px;">${sub}</div></div>`;
+
+                // NEW 30
+                case 'breaking-news': return `<div style="transform:scale(${s}); width:100%;"><div style="background:#e74c3c; color:#fff; padding:8px 40px; display:flex; align-items:center;"><div style="background:#fff; color:#e74c3c; padding:2px 8px; font-weight:bold; margin-right:16px; font-size:10px;">BREAKING</div><div style="font-weight:bold; font-size:16px;">${title}</div></div><div style="background:rgba(0,0,0,0.8); color:#fff; padding:4px 40px; font-size:10px;">${sub}</div></div>`;
+
+                case 'social-youtube': return `<div style="transform:scale(${s}); display:flex; align-items:center; background:#fff; border-radius:40px; padding:8px 24px; box-shadow:0 8px 24px rgba(0,0,0,0.2);"><div style="width:40px; height:40px; background:#e74c3c; border-radius:50%; margin-right:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:12px;">YT</div><div><div style="color:#000; font-size:13px; margin-bottom:2px;">${title}</div><div style="color:#666; font-size:9px;">${sub}</div></div></div>`;
+
+                case 'social-insta': return `<div style="transform:scale(${s}); display:flex; align-items:center;"><div style="padding:2.5px; background:linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); border-radius:50%;"><div style="width:50px; height:50px; background:#fff; border-radius:50%; border:2.5px solid #000;"></div></div><div style="margin-left:16px; color:#fff; text-shadow:0 2px 3px rgba(0,0,0,0.5);"><div style="font-size:14px; font-weight:bold; margin-bottom:2px;">${title}</div><div style="font-size:10px;">${sub}</div></div></div>`;
+
+                case 'gaming-glitch': return `<div style="transform:scale(${s});"><div style="color:#fff; font-weight:900; font-size:20px; letter-spacing:-1.5px; text-shadow:2.5px 0 #f0f, -2.5px 0 #0ff; margin-bottom:2px;">${title}</div><div style="color:#0f0; font-size:9px; font-family:monospace;">${sub}</div></div>`;
+
+                case 'cyberpunk-hud': return `<div style="transform:scale(${s}); color:#0ff; font-family:monospace;"><div style="border:1px solid #0ff; padding:12px; position:relative;"><div style="position:absolute; top:-8px; left:8px; background:#000; padding:0 4px; font-size:8px;">SCANNING...</div><div style="font-size:16px; margin-bottom:2px;">${title}</div><div style="font-size:9px; margin-bottom:8px;">${sub}</div><div style="height:2px; width:80%; background:#0ff;"></div></div></div>`;
+
+                case 'hand-drawn': return `<div style="transform:scale(${s}) rotate(-2deg);"><div style="background:#fff; border:2.5px solid #000; padding:8px 24px; border-radius:12px 40px 24px 8px;"><div style="color:#000; font-family:cursive; font-size:16px; margin-bottom:2px;">${title}</div><div style="color:#333; font-size:10px;">${sub}</div></div></div>`;
+
+                case 'brush-stroke': return `<div style="transform:scale(${s});"><div style="background:#e74c3c; padding:8px 48px; border-radius:24% 56% 56% 24% / 24% 24% 56% 56%; transform:rotate(-1.5deg);"><div style="color:#fff; font-weight:bold; font-size:16px;">${title}</div></div><div style="margin-left:48px; color:#fff; font-size:10px; font-weight:bold; text-shadow:1.5px 1.5px 0 #000; margin-top:4px;">${sub}</div></div>`;
+
+                case 'retro-8bit': return `<div style="transform:scale(${s}); image-rendering:pixelated;"><div style="background:#000; border:3px solid #fff; padding:8px;"><div style="color:#0f0; font-family:monospace; font-size:13px; margin-bottom:2px;">${title}</div><div style="color:#fff; font-size:8px;">${sub}</div></div></div>`;
+
+                case 'classic-tv': return `<div style="transform:scale(${s}); background:rgba(0,0,255,0.7); color:#fff; padding:8px 40px;"><div style="font-weight:bold; letter-spacing:1.5px; font-size:16px; margin-bottom:2px;">${title}</div><div style="font-size:9px; text-transform:uppercase;">${sub}</div></div>`;
+
+                case 'sports-ticker': return `<div style="transform:scale(${s}); display:flex; width:100%;"><div style="background:#e74c3c; color:#fff; padding:12px 32px; font-weight:900; font-size:24px;">LIVE</div><div style="background:#fff; flex:1; padding:12px 24px; display:flex; align-items:center;"><div style="color:#000; font-size:28px; font-weight:bold; margin-right:16px;">${title}</div><div style="width:2px; height:24px; background:#ccc; margin-right:16px;"></div><div style="color:#666; font-size:20px;">${sub}</div></div></div>`;
+
+                case 'wedding-floral': return `<div style="transform:scale(${s}); text-align:center;"><div style="font-family:serif; font-size:20px; color:#5d4037; font-style:italic; margin-bottom:4px;">${title} & ${sub}</div><div style="color:#8d6e63; font-size:16px; letter-spacing:4px;">EST. 2024</div></div>`;
+
+                case 'quote-box': return `<div style="transform:scale(${s}); text-align:center;"><div style="font-size:80px; color:#38bdf8; line-height:0.1; margin-bottom:16px;">"</div><div style="color:#fff; font-size:13px; font-style:italic; margin-bottom:16px;">${title}</div><div style="color:#38bdf8; font-weight:bold; font-size:10px;">— ${sub}</div></div>`;
+
+                case 'ribbon-tag': return `<div style="transform:scale(${s});"><div style="background:#38bdf8; color:#fff; padding:8px 32px 8px 64px; border-radius:0 40px 40px 0; box-shadow:4px 4px 12px rgba(0,0,0,0.3);"><div style="font-weight:bold; font-size:16px; margin-bottom:2px;">${title}</div><div style="font-size:9px;">${sub}</div></div></div>`;
+
+                case 'hologram': return `<div style="transform:scale(${s}); opacity:0.7; color:#00f2ff;"><div style="border-left:2px solid #00f2ff; padding-left:16px; background-image:linear-gradient(rgba(0,242,255,0.1) 50%, transparent 50%); background-size:100% 3px;"><div style="letter-spacing:3px; text-transform:uppercase; font-size:16px; margin-bottom:2px;">${title}</div><div style="font-size:10px;">${sub}</div></div></div>`;
+
+                case 'confetti': return `<div style="transform:scale(${s}); position:relative;"><div style="position:absolute; width:8px; height:8px; background:#38bdf8; top:8px; left:16px; border-radius:50%;"></div><div style="position:absolute; width:8px; height:8px; background:#ff0; top:24px; left:48px; border-radius:50%;"></div><div style="position:absolute; width:8px; height:8px; background:#38bdf8; top:16px; left:80px; border-radius:50%;"></div><div style="color:#fff; font-size:20px; font-weight:900; -webkit-text-stroke:1.5px #000; margin-bottom:2px;">${title}</div><div style="color:#ff0; font-size:16px; font-weight:bold;">${sub}</div></div>`;
+
+                case 'shadow-stack': return `<div style="transform:scale(${s});"><div style="color:#fff; font-size:32px; font-weight:900; text-shadow:4px 4px #38bdf8, 8px 8px rgba(0,0,0,0.3); margin-bottom:4px;">${title}</div><div style="color:#fff; opacity:0.8; font-size:16px;">${sub}</div></div>`;
+
+                case 'floating-bubbles': return `<div style="transform:scale(${s}); display:flex; gap:8px;"><div style="background:#fff; border-radius:40px; padding:8px 24px;"><div style="color:#000; font-size:13px;">${title}</div></div><div style="background:#38bdf8; border-radius:40px; padding:8px 16px; display:flex; align-items:center; color:#fff; font-size:11px;">${sub}</div></div>`;
+
+                case 'stencil-cut': return `<div style="transform:scale(${s});"><div style="background:#fff; padding:8px 24px;"><div style="color:#000; font-size:16px; font-weight:900; margin-bottom:2px;">${title}</div></div><div style="background:#38bdf8; padding:4px 16px; color:#fff; width:fit-content; font-weight:bold; font-size:10px;">${sub}</div></div>`;
+
+                case 'comic-pop': return `<div style="transform:scale(${s});"><div style="background:#ff0; border:4px solid #000; padding:8px 32px; transform:rotate(-2.5deg);"><div style="color:#000; font-weight:900; text-transform:uppercase; font-size:16px;">${title}!!</div></div><div style="background:#f0f; color:#fff; padding:4px 16px; border:2.5px solid #000; transform:rotate(1.5deg) translate(16px, -8px); width:fit-content; font-size:10px;">${sub}</div></div>`;
+
+                case 'luxury-gold': return `<div style="transform:scale(${s});"><div style="background:linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:900; text-transform:uppercase; font-size:16px; margin-bottom:4px;">${title}</div><div style="height:2px; background:#bf953f; width:80px; margin-bottom:4px;"></div><div style="color:#bf953f; letter-spacing:2.5px; font-size:10px;">${sub}</div></div>`;
+
+                default: return `<div style="transform:scale(${s}); border-left:3px solid #38bdf8; padding:8px 16px; background:rgba(56,189,248,0.1);"><div style="color:#fff; font-size:14px; font-weight:bold; margin-bottom:2px;">${title}</div><div style="color:#38bdf8; font-size:10px;">${sub}</div></div>`;
+            }
+        }
+
+        const gallery = document.getElementById('gallery');
+        templates.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="preview-box">${getPreviewHtml(t)}</div>
+                <div class="info">
+                    <div class="name">${t.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
+                    <div class="id">${t}</div>
+                </div>
+            `;
+            gallery.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>

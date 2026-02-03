@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, spring } from 'remotion';
 import { CaptionWord, CaptionStyle } from '../../types';
 import { CAPTION_THEMES, CaptionTheme, getTheme } from './caption-themes';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 // Load font once globally
 if (typeof document !== 'undefined' && !document.getElementById('caption-fonts')) {
@@ -43,16 +44,22 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
     const { fps } = useVideoConfig();
     const currentTime = (frame / fps) + startOffset;
 
+    const { scalePixel, scaleFontSize, isPortrait, uniformScale } = useResponsiveScale();
+
     // Memoize theme and effective style (only recalculate when theme props change)
     const { theme, effectiveStyle } = useMemo(() => {
         const selectedTheme: CaptionTheme = themeName ? getTheme(themeName) : CAPTION_THEMES['clean-minimal'];
         const rawStyle = (typeof style === 'object' ? style : {}) as any || {};
 
+        // Scale font size responsively
+        const baseFontSize = directFontSize || rawStyle.fontSize || selectedTheme.style.fontSize;
+        const scaledFontSize = scaleFontSize(baseFontSize);
+
         return {
             theme: selectedTheme,
             effectiveStyle: {
                 fontFamily: directFont || rawStyle.fontFamily || "Montserrat",
-                fontSize: directFontSize || rawStyle.fontSize || selectedTheme.style.fontSize,
+                fontSize: scaledFontSize,
                 fontWeight: selectedTheme.style.fontWeight,
                 textTransform: selectedTheme.style.textTransform || 'none',
                 letterSpacing: directLetterSpacing || rawStyle.letterSpacing || selectedTheme.style.letterSpacing || 0,
@@ -70,22 +77,24 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                 position: directPosition || rawStyle.position || 'bottom',
             }
         };
-    }, [themeName, style, directFont, directFontSize, directLetterSpacing, directHighlightColor, directPosition]);
+    }, [themeName, style, directFont, directFontSize, directLetterSpacing, directHighlightColor, directPosition, scaleFontSize]);
 
     // Memoize position style (never changes during render)
     const positionStyle = useMemo((): React.CSSProperties => {
+        const layoutMode = isPortrait ? 'portrait' : 'landscape';
+
         switch (effectiveStyle.position) {
             case 'top':
-                return { top: '15%', justifyContent: 'flex-start' };
+                return { top: isPortrait ? '10%' : '15%', justifyContent: 'flex-start' };
             case 'center':
                 return { top: '50%', transform: 'translateY(-50%)', justifyContent: 'center' };
             case 'bottom-high':
-                return { bottom: '20%', justifyContent: 'flex-end' };
+                return { bottom: isPortrait ? '25%' : '20%', justifyContent: 'flex-end' };
             case 'bottom':
             default:
-                return { bottom: '8%', justifyContent: 'flex-end' };
+                return { bottom: isPortrait ? '12%' : '8%', justifyContent: 'flex-end' };
         }
-    }, [effectiveStyle.position]);
+    }, [effectiveStyle.position, isPortrait]);
 
     // Memoize text shadows (expensive to calculate)
     const { normalShadow, activeShadow } = useMemo(() => {
@@ -120,7 +129,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
 
     // Find active word and display window (MUST be after all hooks)
     const { activeWordIndex, displayWords, startIndex } = useMemo(() => {
-        const wordsPerLine = 4;
+        const wordsPerLine = isPortrait ? 3 : 4; // Fewer words on vertical screens
         const activeIdx = words.findIndex(
             (word) => currentTime >= word.start && currentTime <= word.end
         );
@@ -137,7 +146,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
             displayWords: words.slice(start, end),
             startIndex: start
         };
-    }, [words, currentTime]);
+    }, [words, currentTime, isPortrait]);
 
     // Early return AFTER all hooks
     if (activeWordIndex === -1) {
@@ -209,9 +218,9 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                     flexWrap: 'wrap',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    width: '80%',
-                    maxWidth: '1000px',
-                    gap: '16px',
+                    width: isPortrait ? '95%' : '80%',
+                    maxWidth: scalePixel(1000),
+                    gap: scalePixel(16),
                     textAlign: 'center',
                     ...(effectiveStyle.containerBg && {
                         backgroundColor: effectiveStyle.containerBg,

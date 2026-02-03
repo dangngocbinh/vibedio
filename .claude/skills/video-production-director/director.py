@@ -25,7 +25,7 @@ from typing import List, Dict, Optional
 # --- CONFIGURATION ---
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 PROJECTS_DIR = BASE_DIR / "public" / "projects"
-SKILLS_DIR = BASE_DIR / ".agent" / "skills"
+SKILLS_DIR = BASE_DIR / ".claude" / "skills"
 
 # Sub-skill paths
 DIRECTOR_SKILL_DIR = SKILLS_DIR / "video-production-director"
@@ -180,8 +180,8 @@ def run_step_script(project_dir: Path, topic: str, type: str, ratio: str = "9:16
 
     # Call video-script-generator CLI (internal)
     cmd = [
-        "python3",
-        str(SCRIPT_CLI),
+        "python",
+        str(SCRIPT_SKILL / "cli.py"),  # ← Changed from demo.py to cli.py
         "--topic", topic,
         "--type", type,
         "--ratio", ratio,
@@ -333,7 +333,7 @@ def run_step_editor(project_dir: Path):
     log_info("Bắt đầu bước 4: Dựng Phim (Editing)...")
     
     cmd = [
-        "python3",
+        "python",
         str(EDITOR_SKILL / "cli.py"),
         str(project_dir)
     ]

@@ -1,222 +1,68 @@
 [
   {
-    "id": "6-dieu-it-ai-biet-ve-sai-gon",
-    "name": "6-dieu-it-ai-biet-ve-sai-gon",
-    "path": "projects/6-dieu-it-ai-biet-ve-sai-gon",
+    "id": "automation-n8n",
+    "name": "automation-n8n",
+    "path": "projects/automation-n8n",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-02-02T05:46:52.578Z",
-    "timestamp": 1770011212578
+    "modifiedAt": "2026-02-02T04:15:46.956Z",
+    "timestamp": 1770005746956
   },
   {
-    "id": "5-su-that-thu-vi-ve-tp-hcm",
-    "name": "5-su-that-thu-vi-ve-tp-hcm",
-    "path": "projects/5-su-that-thu-vi-ve-tp-hcm",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-02T05:41:24.973Z",
-    "timestamp": 1770010884973
-  },
-  {
-    "id": "test-gemini-voice",
-    "name": "test-gemini-voice",
-    "path": "projects/test-gemini-voice",
-    "hasScript": true,
-    "hasOtio": false,
-    "otioFile": null,
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-02T05:11:41.016Z",
-    "timestamp": 1770009101016
-  },
-  {
-    "id": "test-voice-provider-selection",
-    "name": "test-voice-provider-selection",
-    "path": "projects/test-voice-provider-selection",
-    "hasScript": true,
-    "hasOtio": false,
-    "otioFile": null,
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-02T05:10:49.215Z",
-    "timestamp": 1770009049215
-  },
-  {
-    "id": "test-video-khong-can-output",
-    "name": "test-video-khong-can-output",
-    "path": "projects/test-video-khong-can-output",
-    "hasScript": true,
-    "hasOtio": false,
-    "otioFile": null,
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-02T05:05:52.657Z",
-    "timestamp": 1770008752657
-  },
-  {
-    "id": "tom-and-jerry-facts",
-    "name": "tom-and-jerry-facts",
-    "path": "projects/tom-and-jerry-facts",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-02T04:04:51.993Z",
-    "timestamp": 1770005091993
-  },
-  {
-    "id": "Vibedio-tao-video-theo-phong-cach-vibe",
-    "name": "Vibedio-tao-video-theo-phong-cach-vibe",
-    "path": "projects/Vibedio-tao-video-theo-phong-cach-vibe",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-02T03:46:18.637Z",
-    "timestamp": 1770003978637
-  },
-  {
-    "id": "vibedio",
-    "name": "vibedio",
-    "path": "projects/vibedio",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-02T03:10:41.286Z",
-    "timestamp": 1770001841286
-  },
-  {
-    "id": "test4h",
-    "name": "test4h",
-    "path": "projects/test4h",
+    "id": "bien-va-em",
+    "name": "bien-va-em",
+    "path": "projects/bien-va-em",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-31T10:06:48.742Z",
-    "timestamp": 1769854008742
+    "modifiedAt": "2026-02-02T03:23:29.239Z",
+    "timestamp": 1770002609239
   },
   {
-    "id": "cho-anh-trong-con-mua",
-    "name": "cho-anh-trong-con-mua",
-    "path": "projects/cho-anh-trong-con-mua",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-01-29T09:23:53.332Z",
-    "timestamp": 1769678633332
-  },
-  {
-    "id": "bai-tap-edit-1",
-    "name": "bai-tap-edit-1",
-    "path": "projects/bai-tap-edit-1",
+    "id": "noi-long-con-xa-que",
+    "name": "noi-long-con-xa-que",
+    "path": "projects/noi-long-con-xa-que",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-29T02:56:03.245Z",
-    "timestamp": 1769655363245
+    "modifiedAt": "2026-01-31T17:10:59.291Z",
+    "timestamp": 1769879459291
   },
   {
-    "id": "huong-dan-anh-thanh",
-    "name": "huong-dan-anh-thanh",
-    "path": "projects/huong-dan-anh-thanh",
-    "hasScript": true,
-    "hasOtio": false,
-    "otioFile": null,
-    "ratio": "16:9",
-    "modifiedAt": "2026-01-28T12:14:35.417Z",
-    "timestamp": 1769602475417
-  },
-  {
-    "id": "facebook-zalo-debug",
-    "name": "facebook-zalo-debug",
-    "path": "projects/facebook-zalo-debug",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-01-28T11:13:09.181Z",
-    "timestamp": 1769598789181
-  },
-  {
-    "id": "tim-hieu-sau-chuong-17",
-    "name": "tim-hieu-sau-chuong-17",
-    "path": "projects/tim-hieu-sau-chuong-17",
+    "id": "duong-vuot-bien-can-gio-vung-tau",
+    "name": "duong-vuot-bien-can-gio-vung-tau",
+    "path": "projects/duong-vuot-bien-can-gio-vung-tau",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-28T04:23:15.706Z",
-    "timestamp": 1769574195706
+    "modifiedAt": "2026-01-28T14:54:53.931Z",
+    "timestamp": 1769612093931
   },
   {
-    "id": "nguoi-luc-nao-cung-ban",
-    "name": "nguoi-luc-nao-cung-ban",
-    "path": "projects/nguoi-luc-nao-cung-ban",
+    "id": "may-bay-yak130-roi-dak-lak",
+    "name": "may-bay-yak130-roi-dak-lak",
+    "path": "projects/may-bay-yak130-roi-dak-lak",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-28T04:11:55.281Z",
-    "timestamp": 1769573515281
+    "modifiedAt": "2026-01-28T12:32:48.757Z",
+    "timestamp": 1769603568757
   },
   {
-    "id": "nguoi-que",
-    "name": "nguoi-que",
-    "path": "projects/nguoi-que",
+    "id": "lao-dong-tieng-trung",
+    "name": "lao-dong-tieng-trung",
+    "path": "projects/lao-dong-tieng-trung",
     "hasScript": true,
     "hasOtio": true,
     "otioFile": "project.otio",
     "ratio": "9:16",
-    "modifiedAt": "2026-01-27T10:35:01.642Z",
-    "timestamp": 1769510101642
-  },
-  {
-    "id": "the-unfinished-painting",
-    "name": "the-unfinished-painting",
-    "path": "projects/the-unfinished-painting",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-01-26T14:21:36.258Z",
-    "timestamp": 1769437296258
-  },
-  {
-    "id": "vibe-video-capcut",
-    "name": "vibe-video-capcut",
-    "path": "projects/vibe-video-capcut",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-26T06:49:07.794Z",
-    "timestamp": 1769410147794
-  },
-  {
-    "id": "10-su-that-thu-vi-ve-giong-noi",
-    "name": "10-su-that-thu-vi-ve-giong-noi",
-    "path": "projects/10-su-that-thu-vi-ve-giong-noi",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "9:16",
-    "modifiedAt": "2026-01-24T17:22:49.540Z",
-    "timestamp": 1769275369540
-  },
-  {
-    "id": "vietnam",
-    "name": "vietnam",
-    "path": "projects/vietnam",
-    "hasScript": false,
-    "hasOtio": true,
-    "otioFile": "vietnam_vibes.otio",
-    "ratio": null,
-    "modifiedAt": "2026-01-24T16:16:19.254Z",
-    "timestamp": 1769271379254
+    "modifiedAt": "2026-01-28T04:08:28.803Z",
+    "timestamp": 1769573308803
   }
 ]

@@ -27,4 +27,8 @@ venv/
 src/generated/*
 src/tmp_scripts/*
 scripts/tmp_scripts/*
-
+.claude/skills/video-editor/core/__pycache__/asset_resolver.cpython-313.pyc
+.claude/skills/video-editor/core/__pycache__/otio_builder.cpython-313.pyc
+.claude/skills/video-editor/strategies/__pycache__/base_strategy.cpython-313.pyc
+.claude/skills/video-editor/strategies/__pycache__/listicle_strategy.cpython-313.pyc
+.claude/skills/video-editor/templates/__pycache__/subtitle_generator.cpython-313.pyc

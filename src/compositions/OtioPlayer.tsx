@@ -191,10 +191,8 @@ export const OtioClip: React.FC<{
     // [Vue: React.useState] -> Equivalent to `const hasError = ref(false)` in Vue 3 Composition API.
     // `setHasError` is the setter function. In Vue you would just assign `hasError.value = true`.
 
-    const frame = useCurrentFrame();
-    // [Vue: Custom Hook] -> Similar to a composable function `useCurrentFrame()` in Vue.
-
     const { width, height } = useVideoConfig();
+    const frame = useCurrentFrame();
     const isVertical = height > width;
 
     // Debug log for first clip only to reduce noise
@@ -322,6 +320,9 @@ export const OtioClip: React.FC<{
     // Style Metadata Handling
     const customStyle: React.CSSProperties = clip.metadata?.style || {};
 
+    // Logic default objectFit: Nếu là video dọc (height > width), mặc định là contain để không bị cover mất nội dung
+    const defaultObjectFit = height > width ? 'contain' : 'cover';
+
     return (
         <Sequence
             key={clip.name || clipIndex}
@@ -344,6 +345,7 @@ export const OtioClip: React.FC<{
                             fit: isVertical ? 'blur-bg' : 'cover'
                         }}
                         durationInFrames={durationFrames}
+                        objectFit={(clip.metadata?.objectFit as any) || (clip.metadata?.style?.objectFit as any) || defaultObjectFit}
                         onError={() => { console.error(`Failed to load image: ${src}`); setHasError(true); }}
                     />
                 ) : isAudio ? (
@@ -407,7 +409,7 @@ export const OtioClip: React.FC<{
                             style={{
                                 width: clip.metadata?.props?.maxWidth || '100%',
                                 height: clip.metadata?.props?.maxHeight || '100%',
-                                objectFit: clip.metadata?.props?.objectFit || clip.metadata?.props?.scaleMode || 'cover',
+                                objectFit: clip.metadata?.props?.objectFit || clip.metadata?.props?.scaleMode || defaultObjectFit,
                                 ...clip.metadata?.props?.style
                             }}
                             volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume}

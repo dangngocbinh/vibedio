@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layer Title Templates (Top 10)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;700;800;900&family=Playfair+Display:ital,wght@1,700&family=Bungee&family=Roboto+Condensed&family=Anton&family=Lobster&family=Pacifico&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #10b981;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .preview-box {
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
+        }
+
+        .info .name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .info .id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .btn-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-4px);
+        }
+
+        /* Layer Title Mimic Styles */
+        .lt-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        .lt-content {
+            box-sizing: border-box;
+            display: inline-block;
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .lt-title {
+            margin: 0;
+            font-weight: 900;
+            line-height: 1.3;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .lt-subtitle {
+            margin: 8px 0 0;
+            font-weight: 500;
+        }
+
+        /* Aspect Ratio Containers */
+        .preview-box.ratio-9-16 {
+            width: 112.5px;
+            /* (200 * 9) / 16 */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .preview-box {
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
+            transition: width 0.3s ease;
+        }
+
+        /* Toggle Button Styles */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .toggle-btn {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="btn-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Quay lại
+    </a>
+    <div class="header">
+        <h1>Layer Title Templates</h1>
+        <p>Dynamic overlays for cinematic storytelling</p>
+    </div>
+
+    <div class="controls">
+        <button class="toggle-btn active" onclick="setRatio('16-9', this)">Landscape (16:9)</button>
+        <button class="toggle-btn" onclick="setRatio('9-16', this)">Portrait (9:16)</button>
+    </div>
+
+    <div class="grid" id="gallery"></div>
+
+    <script>
+        const templates = [
+            'classic-lower-third', 'minimal-corner', 'bold-centered',
+            'modern-top', 'clean-bottom', 'fullscreen-intro',
+            'social-badge', 'breaking-news', 'elegant-centered', 'gaming-title'
+        ];
+
+        function getPreviewHtml(t) {
+            const title = "LAYER TITLE";
+            const sub = "Professional Overlay System";
+            const w = "100%", h = "200px";
+
+            let contentStyle = "";
+            let containerStyle = "";
+            let titleStyle = "";
+            let subStyle = "";
+            let font = "'Inter', sans-serif";
+
+            switch (t) {
+                case 'classic-lower-third':
+                    containerStyle = "position:absolute; bottom:20px; left:20px; max-width:70%;";
+                    contentStyle = "background:rgba(6, 182, 79, 0.85); padding:8px 16px; border-left:4px solid #ffae00;";
+                    titleStyle = "color:#eb0000; font-size:18px;";
+                    subStyle = "color:#ffae00; font-size:12px;";
+                    break;
+
+                case 'minimal-corner':
+                    containerStyle = "position:absolute; top:15px; right:15px;";
+                    contentStyle = "background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:4px;";
+                    titleStyle = "color:#fff; font-size:14px; text-transform:uppercase;";
+                    subStyle = "color:#aaa; font-size:10px;";
+                    break;
+
+                case 'bold-centered':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "background:#000; padding:20px 30px; border-radius:12px; width:90%; text-align:center;";
+                    titleStyle = "color:#fff; font-size:24px; font-weight:900;";
+                    subStyle = "color:#10b981; font-size:14px;";
+                    font = "'Anton', sans-serif";
+                    break;
+
+                case 'modern-top':
+                    containerStyle = "position:absolute; top:20px; left:5%; right:5%; display:flex; justify-content:center;";
+                    contentStyle = "background:rgba(59, 130, 246, 0.9); padding:8px 24px; border-radius:100px;";
+                    titleStyle = "color:#fff; font-size:16px;";
+                    subStyle = "display:none;";
+                    break;
+
+                case 'clean-bottom':
+                    containerStyle = "position:absolute; bottom:25px; left:5%; right:5%; display:flex; justify-content:center;";
+                    contentStyle = "background:rgba(255,255,255,0.9); padding:10px 20px; border-bottom:4px solid #3b82f6;";
+                    titleStyle = "color:#000; font-size:18px;";
+                    subStyle = "color:#666; font-size:11px;";
+                    break;
+
+                case 'fullscreen-intro':
+                    containerStyle = "position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:rgba(0,0,0,0.7); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;";
+                    titleStyle = "color:#fff; font-size:32px; letter-spacing:4px;";
+                    subStyle = "color:#f59e0b; font-size:14px; text-transform:uppercase; letter-spacing:2px;";
+                    font = "'Roboto Condensed', sans-serif";
+                    break;
+
+                case 'social-badge':
+                    containerStyle = "position:absolute; top:15px; right:15px;";
+                    contentStyle = "background:#3b82f6; padding:8px 12px; border-left:4px solid #fff; display:flex; align-items:center; float:right;";
+                    titleStyle = "color:#fff; font-size:14px; font-weight:700;";
+                    subStyle = "display:none;";
+                    break;
+
+                case 'breaking-news':
+                    containerStyle = "position:absolute; bottom:20px; left:0; max-width:80%;";
+                    contentStyle = "background:#ef4444; padding:8px 24px; border-right:8px solid #fff;";
+                    titleStyle = "color:#fff; font-size:20px; font-weight:900;";
+                    subStyle = "color:#fff; opacity:0.8; font-size:12px;";
+                    break;
+
+                case 'elegant-centered':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "border:1px solid rgba(255,215,0,0.5); padding:30px; text-align:center; background:rgba(0,0,0,0.4); backdrop-filter:blur(5px);";
+                    titleStyle = "color:#ffd700; font-size:22px; font-family:serif; font-style:italic;";
+                    subStyle = "color:#fff; font-size:11px; letter-spacing:3px; text-transform:uppercase; margin-top:20px;";
+                    font = "'Playfair Display', serif";
+                    break;
+
+                case 'gaming-title':
+                    containerStyle = "position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "text-align:center;";
+                    titleStyle = "color:#fff; font-size:40px; text-shadow:0 0 10px #f05, 0 0 20px #f05; font-style:italic;";
+                    subStyle = "color:#0ff; font-size:16px; font-weight:bold; letter-spacing:5px;";
+                    font = "'Anton', sans-serif";
+                    break;
+
+                default:
+                    return `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#888;">${t}</div>`;
+            }
+
+            return `
+                <div class="lt-container">
+                    <div style="${containerStyle}">
+                        <div class="lt-content" style="${contentStyle}">
+                            <h1 class="lt-title" style="${titleStyle} font-family:${font}">${title}</h1>
+                            <p class="lt-subtitle" style="${subStyle} font-family:${font}">${sub}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setRatio(ratio, btn) {
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const boxes = document.querySelectorAll('.preview-box');
+            boxes.forEach(box => {
+                if (ratio === '9-16') {
+                    box.classList.add('ratio-9-16');
+                } else {
+                    box.classList.remove('ratio-9-16');
+                }
+            });
+        }
+
+        const gallery = document.getElementById('gallery');
+        templates.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="preview-box">${getPreviewHtml(t)}</div>
+                <div class="info">
+                    <div class="name">${t.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
+                    <div class="id">${t}</div>
+                </div>
+            `;
+            gallery.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>

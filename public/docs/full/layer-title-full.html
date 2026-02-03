@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layer Title Full Templates (40 Styles)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;700;800;900&family=Playfair+Display:ital,wght@1,700&family=Bungee&family=Roboto+Condensed&family=Anton&family=Lobster&family=Pacifico&family=Dancing+Script&family=Comfortaa&font-family=VT323&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #10b981;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .preview-box {
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #475569;
+        }
+
+        .info .name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .info .id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        /* Layer Title Mimic Styles */
+        .lt-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        .lt-content {
+            box-sizing: border-box;
+            display: inline-block;
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .lt-title {
+            margin: 0;
+            font-weight: 900;
+            line-height: 1.3;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .lt-subtitle {
+            margin: 8px 0 0;
+            font-weight: 500;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Layer Title Full Library</h1>
+        <p>40 Specialized Combinations For Every Scene</p>
+    </div>
+    <div class="grid" id="gallery"></div>
+
+    <script>
+        const templates = [
+            // Lower Third Variations (1-8)
+            'lt-standard', 'lt-accent-left', 'lt-glass', 'lt-gradient', 'lt-minimal', 'lt-bold-red', 'lt-rounded-dark', 'lt-floating',
+            // Centered Variations (9-16)
+            'c-dramatic', 'c-elegant', 'c-neon', 'c-classic-black', 'c-minimal-white', 'c-paper', 'c-boxed', 'c-quotes',
+            // Corner Badge Variations (17-24)
+            'cb-live', 'cb-info', 'cb-social', 'cb-tag', 'cb-warning', 'cb-price', 'cb-status', 'cb-date',
+            // Full Screen Variations (25-32)
+            'fs-intro', 'fs-outro', 'fs-impact', 'fs-minimalist', 'fs-vintage', 'fs-tech', 'fs-liquid', 'fs-chapter',
+            // Top/Bottom Center Variations (33-40)
+            'tc-alert', 'tc-notification', 'tc-header', 'tc-navigation', 'bc-caption', 'bc-news-scroll', 'bc-simple', 'bc-premium'
+        ];
+
+        function getPreviewHtml(t) {
+            const title = "TITLE TEXT";
+            const sub = "Professional Metadata Subtitle";
+
+            let contentStyle = "";
+            let containerStyle = "";
+            let titleStyle = "";
+            let subStyle = "";
+            let font = "'Inter', sans-serif";
+
+            switch (t) {
+                // LOWER THIRD
+                case 'lt-standard':
+                    containerStyle = "position:absolute; bottom:20px; left:20px; max-width:70%;";
+                    contentStyle = "background:rgba(6, 182, 79, 0.85); padding:8px 16px; border-left:4px solid #ffae00;";
+                    titleStyle = "color:#eb0000; font-size:16px;";
+                    subStyle = "color:#ffae00; font-size:10px;";
+                    break;
+                case 'lt-accent-left':
+                    containerStyle = "position:absolute; bottom:30px; left:0; max-width:60%;";
+                    contentStyle = "background:#3b82f6; padding:12px 30px; border-radius:0 50px 50px 0;";
+                    titleStyle = "color:#fff; font-size:18px; font-weight:900;";
+                    subStyle = "color:rgba(255,255,255,0.7); font-size:10px;";
+                    break;
+                case 'lt-glass':
+                    containerStyle = "position:absolute; bottom:25px; left:25px;";
+                    contentStyle = "background:rgba(255,255,255,0.1); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.2); border-radius:12px; padding:15px 25px;";
+                    titleStyle = "color:#fff; font-size:16px;";
+                    subStyle = "color:#aaa; font-size:9px;";
+                    break;
+                case 'lt-gradient':
+                    containerStyle = "position:absolute; bottom:20px; left:20px;";
+                    contentStyle = "background:linear-gradient(45deg, #f05, #ffae00); padding:10px 20px; border-radius:4px;";
+                    titleStyle = "color:#fff; font-size:17px; font-weight:900;";
+                    subStyle = "color:#fff; opacity:0.8; font-size:10px;";
+                    break;
+                case 'lt-minimal':
+                    containerStyle = "position:absolute; bottom:25px; left:25px;";
+                    contentStyle = "border-left:2px solid #fff; padding-left:12px;";
+                    titleStyle = "color:#fff; font-size:18px; font-weight:300;";
+                    subStyle = "color:#888; font-size:10px;";
+                    break;
+                case 'lt-bold-red':
+                    containerStyle = "position:absolute; bottom:20px; left:0;";
+                    contentStyle = "background:#eb0000; padding:10px 40px; transform:skewX(-10deg);";
+                    titleStyle = "color:#fff; font-size:20px; font-weight:900; transform:skewX(10deg);";
+                    subStyle = "color:#fff; font-size:11px; transform:skewX(10deg); opacity:0.8;";
+                    break;
+                case 'lt-rounded-dark':
+                    containerStyle = "position:absolute; bottom:20px; left:20px;";
+                    contentStyle = "background:rgba(0,0,0,0.8); padding:15px 25px; border-radius:30px;";
+                    titleStyle = "color:#10b981; font-size:16px; font-weight:bold;";
+                    subStyle = "color:#fff; font-size:10px;";
+                    break;
+                case 'lt-floating':
+                    containerStyle = "position:absolute; bottom:35px; left:25px;";
+                    contentStyle = "background:#fff; box-shadow:0 10px 25px rgba(0,0,0,0.3); padding:12px 24px; border-radius:8px;";
+                    titleStyle = "color:#000; font-size:16px;";
+                    subStyle = "color:#3b82f6; font-size:10px; font-weight:bold;";
+                    break;
+
+                // CENTERED
+                case 'c-dramatic':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "background:rgba(0,0,0,0.6); padding:40px; text-align:center; width:90%; min-height:40%; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+                    titleStyle = "color:#fff; font-size:36px; letter-spacing:8px; font-weight:900;";
+                    subStyle = "color:#aaa; font-size:14px; margin-top:20px; text-transform:uppercase;";
+                    break;
+                case 'c-elegant':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "text-align:center;";
+                    titleStyle = "color:#ffd700; font-size:32px; font-style:italic;";
+                    subStyle = "color:#fff; font-size:12px; letter-spacing:5px; border-top:1px solid #ffd700; padding-top:10px; margin-top:15px;";
+                    font = "'Playfair Display', serif";
+                    break;
+                case 'c-neon':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "text-align:center; border:2px solid #0ff; padding:30px 60px; box-shadow:0 0 15px #0ff;";
+                    titleStyle = "color:#fff; font-size:28px; text-shadow:0 0 10px #0ff;";
+                    subStyle = "color:#f0f; font-size:14px; text-shadow:0 0 5px #f0f;";
+                    break;
+                case 'c-classic-black':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "background:#000; color:#fff; padding:50px; text-align:center; width:100%;";
+                    titleStyle = "font-size:32px; font-weight:900;";
+                    subStyle = "color:#f59e0b; font-size:16px; font-weight:bold;";
+                    break;
+                case 'c-minimal-white':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "background:#fff; color:#000; padding:40px; text-align:center; box-shadow:0 0 40px rgba(0,0,0,0.1);";
+                    titleStyle = "font-size:24px; font-weight:200; letter-spacing:10px;";
+                    subStyle = "font-size:11px; margin-top:20px;";
+                    break;
+                case 'c-paper':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "background:#f4f1ea; border:1px solid #ddd; padding:30px; transform:rotate(-1deg); box-shadow:5px 5px 15px rgba(0,0,0,0.05);";
+                    titleStyle = "color:#4a3728; font-size:22px; font-family:serif;";
+                    subStyle = "color:#8a7e72; font-size:12px;";
+                    break;
+                case 'c-boxed':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "border:10px solid #fff; padding:40px;";
+                    titleStyle = "color:#fff; font-size:36px; font-weight:900;";
+                    subStyle = "color:#fff; font-size:14px; background:#fff; color:#000; padding:5px 15px; margin-top:20px; display:inline-block;";
+                    break;
+                case 'c-quotes':
+                    containerStyle = "position:absolute; top:50%; left:5%; right:5%; transform:translateY(-50%); display:flex; justify-content:center;";
+                    contentStyle = "text-align:center; max-width:80%;";
+                    titleStyle = "color:#fff; font-size:24px; font-style:italic; font-family:serif;";
+                    subStyle = "color:#10b981; font-size:14px; margin-top:20px;";
+                    break;
+
+                // CORNER BADGE
+                case 'cb-live':
+                    containerStyle = "position:absolute; top:20px; right:20px;";
+                    contentStyle = "background:#ef4444; color:#fff; padding:5px 15px; font-weight:bold; border-radius:4px; display:flex; align-items:center;";
+                    titleStyle = "font-size:14px;";
+                    subStyle = "display:none;";
+                    break;
+                case 'cb-info':
+                    containerStyle = "position:absolute; top:20px; right:20px;";
+                    contentStyle = "background:rgba(255,255,255,0.9); padding:10px 15px; border-right:4px solid #3b82f6;";
+                    titleStyle = "color:#000; font-size:12px; font-weight:bold;";
+                    subStyle = "color:#666; font-size:10px;";
+                    break;
+                case 'cb-social':
+                    containerStyle = "position:absolute; top:20px; right:20px;";
+                    contentStyle = "background:#000; color:#fff; padding:8px 18px; border-radius:20px; border:1px solid #333;";
+                    titleStyle = "font-size:13px; font-family:monospace;";
+                    subStyle = "display:none;";
+                    break;
+                case 'cb-tag':
+                    containerStyle = "position:absolute; top:0; right:0;";
+                    contentStyle = "background:#ffae00; color:#000; padding:15px 40px; transform:rotate(45deg) translate(30px, -40px);";
+                    titleStyle = "font-size:12px; font-weight:900; text-align:center;";
+                    subStyle = "display:none;";
+                    break;
+                case 'cb-warning':
+                    containerStyle = "position:absolute; top:20px; left:20px;";
+                    contentStyle = "background:#f59e0b; color:#000; padding:10px 20px; border-radius:0 20px 20px 0;";
+                    titleStyle = "font-size:14px; font-weight:bold;";
+                    subStyle = "display:none;";
+                    break;
+                case 'cb-price':
+                    containerStyle = "position:absolute; bottom:20px; right:20px;";
+                    contentStyle = "background:#10b981; color:#fff; padding:15px; border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center;";
+                    titleStyle = "font-size:18px; font-weight:900; line-height:1;";
+                    subStyle = "font-size:8px; margin:0;";
+                    break;
+                case 'cb-status':
+                    containerStyle = "position:absolute; top:20px; right:20px;";
+                    contentStyle = "background:rgba(0,0,0,0.5); padding:6px 15px; border-radius:100px; border:1px solid rgba(255,255,255,0.2);";
+                    titleStyle = "color:#0f0; font-size:11px; font-family:monospace;";
+                    subStyle = "display:none;";
+                    break;
+                case 'cb-date':
+                    containerStyle = "position:absolute; top:20px; left:20px;";
+                    contentStyle = "background:#fff; color:#000; padding:5px 12px; text-align:center;";
+                    titleStyle = "font-size:18px; font-weight:900;";
+                    subStyle = "font-size:10px; background:#000; color:#fff; margin:-5px -12px -5px; padding:2px 0;";
+                    break;
+
+                // FULL SCREEN
+                case 'fs-intro':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:rgba(0,0,0,0.9); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;";
+                    titleStyle = "color:#fff; font-size:48px; letter-spacing:10px; font-weight:900;";
+                    subStyle = "color:#f59e0b; font-size:18px; margin-top:30px; letter-spacing:5px;";
+                    break;
+                case 'fs-outro':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:linear-gradient(to bottom, #1e293b, #0f172a); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+                    titleStyle = "color:#fff; font-size:32px; font-family:serif; font-style:italic;";
+                    subStyle = "color:#94a3b8; font-size:14px; margin-top:40px;";
+                    break;
+                case 'fs-impact':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:#ffae00; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+                    titleStyle = "color:#000; font-size:60px; font-weight:900; line-height:0.8;";
+                    subStyle = "color:#000; font-size:24px; font-weight:bold; margin-top:10px;";
+                    font = "'Anton', sans-serif";
+                    break;
+                case 'fs-minimalist':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:#fff; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+                    titleStyle = "color:#000; font-size:40px; font-weight:100; letter-spacing:20px;";
+                    subStyle = "color:#888; font-size:12px; margin-top:50px;";
+                    break;
+                case 'fs-vintage':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:#3d2b1f; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; border:20px solid #2d1f14;";
+                    titleStyle = "color:#d4af37; font-size:36px; font-family:serif;";
+                    subStyle = "color:#a68b6d; font-size:16px; font-style:italic;";
+                    break;
+                case 'fs-tech':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:#050505; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+                    titleStyle = "color:#0f0; font-size:32px; font-family:monospace; text-shadow:0 0 10px #0f0;";
+                    subStyle = "color:#0f0; font-size:14px; opacity:0.6; margin-top:20px;";
+                    break;
+                case 'fs-chapter':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:#f8fafc; color:#000; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+                    titleStyle = "font-size:80px; font-weight:900; margin:0;";
+                    subStyle = "font-size:24px; font-weight:300; border-top:4px solid #000; padding-top:10px;";
+                    break;
+                case 'fs-liquid':
+                    containerStyle = "position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center;";
+                    contentStyle = "background:linear-gradient(135deg, #6366f1, #a855f7); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+                    titleStyle = "color:#fff; font-size:44px; font-weight:900; filter:drop-shadow(0 10px 10px rgba(0,0,0,0.2));";
+                    subStyle = "color:#fff; font-size:16px; background:rgba(255,255,255,0.2); padding:5px 20px; border-radius:100px; margin-top:20px;";
+                    break;
+
+                // TOP/BOTTOM CENTER
+                case 'tc-alert':
+                    containerStyle = "position:absolute; top:40px; left:5%; right:5%; display:flex; justify-content:center;";
+                    contentStyle = "background:#ef4444; color:#fff; padding:10px 40px; box-shadow:0 10px 30px rgba(239,68,68,0.4); border-radius:4px;";
+                    titleStyle = "font-size:18px; font-weight:900;";
+                    subStyle = "display:none;";
+                    break;
+                case 'tc-notification':
+                    containerStyle = "position:absolute; top:40px; left:5%; right:5%; display:flex; justify-content:center;";
+                    contentStyle = "background:#1e293b; color:#fff; padding:12px 24px; border-radius:16px; border:1px solid #334155; display:flex; align-items:center; gap:15px;";
+                    titleStyle = "font-size:14px; font-weight:bold;";
+                    subStyle = "color:#94a3b8; font-size:12px; margin:0;";
+                    break;
+                case 'bc-caption':
+                    containerStyle = "position:absolute; bottom:40px; left:5%; right:5%; display:flex; justify-content:center;";
+                    contentStyle = "background:rgba(0,0,0,0.8); color:#fff; padding:8px 20px; border-radius:8px;";
+                    titleStyle = "font-size:20px; font-weight:700;";
+                    subStyle = "display:none;";
+                    break;
+                case 'bc-news-scroll':
+                    containerStyle = "position:absolute; bottom:0; left:0; right:0;";
+                    contentStyle = "background:#fff; color:#000; padding:10px 20px; border-top:4px solid #ef4444; width:100%; box-sizing:border-box;";
+                    titleStyle = "font-size:18px; font-weight:900;";
+                    subStyle = "background:#ef4444; color:#fff; padding:2px 10px; font-size:12px; display:inline-block; margin-right:15px;";
+                    break;
+                case 'bc-simple':
+                    containerStyle = "position:absolute; bottom:40px; left:5%; right:5%; display:flex; justify-content:center;";
+                    contentStyle = "text-align:center;";
+                    titleStyle = "color:#fff; font-size:18px; font-weight:300;";
+                    subStyle = "color:#10b981; font-size:11px; font-weight:bold;";
+                    break;
+                case 'bc-premium':
+                    containerStyle = "position:absolute; bottom:50px; left:5%; right:5%; display:flex; justify-content:center;";
+                    contentStyle = "background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); padding:20px 40px; border:1px solid rgba(255,255,255,0.1); border-radius:20px;";
+                    titleStyle = "color:#fff; font-size:20px; letter-spacing:3px;";
+                    subStyle = "color:#aaa; font-size:10px; text-transform:uppercase;";
+                    break;
+                default:
+                    containerStyle = "display:flex; align-items:center; justify-content:center; height:100%;";
+                    titleStyle = "color:#444;";
+                    break;
+            }
+
+            return `
+                <div class="lt-container">
+                    <div style="${containerStyle}">
+                        <div class="lt-content" style="${contentStyle}">
+                            <h1 class="lt-title" style="${titleStyle} font-family:${font}">${title}</h1>
+                            <p class="lt-subtitle" style="${subStyle} font-family:${font}">${sub}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const gallery = document.getElementById('gallery');
+        templates.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="preview-box">${getPreviewHtml(t)}</div>
+                <div class="info">
+                    <div class="name">${t.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</div>
+                    <div class="id">${t}</div>
+                </div>
+            `;
+            gallery.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>

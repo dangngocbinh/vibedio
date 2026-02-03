@@ -50,17 +50,32 @@ export const useResponsiveScale = () => {
     };
 
     /**
-     * Scale font size responsively
+     * Scale font size responsively with aspect ratio multipliers
      */
     const scaleFontSize = (baseFontSize: number): number => {
-        // For portrait videos, use height-based scaling to prevent too small text
-        if (isPortrait) {
-            // Portrait: scale based on width but with a minimum
-            const scaled = baseFontSize * widthScale;
-            const minFontSize = baseFontSize * 0.4; // Minimum 40% of base
-            return Math.max(scaled, minFontSize);
+        // Xác định loại aspect ratio
+        const isVertical = aspectRatio < 0.75; // 9:16, 4:5
+        const isSquareAspect = aspectRatio >= 0.75 && aspectRatio <= 1.25; // 1:1
+        const isHorizontal = aspectRatio > 1.25; // 16:9
+
+        let baseScaleFactor: number;
+        let fontSizeMultiplier: number;
+
+        if (isVertical) {
+            // Vertical: Scale theo width
+            baseScaleFactor = width / 1080;
+            fontSizeMultiplier = aspectRatio < 0.7 ? 0.7 : 0.8; // 9:16 nhỏ hơn 4:5
+        } else if (isSquareAspect) {
+            // Square: Scale theo dimension nhỏ nhất
+            baseScaleFactor = Math.min(width / 1080, height / 1080);
+            fontSizeMultiplier = 0.85;
+        } else {
+            // Horizontal: Scale theo height
+            baseScaleFactor = height / 1080;
+            fontSizeMultiplier = 1.0;
         }
-        return baseFontSize * minScale;
+
+        return baseFontSize * baseScaleFactor * fontSizeMultiplier;
     };
 
     /**

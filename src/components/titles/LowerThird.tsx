@@ -5,6 +5,7 @@ import {
     useVideoConfig,
     interpolate,
     Easing,
+    random,
 } from 'remotion';
 import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
@@ -32,6 +33,29 @@ export interface LowerThirdProps {
     fontFamily?: string;
 }
 
+const DEFAULT_FONTS = [
+    'Playwrite New Zealand Basic',
+    'Roboto Condensed',
+    'Arimo',
+    'Bungee',
+    'Merriweather',
+    'Mulish',
+    'Be Vietnam Pro',
+    'Nunito',
+    'Montserrat',
+    'Lexend',
+    'Oswald',
+    'Anton',
+    'Lobster',
+    'Pacifico',
+    'Dancing Script',
+    'Quicksand',
+    'Comfortaa',
+    'Patrick Hand',
+    'Josefin Sans',
+    'VT323'
+];
+
 // ============ COMPONENT ============
 export const LowerThird: React.FC<LowerThirdProps> = ({
     title,
@@ -41,11 +65,15 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
     secondaryColor = '#ffffff',
     textColor = '#2c3e50',
     fontSize = 42,
-    fontFamily,
+    fontFamily: propFontFamily,
 }) => {
     const frame = useCurrentFrame();
     const { fps, durationInFrames } = useVideoConfig();
     const { scalePixel, scaleFontSize, isPortrait, isSquare, uniformScale, width } = useResponsiveScale();
+
+    // Random default font
+    const defaultFont = DEFAULT_FONTS[Math.floor(random(title || 'lower-third') * DEFAULT_FONTS.length)];
+    const fontFamily = propFontFamily || defaultFont;
 
     // Responsive scaled values
     const scaledFontSize = scaleFontSize(fontSize);
@@ -97,12 +125,12 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
                 return (
                     <div style={{ position: 'absolute', bottom: 100, left: 80, opacity, transform: `translateX(${interpolate(entrance, [0, 1], [-50, 0])}px)`, ...commonStyle }}>
                         <div style={{ backgroundColor: secondaryColor, padding: '10px 40px 10px 20px', display: 'inline-block', transform: 'skewX(-15deg)', boxShadow: '10px 10px 30px rgba(0,0,0,0.1)' }}>
-                            <h1 style={{ margin: 0, fontSize, fontWeight: 900, color: textColor, transform: 'skewX(15deg)', fontFamily: fontFamily || 'Inter, sans-serif', textTransform: 'uppercase' }}>{title}</h1>
+                            <h1 style={{ margin: 0, fontSize, fontWeight: 900, color: textColor, transform: 'skewX(15deg)', fontFamily, textTransform: 'uppercase' }}>{title}</h1>
                         </div>
                         <br />
                         {subtitle && (
                             <div style={{ backgroundColor: primaryColor, padding: '5px 30px 5px 15px', display: 'inline-block', marginTop: 5, transform: 'skewX(-15deg) translateX(20px)', width: 'fit-content' }}>
-                                <p style={{ margin: 0, fontSize: fontSize * 0.6, color: '#fff', fontWeight: 600, transform: 'skewX(15deg)', fontFamily: fontFamily || 'Inter, sans-serif' }}>{subtitle}</p>
+                                <p style={{ margin: 0, fontSize: fontSize * 0.6, color: '#fff', fontWeight: 600, transform: 'skewX(15deg)', fontFamily }}>{subtitle}</p>
                             </div>
                         )}
                     </div>
@@ -198,12 +226,36 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
                     </div>
                 );
             case 'social-youtube':
+                const iconSize = fontSize * 1.2;
                 return (
-                    <div style={{ position: 'absolute', bottom: 100, left: 80, opacity, display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: 50, padding: '10px 30px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                        <div style={{ width: 50, height: 50, backgroundColor: primaryColor, borderRadius: '50%', marginRight: 15, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fff' }}>YT</div>
+                    <div style={{
+                        position: 'absolute',
+                        bottom: 100,
+                        left: 80,
+                        opacity,
+                        display: 'flex',
+                        alignItems: 'center',
+                        backgroundColor: '#fff',
+                        borderRadius: fontSize,
+                        padding: `${fontSize * 0.2}px ${fontSize * 1.2}px`,
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                    }}>
+                        <div style={{
+                            width: iconSize,
+                            height: iconSize,
+                            backgroundColor: primaryColor,
+                            borderRadius: '50%',
+                            marginRight: fontSize * 0.3,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            color: '#fff',
+                            fontSize: fontSize * 0.6,
+                            fontWeight: 'bold'
+                        }}>YT</div>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: fontSize * 0.8, color: '#000' }}>{title}</h1>
-                            <p style={{ margin: 0, fontSize: fontSize * 0.5, color: '#666' }}>{subtitle}</p>
+                            <h1 style={{ margin: 0, fontSize: fontSize * 0.8, color: '#000', lineHeight: 1 }}>{title}</h1>
+                            <p style={{ margin: 0, fontSize: fontSize * 0.4, color: '#666', marginTop: fontSize * 0.1 }}>{subtitle}</p>
                         </div>
                     </div>
                 );
@@ -377,7 +429,7 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
                                 fontSize,
                                 fontWeight: 900,
                                 color: '#000', // Chuyển sang chữ đen
-                                fontFamily: 'Inter, sans-serif'
+                                fontFamily: fontFamily || 'Inter, sans-serif'
                             }}>{title}</h1>
                         </div>
                         <div style={{
