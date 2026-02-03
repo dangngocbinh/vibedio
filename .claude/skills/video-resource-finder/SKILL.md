@@ -68,7 +68,9 @@ script.json → Read Scenes → Extract Queries → Call APIs/AI → Download �
 
 ### Search Options
 - **`--resultsPerQuery`**: Số lượng results mỗi query (default: 3, max: 80)
-- **`--preferredSource`**: API ưu tiên "pexels" hoặc "pixabay" (default: pexels)
+- **`--provider`**: Provider cụ thể: "pexels", "pixabay", hoặc "unsplash" (default: null = multi-provider)
+  - **Multi-provider mode (default)**: Search TẤT CẢ providers có API key được cấu hình
+  - **Single provider mode**: Chỉ search provider được chỉ định, KHÔNG fallback
 - **`--enableAI`**: Bật AI image generation (default: true nếu có GEMINI_API_KEY)
 - **`--noAI`**: Tắt AI image generation (chỉ dùng stock)
 
@@ -504,15 +506,24 @@ node scripts/find-resources.js \
 - Download 2 results tốt nhất mỗi scene
 - Ưu tiên quality HD (thay vì 4K)
 
-### Example 5: Ưu tiên Pixabay
+### Example 4: Multi-provider (mặc định)
+
+```bash
+node scripts/find-resources.js \
+  --projectDir "../../public/projects/my-project"
+```
+
+Mặc định sẽ search trên **TẤT CẢ** providers có API key (Pexels, Pixabay, Unsplash).
+
+### Example 5: Chỉ search Pixabay (không fallback)
 
 ```bash
 node scripts/find-resources.js \
   --projectDir "../../public/projects/my-project" \
-  --preferredSource "pixabay"
+  --provider "pixabay"
 ```
 
-Sẽ search Pixabay trước, Pexels làm fallback.
+Chỉ search Pixabay. Nếu không tìm thấy, sẽ KHÔNG fallback sang providers khác.
 
 ### Example 6: Với AI Image Generation
 

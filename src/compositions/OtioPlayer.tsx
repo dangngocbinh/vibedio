@@ -194,6 +194,14 @@ export const OtioClip: React.FC<{
     const frame = useCurrentFrame();
     // [Vue: Custom Hook] -> Similar to a composable function `useCurrentFrame()` in Vue.
 
+    const { width, height } = useVideoConfig();
+    const isVertical = height > width;
+
+    // Debug log for first clip only to reduce noise
+    if (clipIndex === 0 && frame < 5) {
+        console.log(`[OtioPlayer Debug] Clip 0 Mode: Width=${width}, Height=${height}, isVertical=${isVertical}`);
+    }
+
     // Handle Gap (Silence)
     if (clip.OTIO_SCHEMA?.startsWith('Gap')) {
         return null;
@@ -331,7 +339,10 @@ export const OtioClip: React.FC<{
                     <ImageWithEffect
                         src={src!}
                         effect={clip.metadata?.effect}
-                        effectParams={clip.metadata?.effect_params}
+                        effectParams={{
+                            ...(clip.metadata?.effect_params || {}),
+                            fit: isVertical ? 'blur-bg' : 'cover'
+                        }}
                         durationInFrames={durationFrames}
                         onError={() => { console.error(`Failed to load image: ${src}`); setHasError(true); }}
                     />
@@ -343,19 +354,68 @@ export const OtioClip: React.FC<{
                         onError={(e) => { console.error(`Audio error`, e); setHasError(true); }}
                     />
                 ) : isVideo ? (
-                    <Video
-                        src={src!}
-                        style={{
-                            width: clip.metadata?.props?.maxWidth || '100%',
-                            height: clip.metadata?.props?.maxHeight || '100%',
-                            objectFit: clip.metadata?.props?.objectFit || clip.metadata?.props?.scaleMode || 'cover',
-                            ...clip.metadata?.props?.style
-                        }}
-                        volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume}
-                        muted={(clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume) === 0}
-                        startFrom={startFromFrames}
-                        onError={(e) => { console.error(`Video error: ${src} `, e); setHasError(true); }}
-                    />
+                    isVertical ? (
+                        // Vertical Mode: ALWAYS use Blur Background approach
+                        // - If video is 9:16, 'contain' will make it fill the screen (hiding the blur bg) -> correct.
+                        // - If video is 16:9, 'contain' will show full content with blur bars -> correct.
+                        <AbsoluteFill>
+                            {/* Background Layer (Blurred & Zoomed) */}
+                            <AbsoluteFill style={{ overflow: 'hidden', zIndex: 0 }}>
+                                <Video
+                                    src={src!}
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover', // Always cover for background
+                                        filter: 'blur(30px) brightness(0.6)', // Darker & more blurred
+                                        transform: 'scale(1.2)', // Zoom in more to hide edges
+                                    }}
+                                    volume={0}
+                                    startFrom={startFromFrames}
+                                    onError={(e) => { console.error(`Video BG error: ${src} `, e); }}
+                                />
+                            </AbsoluteFill>
+
+                            {/* Foreground Layer (Active Video) */}
+                            <AbsoluteFill style={{
+                                zIndex: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <Video
+                                    src={src!}
+                                    style={{
+                                        // Respect overrides if present, otherwise default to full size
+                                        width: clip.metadata?.props?.maxWidth || '100%',
+                                        height: clip.metadata?.props?.maxHeight || '100%',
+                                        objectFit: 'contain', // CRITICAL: This ensures no cropping
+                                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)', // Nice shadow
+                                        ...clip.metadata?.props?.style
+                                    }}
+                                    volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume}
+                                    muted={(clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume) === 0}
+                                    startFrom={startFromFrames}
+                                    onError={(e) => { console.error(`Video FG error: ${src} `, e); setHasError(true); }}
+                                />
+                            </AbsoluteFill>
+                        </AbsoluteFill>
+                    ) : (
+                        // Horizontal/Square Mode: Default Cover
+                        <Video
+                            src={src!}
+                            style={{
+                                width: clip.metadata?.props?.maxWidth || '100%',
+                                height: clip.metadata?.props?.maxHeight || '100%',
+                                objectFit: clip.metadata?.props?.objectFit || clip.metadata?.props?.scaleMode || 'cover',
+                                ...clip.metadata?.props?.style
+                            }}
+                            volume={clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume}
+                            muted={(clip.metadata?.video_volume !== undefined ? parseFloat(clip.metadata.video_volume) : audioVolume) === 0}
+                            startFrom={startFromFrames}
+                            onError={(e) => { console.error(`Video error: ${src} `, e); setHasError(true); }}
+                        />
+                    )
                 ) : (
                     // Fallback for missing media or just text placeholders
                     <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>

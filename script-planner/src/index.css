@@ -1,0 +1,65 @@
+/* Google Fonts Import - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+    --color-primary: #13a4ec;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+
+    --font-display: "Inter", sans-serif;
+    --font-sans: "Inter", sans-serif;
+}
+
+@layer base {
+    body {
+        font-family: var(--font-sans);
+        @apply text-gray-900 bg-gray-50;
+    }
+}
+
+/* Custom Scrollbar from original design */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.editable-input:focus,
+.editable-textarea:focus {
+    @apply bg-gray-100 outline-none;
+}
+
+.editable-input:hover,
+.editable-textarea:hover {
+    @apply bg-gray-50;
+}
+
+.wave-bar {
+    width: 3px;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    transition: height 0.2s, background-color 0.2s;
+}
+
+.wave-bar.active {
+    background-color: #13a4ec;
+}

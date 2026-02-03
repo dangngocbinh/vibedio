@@ -34,7 +34,20 @@ class ScriptReader {
    * @returns {Object} Object with stock and ai arrays
    */
   extractVisualQueries(script) {
-    if (!script.scenes || !Array.isArray(script.scenes)) {
+    // Support both sections (new) and scenes (legacy)
+    let scenes = [];
+    if (script.sections && Array.isArray(script.sections)) {
+      // Flatten sections into scenes
+      for (const section of script.sections) {
+        if (section.scenes && Array.isArray(section.scenes)) {
+          scenes = scenes.concat(section.scenes);
+        }
+      }
+    } else if (script.scenes && Array.isArray(script.scenes)) {
+      scenes = script.scenes;
+    }
+
+    if (scenes.length === 0) {
       console.warn('[ScriptReader] No scenes found in script');
       return { stock: [], ai: [], pinned: [] };
     }
@@ -43,48 +56,61 @@ class ScriptReader {
     const aiQueries = [];
     const pinnedQueries = [];
 
-    for (const scene of script.scenes) {
-      if (!scene.visualSuggestion) {
+    for (const scene of scenes) {
+      // Collect all visual items (from legacy visualSuggestion or new visuals array)
+      const visualItems = [];
+
+      if (scene.visualSuggestion) {
+        visualItems.push(scene.visualSuggestion);
+      }
+
+      if (scene.visuals && Array.isArray(scene.visuals)) {
+        visualItems.push(...scene.visuals);
+      }
+
+      if (visualItems.length === 0) {
         continue;
       }
 
-      const { type, query, style, path, url, description, resourceType } = scene.visualSuggestion;
+      for (const item of visualItems) {
+        const { type, query, style, path, url, description, resourceType } = item;
 
-      // Pinned resources: user-provided local path or URL
-      if (type === 'pinned') {
-        if (path || url) {
-          pinnedQueries.push({
-            sceneId: scene.id,
-            sceneText: scene.text,
-            path: path || null,
-            url: url || null,
-            description: description || '',
-            style: style || null,
-            query: query || null, // fallback search query
-            resourceType: resourceType || 'auto', // preferred asset type
-            duration: scene.duration || 5
-          });
+        // Pinned resources: user-provided local path or URL
+        if (type === 'pinned') {
+          if (path || url) {
+            pinnedQueries.push({
+              sceneId: scene.id,
+              sceneText: scene.text,
+              path: path || null,
+              url: url || null,
+              description: description || '',
+              style: style || null,
+              query: query || null, // fallback search query
+              resourceType: resourceType || 'auto', // preferred asset type
+              duration: item.duration || scene.duration || 5
+            });
+          }
+          continue;
         }
-        continue;
-      }
 
-      const queryObj = {
-        sceneId: scene.id,
-        sceneText: scene.text,
-        query: query,
-        style: style || null,
-        resourceType: resourceType || 'auto', // 'image', 'video', or 'auto'
-        referenceImages: scene.visualSuggestion.referenceImages || scene.visualSuggestion.references || [],
-        duration: scene.duration || 5
-      };
+        const queryObj = {
+          sceneId: scene.id,
+          sceneText: scene.text,
+          query: query,
+          style: style || null,
+          resourceType: resourceType || 'auto', // 'image', 'video', or 'auto'
+          referenceImages: item.referenceImages || item.references || [],
+          duration: item.duration || scene.duration || 5
+        };
 
-      // Categorize by type
-      if (type === 'ai-generated' || type === 'ai' || type === 'illustration') {
-        if (query) {
-          aiQueries.push({ ...queryObj, type: 'ai-generated' });
+        // Categorize by type
+        if (type === 'ai-generated' || type === 'ai' || type === 'illustration') {
+          if (query) {
+            aiQueries.push({ ...queryObj, type: 'ai-generated' });
+          }
+        } else if ((type === 'stock' || !type) && query) {
+          stockQueries.push(queryObj);
         }
-      } else if (type === 'stock' && query) {
-        stockQueries.push(queryObj);
       }
     }
 

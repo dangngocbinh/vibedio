@@ -178,27 +178,9 @@ async function main() {
         }
 
         // Post-processing: Check if we need to generate timestamps via Whisper
-        if (!result.timestamps && CONFIG.openaiApiKey && !ARGS['skip-timestamps']) {
-            console.log('Timestamps missing. Attempting to generate via Whisper...');
-            try {
-                const whisperTimestamps = await generateTimestampsWithWhisper(result.audioPath, finalText);
-                if (whisperTimestamps) {
-                    result.timestamps = whisperTimestamps;
-                    // Update the JSON file
-                    const meta = await fs.readJson(result.jsonPath);
-                    meta.timestamps = whisperTimestamps;
-                    meta.timestamp_source = 'whisper';
-                    // Recalculate duration from timestamps if available
-                    if (whisperTimestamps.length > 0) {
-                        const lastWord = whisperTimestamps[whisperTimestamps.length - 1];
-                        meta.durationFromTimestamps = lastWord.end;
-                    }
-                    await fs.writeJson(result.jsonPath, meta, { spaces: 2 });
-                    console.log('Timestamps generated successfully via Whisper.');
-                }
-            } catch (err) {
-                console.error('Failed to generate timestamps with Whisper:', err.message);
-            }
+        if (!result.timestamps && !ARGS['skip-timestamps']) {
+            console.log('Timestamps missing. ');
+
         }
 
         console.log(`\nSuccess!`);

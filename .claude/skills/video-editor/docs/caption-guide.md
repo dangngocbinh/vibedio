@@ -171,7 +171,7 @@ Control where captions appear on screen:
 {
   "subtitle": {
     "theme": "clean-minimal",
-    "position": "bottom"  // "top" | "center" | "bottom" | "bottom-high"
+    "position": "bottom"  //  "bottom" | "bottom-high" | "top" | "center" 
   }
 }
 ```

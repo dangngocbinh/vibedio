@@ -8,12 +8,10 @@
     "build": "remotion render AutoVideo output.mp4",
     "build:landscape": "remotion render AutoVideoLandscape output-landscape.mp4",
     "build:square": "remotion render AutoVideoSquare output-square.mp4",
-    "generate": "ts-node src/cli/generate-video.ts",
     "upgrade": "remotion upgrade",
     "setup:all": "node scripts/setup-dependencies.js",
-    "setup:node": "node scripts/setup-dependencies.js --node-only",
-    "setup:python": "node scripts/setup-dependencies.js --python-only",
-    "setup:skills": "node scripts/setup-dependencies.js"
+    "preplan": "node scripts/generate-project-list.js",
+    "plan": "cd script-planner && npm run dev:all"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",

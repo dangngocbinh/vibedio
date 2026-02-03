@@ -7,8 +7,13 @@ import { OtioPlayer, calculateTotalDuration } from './compositions/OtioPlayer';
 import { HtmlGalleryViewer } from './compositions/HtmlGalleryViewer';
 
 // @ts-ignore
-import projectsList from './generated/projects.json';
+import projectsListRaw from './generated/projects.json';
 import { loadProject } from './utils/project-loader';
+
+const projectsList = (projectsListRaw as any[]).map(p => ({
+  ...p,
+  ratio: p.ratio === null ? undefined : p.ratio
+}));
 
 const projectIds = projectsList.length > 0
   ? projectsList.map((p: any) => p.id)

@@ -78,7 +78,18 @@ class InputLoader:
             ValueError: If required fields are missing
         """
         # Strict requirements - must always have these
-        required_base = ['metadata', 'scenes']
+        # Support both 'sections' (new) and 'scenes' (legacy)
+        has_sections = 'sections' in data
+        has_scenes = 'scenes' in data
+
+        if not has_sections and not has_scenes:
+            raise ValueError(
+                "❌ script.json must have either 'sections' or 'scenes' field\n"
+                "   New format uses 'sections' with nested 'scenes'\n"
+                "   See: .claude/skills/video-editor/SCHEMA.md for details"
+            )
+
+        required_base = ['metadata']
 
         # Conditional requirements based on video type
         video_type = data.get('metadata', {}).get('videoType', 'unknown')
@@ -130,17 +141,41 @@ class InputLoader:
         if 'ratio' not in metadata:
             metadata['ratio'] = '16:9'
 
-        # Validate scenes
-        scenes = data['scenes']
-        if not isinstance(scenes, list) or len(scenes) == 0:
-            raise ValueError("script.json must have at least one scene")
+        # Validate sections or scenes
+        if has_sections:
+            sections = data['sections']
+            if not isinstance(sections, list) or len(sections) == 0:
+                raise ValueError("script.json must have at least one section")
 
-        # Validate each scene has required fields
-        for i, scene in enumerate(scenes):
-            if 'id' not in scene:
-                raise ValueError(f"Scene {i} missing 'id'")
-            if 'duration' not in scene:
-                raise ValueError(f"Scene {i} missing 'duration'")
+            # Validate each section
+            for i, section in enumerate(sections):
+                if 'id' not in section:
+                    raise ValueError(f"Section {i} missing 'id'")
+                if 'scenes' not in section:
+                    raise ValueError(f"Section {i} missing 'scenes'")
+
+                scenes = section.get('scenes', [])
+                if not isinstance(scenes, list):
+                    raise ValueError(f"Section {i} 'scenes' must be an array")
+
+                # Validate scenes within section
+                for j, scene in enumerate(scenes):
+                    if 'id' not in scene:
+                        raise ValueError(f"Section {i}, Scene {j} missing 'id'")
+                    if 'duration' not in scene:
+                        raise ValueError(f"Section {i}, Scene {j} missing 'duration'")
+        else:
+            # Legacy scenes validation
+            scenes = data['scenes']
+            if not isinstance(scenes, list) or len(scenes) == 0:
+                raise ValueError("script.json must have at least one scene")
+
+            # Validate each scene has required fields
+            for i, scene in enumerate(scenes):
+                if 'id' not in scene:
+                    raise ValueError(f"Scene {i} missing 'id'")
+                if 'duration' not in scene:
+                    raise ValueError(f"Scene {i} missing 'duration'")
 
     def _validate_voice(self, data: Dict) -> None:
         """

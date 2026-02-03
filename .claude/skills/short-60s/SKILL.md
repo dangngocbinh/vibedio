@@ -177,10 +177,7 @@ Yêu cầu:
     "fadeOut": 2.0
   },
   "subtitle": {
-    "style": "highlight-word",
-    "position": "center",
-    "font": "Montserrat",
-    "highlightColor": "#FFD700"
+    "style": "highlight-word"
   }
 }
 ```

@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const PROJECTS_DIR = path.join(__dirname, '../public/projects');
-//
 const OUTPUT_FILE = path.join(__dirname, '../src/generated/projects.json');
+const PUBLIC_OUTPUT_FILE = path.join(__dirname, '../public/projects-list.json');
 
 function getProjects() {
     if (!fs.existsSync(PROJECTS_DIR)) {
@@ -64,14 +64,21 @@ function getProjects() {
 }
 
 const projects = getProjects();
+
 // Ensure src/generated exists
 const generatedDir = path.dirname(OUTPUT_FILE);
 if (!fs.existsSync(generatedDir)) {
     fs.mkdirSync(generatedDir, { recursive: true });
 }
 
-fs.writeFileSync(OUTPUT_FILE, JSON.stringify(projects, null, 2));
+// Write to both locations
+const jsonContent = JSON.stringify(projects, null, 2);
+fs.writeFileSync(OUTPUT_FILE, jsonContent);
+fs.writeFileSync(PUBLIC_OUTPUT_FILE, jsonContent);
 
-console.log(`Generated project list with ${projects.length} projects.`);
-console.log(`Scanned projects from ${PROJECTS_DIR}`);
-console.log(`Saved JSON to ${OUTPUT_FILE}`);
+console.log(`✅ Generated project list with ${projects.length} projects.`);
+console.log(`📁 Scanned projects from ${PROJECTS_DIR}`);
+console.log(`💾 Saved to:`);
+console.log(`   - ${OUTPUT_FILE}`);
+console.log(`   - ${PUBLIC_OUTPUT_FILE}`);
+

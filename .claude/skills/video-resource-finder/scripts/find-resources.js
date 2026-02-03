@@ -30,19 +30,19 @@ async function main() {
 
   // Parse command line arguments
   const args = minimist(process.argv.slice(2), {
-    string: ['projectDir', 'preferredSource', 'quality', 'storage'],
+    string: ['projectDir', 'provider', 'quality', 'storage'],
     number: ['resultsPerQuery', 'concurrency', 'downloadCount'],
     boolean: ['enableAI', 'noAI', 'download', 'skipDownload'],
     default: {
       resultsPerQuery: 3,
-      preferredSource: 'pexels',
+      provider: null,           // null = multi-provider (search all available)
       enableAI: true,
       download: true,           // Enable download by default
       skipDownload: false,      // Explicit skip
       quality: 'best',          // best | hd | sd | medium
       storage: 'local',         // local | cloud (future)
       concurrency: 3,           // Parallel downloads
-      downloadCount: 1,         // Download only first result per scene
+      downloadCount: 10,        // Download 10 results per scene for selection
       batchSize: 0              // 0 = unlimited, otherwise limit number of AI generation requests
     }
   });
@@ -55,7 +55,7 @@ async function main() {
     console.log('\nOptions:');
     console.log('  --projectDir         Path to project directory (required)');
     console.log('  --resultsPerQuery    Number of results per query (default: 3)');
-    console.log('  --preferredSource    Preferred API source: pexels|pixabay (default: pexels)');
+    console.log('  --provider           Specific provider: pexels|pixabay|unsplash (default: all available)');
     console.log('  --download           Enable download (default: true)');
     console.log('  --skipDownload       Skip downloading, only get URLs');
     console.log('  --quality            Quality preference: best|hd|sd|medium (default: best)');
@@ -81,6 +81,7 @@ async function main() {
   }
 
   console.log(`📁 Project Directory: ${projectDir}`);
+  console.log(`🔍 Provider Mode: ${args.provider || 'multi-provider (all available)'}`);
   console.log(`📥 Download: ${args.download && !args.skipDownload ? 'enabled' : 'disabled'}`);
   if (args.download && !args.skipDownload) {
     console.log(`   Quality: ${args.quality}, Count per scene: ${args.downloadCount}`);
@@ -169,7 +170,7 @@ async function main() {
       geminiClient: geminiClient,
       pixabayScraper: pixabayScraper, // Pass scraper instance
       resultsPerQuery: args.resultsPerQuery,
-      preferredSource: args.preferredSource,
+      provider: args.provider,          // null = multi-provider, or specific provider name
       enableAIGeneration: enableAI,
       projectDir: projectDir,
       existingResources: existingResources, // Pass existing resources

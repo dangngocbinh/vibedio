@@ -149,6 +149,36 @@ class AssetResolver:
         # Fallback: just use basename
         return os.path.basename(abs_path_norm)
 
+    def resolve_music_from_script(self, script: Dict[str, Any]) -> Optional[str]:
+        """
+        Extract and resolve music URL from script.json music config.
+
+        Args:
+            script: Parsed script.json content
+
+        Returns:
+            Music URL/path or None if not found
+        """
+        music_config = script.get('music', {})
+        
+        # Priority 1: importedMusicPath (user imported music)
+        if music_config.get('importedMusicPath'):
+            return self.sanitize_for_otio(music_config['importedMusicPath'])
+        
+        # Priority 2: selectedMusicId -> find in candidates
+        selected_id = music_config.get('selectedMusicId')
+        if selected_id:
+            candidates = music_config.get('candidates', [])
+            for candidate in candidates:
+                if candidate.get('id') == selected_id:
+                    # Try localPath first, then downloadUrl
+                    if candidate.get('localPath'):
+                        return self.sanitize_for_otio(candidate['localPath'])
+                    if candidate.get('downloadUrl'):
+                        return candidate['downloadUrl']
+        
+        return None
+
     def resolve_music_from_resources(self, resources: Dict[str, Any]) -> Optional[str]:
         """
         Extract and resolve music URL from resources.json.

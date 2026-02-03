@@ -16,7 +16,7 @@ This skill allows you to generate high-quality voiceovers from text using multip
 ## Usage
 
 ### 1. Setup
-Ensure the `.env` file is configured with valid API keys in `skill-voice-gen/.env`.
+Ensure the `.env` at root project
 
 ### 2. General Instruction
 To generate voice, you will typically run the Node.js script located at `skill-voice-gen/scripts/generate-voice.js`.
@@ -37,6 +37,8 @@ node skill-voice-gen/scripts/generate-voice.js \
 
 **IMPORTANT**: When generating voice for a script, always use `--outputDir` to match the script folder:
 ```bash
+NOTE: If timestamps are not generated, you must create them according to section 5.
+
 node .claude/skills/voice-generation/scripts/generate-voice.js \
   --text "Your text here" \ # should use for short text
   --script "path/to/script.json" \ # should use for long text: path to script.json
@@ -85,30 +87,30 @@ When `voiceId` is not explicitly provided, or when creating a new configuration,
 
 ## 🚀 Recommended Voices by Use Case (Personas)
 
-| Use Case | Recommended Voice | Provider | Why? |
-| :--- | :--- | :--- | :--- |
-| **News / Facts / Edu** | `Charon` | Gemini | Deep, authoritative, trustworthy. |
-| | `onyx` | OpenAI | Serious, professional tone. |
-| | `hn_male_manh_dung_news_48k-h` | Vbee | Standard Vietnamese News voice. |
-| **Storytelling / Podcast** | `Aoede` | Gemini | Expressive, emotional, great for stories. |
-| | `echo` | OpenAI | Warm, soft, good for audiobooks. |
-| | `fable` | OpenAI | Narrative, slightly British phrasing. |
-| **TikTok / Shorts / Vlog** | `Puck` | Gemini | Energetic, mischievous, "Youtuber" vibe. |
-| | `Fenrir` | Gemini | Intense, wild, good for dramatic shorts. |
-| | `nova` | OpenAI | Fast, friendly, energetic. |
-| **Meditation / Soothing** | `Kore` | Gemini | Very calm, slow, relaxing. |
-| | `shimmer` | OpenAI | Clear, resonant, pure. |
+| Use Case                   | Recommended Voice              | Provider | Why?                                      |
+| :------------------------- | :----------------------------- | :------- | :---------------------------------------- |
+| **News / Facts / Edu**     | `Charon`                       | Gemini   | Deep, authoritative, trustworthy.         |
+|                            | `onyx`                         | OpenAI   | Serious, professional tone.               |
+|                            | `hn_male_manh_dung_news_48k-h` | Vbee     | Standard Vietnamese News voice.           |
+| **Storytelling / Podcast** | `Aoede`                        | Gemini   | Expressive, emotional, great for stories. |
+|                            | `echo`                         | OpenAI   | Warm, soft, good for audiobooks.          |
+|                            | `fable`                        | OpenAI   | Narrative, slightly British phrasing.     |
+| **TikTok / Shorts / Vlog** | `Puck`                         | Gemini   | Energetic, mischievous, "Youtuber" vibe.  |
+|                            | `Fenrir`                       | Gemini   | Intense, wild, good for dramatic shorts.  |
+|                            | `nova`                         | OpenAI   | Fast, friendly, energetic.                |
+| **Meditation / Soothing**  | `Kore`                         | Gemini   | Very calm, slow, relaxing.                |
+|                            | `shimmer`                      | OpenAI   | Clear, resonant, pure.                    |
 
 ### 5. Generate Timestamps for Existing Voice Files
 
 Nếu bạn đã có voice file từ nguồn khác (thu âm, tải về, hoặc từ provider không hỗ trợ timestamps), bạn có thể tạo timestamps riêng bằng script `generate-timestamps.js`.
 
 **STT Provider Selection** (flag `--provider`):
-| Provider | Model | Accuracy | Notes |
-| :--- | :--- | :--- | :--- |
-| `elevenlabs` | Scribe v2 | Cao nhất, hỗ trợ 90+ ngôn ngữ | Tính phí theo giờ audio |
-| `whisper` | Whisper-1 | Tốt | ~$0.006/phút (~140đ/phút) |
-| `auto` (default) | Tự chọn | - | Ưu tiên ElevenLabs nếu có key, fallback Whisper |
+| Provider         | Model     | Accuracy                      | Notes                                           |
+| :--------------- | :-------- | :---------------------------- | :---------------------------------------------- |
+| `elevenlabs`     | Scribe v2 | Cao nhất, hỗ trợ 90+ ngôn ngữ | Tính phí theo giờ audio                         |
+| `whisper`        | Whisper-1 | Tốt                           | ~$0.006/phút (~140đ/phút)                       |
+| `auto` (default) | Tự chọn   | -                             | Ưu tiên ElevenLabs nếu có key, fallback Whisper |
 
 **Use Cases**:
 - ✅ Voice file từ TikTok, YouTube, hoặc nguồn khác
@@ -167,55 +169,55 @@ node skill-voice-gen/scripts/list-voices.js
 ## Voice Reference (Quick Look)
 
 ### Google Gemini (Generative)
-| id            | description                 |
-|---------------|-----------------------------|
-| Zephyr        | Tươi sáng                   |
-| Puck          | Rộn ràng                    |
-| Charon        | Cung cấp nhiều thông tin    |
-| Kore          | Firm                        |
-| Fenrir        | Dễ kích động                |
-| Leda          | Trẻ trung                   |
-| Orus          | Firm                        |
-| Aoede         | Breezy                      |
-| Callirrhoe    | Dễ chịu                     |
-| Autonoe       | Tươi sáng                   |
-| Enceladus     | Breathy                     |
-| Iapetus       | Rõ ràng                     |
-| Umbriel       | Dễ tính                     |
-| Algieba       | Làm mịn                     |
-| Despina       | Smooth (Mượt mà)            |
-| Erinome       | Clear                       |
-| Algenib       | Khàn                        |
-| Rasalgethi    | Cung cấp nhiều thông tin    |
-| Laomedeia     | Rộn ràng                    |
-| Achernar      | Mềm                         |
-| Alnilam       | Firm                        |
-| Schedar       | Even                        |
-| Gacrux        | Người trưởng thành          |
-| Pulcherrima   | Lạc quan                    |
-| Achird        | Thân thiện                  |
-| Zubenelgenubi | Thông thường                |
-| Vindemiatrix  | Êm dịu                      |
-| Sadachbia     | Lively                      |
-| Sadaltager    | Hiểu biết                   |
-| Sulafat       | Ấm                          |
+| id            | description              |
+| ------------- | ------------------------ |
+| Zephyr        | Tươi sáng                |
+| Puck          | Rộn ràng                 |
+| Charon        | Cung cấp nhiều thông tin |
+| Kore          | Firm                     |
+| Fenrir        | Dễ kích động             |
+| Leda          | Trẻ trung                |
+| Orus          | Firm                     |
+| Aoede         | Breezy                   |
+| Callirrhoe    | Dễ chịu                  |
+| Autonoe       | Tươi sáng                |
+| Enceladus     | Breathy                  |
+| Iapetus       | Rõ ràng                  |
+| Umbriel       | Dễ tính                  |
+| Algieba       | Làm mịn                  |
+| Despina       | Smooth (Mượt mà)         |
+| Erinome       | Clear                    |
+| Algenib       | Khàn                     |
+| Rasalgethi    | Cung cấp nhiều thông tin |
+| Laomedeia     | Rộn ràng                 |
+| Achernar      | Mềm                      |
+| Alnilam       | Firm                     |
+| Schedar       | Even                     |
+| Gacrux        | Người trưởng thành       |
+| Pulcherrima   | Lạc quan                 |
+| Achird        | Thân thiện               |
+| Zubenelgenubi | Thông thường             |
+| Vindemiatrix  | Êm dịu                   |
+| Sadachbia     | Lively                   |
+| Sadaltager    | Hiểu biết                |
+| Sulafat       | Ấm                       |
 
 
 ### OpenAI
-| ID | Gender | Description |
-| :--- | :--- | :--- |
-| `alloy` | Neutral | Versatile, Balanced |
-| `echo` | Male | Warm, Soft |
-| `fable` | Male | British, Narrative |
-| `onyx` | Male | Deep, Serious |
-| `nova` | Female | Energetic, Friendly |
-| `shimmer` | Female | Clear, Resonant |
+| ID        | Gender  | Description         |
+| :-------- | :------ | :------------------ |
+| `alloy`   | Neutral | Versatile, Balanced |
+| `echo`    | Male    | Warm, Soft          |
+| `fable`   | Male    | British, Narrative  |
+| `onyx`    | Male    | Deep, Serious       |
+| `nova`    | Female  | Energetic, Friendly |
+| `shimmer` | Female  | Clear, Resonant     |
 
 ### Vbee (Vietnamese)
-| ID | Name | Style |
-| :--- | :--- | :--- |
+| ID                             | Name      | Style               |
+| :----------------------------- | :-------- | :------------------ |
 | `hn_male_manh_dung_news_48k-h` | Mạnh Dũng | News, Standard (HN) |
-| `sg_female_thao_vy_news_48k-h` | Thảo Vy | News, Clear (SG) |
+| `sg_female_thao_vy_news_48k-h` | Thảo Vy   | News, Clear (SG)    |
 
 ## Output Structure
 

@@ -115,6 +115,42 @@ function checkSystemDependencies() {
 }
 
 /**
+ * Kiểm tra và tạo file .env nếu chưa có
+ */
+function checkEnvFile(projectRoot) {
+    log('\n🔑 Checking Environment Configuration...', 'bold');
+
+    const envPath = path.join(projectRoot, '.env');
+    if (fs.existsSync(envPath)) {
+        log('  ✓ .env file exists', 'green');
+        return;
+    }
+
+    log('  ! .env file not found. Creating from template...', 'yellow');
+
+    const envTemplate = `# AI API Keys
+GEMINI_API_KEY=your_gemini_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Voice APIs (optional)
+ELEVENLABS_API_KEY=your_elevenlabs_key
+VBEE_API_KEY=your_vbee_key
+
+# Stock Resources (optional)
+PEXELS_API_KEY=your_pexels_key
+PIXABAY_API_KEY=your_pixabay_key
+`;
+
+    try {
+        fs.writeFileSync(envPath, envTemplate);
+        log('  ✓ Created .env file successfully', 'green');
+        log('    ⚠️  PLEASE UPDATE .env WITH YOUR REAL API KEYS!', 'red');
+    } catch (error) {
+        log(`  ✗ Failed to create .env file: ${error.message}`, 'red');
+    }
+}
+
+/**
  * Cài đặt Node.js dependencies
  */
 function installNodeDependencies(projectRoot) {
@@ -169,8 +205,19 @@ function installPythonDependencies(projectRoot) {
     log('\n🐍 Installing Python Dependencies...', 'bold');
 
     // Kiểm tra Python có được cài đặt không
+    // Kiểm tra Python có được cài đặt không
     if (!commandExists('python3') && !commandExists('python')) {
-        log('  ✗ Python not found. Please install Python first.', 'red');
+        log('  ✗ Python not found!', 'red');
+        log('    Please install Python 3 to run the skills.', 'yellow');
+
+        // Suggest installation commands
+        if (process.platform === 'darwin') {
+            log('    👉 Run: brew install python', 'cyan');
+        } else if (process.platform === 'linux') {
+            log('    👉 Run: sudo apt update && sudo apt install -y python3 python3-pip python3-venv', 'cyan');
+        } else if (process.platform === 'win32') {
+            log('    👉 Download Python from https://www.python.org/downloads/', 'cyan');
+        }
         return;
     }
 
@@ -276,6 +323,9 @@ function main() {
 
     // Kiểm tra hệ thống
     checkSystemDependencies();
+
+    // Kiểm tra và tạo .env
+    checkEnvFile(projectRoot);
 
     // Hiển thị thông tin skills
     displaySkillsInfo(projectRoot);

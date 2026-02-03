@@ -70,6 +70,9 @@ class PixabayScraper {
 
             const results = [];
 
+            // Enable request interception if not already enabled? 
+            // Better to listener on the page for responses.
+
             for (let i = 0; i < processLimit; i++) {
                 const row = trackRows[i];
 
@@ -87,44 +90,43 @@ class PixabayScraper {
 
                 if (playBtn) {
                     try {
+                        // Setup response listener for MP3
+                        const mp3Promise = new Promise((resolve) => {
+                            const handler = (response) => {
+                                const url = response.url();
+                                if (url.includes('.mp3') && !url.includes('google') && response.request().method() === 'GET') {
+                                    page.off('response', handler); // Remove listener
+                                    resolve(url);
+                                }
+                            };
+
+                            // Timeout fallback
+                            setTimeout(() => {
+                                page.off('response', handler);
+                                resolve(null);
+                            }, 5000);
+
+                            page.on('response', handler);
+                        });
+
                         // Click play
                         await playBtn.click();
 
-                        // Wait and poll for audio.src to be populated
-                        // This is the KEY FIX based on browser subagent findings
-                        const mp3Url = await page.evaluate(() => {
-                            return new Promise((resolve) => {
-                                let attempts = 0;
-                                const maxAttempts = 25; // 5 seconds total (25 * 200ms)
-
-                                const checkAudio = () => {
-                                    const audio = document.querySelector('audio');
-                                    if (audio && audio.src && audio.src.includes('.mp3')) {
-                                        resolve(audio.src);
-                                    } else if (attempts < maxAttempts) {
-                                        attempts++;
-                                        setTimeout(checkAudio, 200);
-                                    } else {
-                                        resolve(null);
-                                    }
-                                };
-
-                                checkAudio();
-                            });
-                        });
+                        // Wait for MP3 URL
+                        const mp3Url = await mp3Promise;
 
                         if (mp3Url) {
-                            console.log(`[PixabayScraper]     ✅ Got: ...${mp3Url.slice(-40)}`);
+                            console.log(`[PixabayScraper]     ✅ Network Captured: ...${mp3Url.slice(-40)}`);
                             results.push({
                                 title,
                                 durationText,
                                 url: mp3Url
                             });
 
-                            // Stop playback
+                            // Stop playback (click again)
                             await playBtn.click().catch(() => { });
                         } else {
-                            console.log(`[PixabayScraper]     ⚠️ Timeout - no audio src`);
+                            console.log(`[PixabayScraper]     ⚠️ Timeout - no MP3 request detected`);
                         }
 
                     } catch (err) {
@@ -132,8 +134,8 @@ class PixabayScraper {
                     }
                 }
 
-                // Small delay between tracks
-                await new Promise(r => setTimeout(r, 300));
+                // Delay between tracks
+                await new Promise(r => setTimeout(r, 1000));
             }
 
             if (results.length === 0) {

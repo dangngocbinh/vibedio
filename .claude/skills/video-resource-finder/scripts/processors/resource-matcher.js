@@ -10,7 +10,7 @@ class ResourceMatcher {
     this.unsplashClient = options.unsplashClient || null;
     this.geminiClient = options.geminiClient || null;
     this.resultsPerQuery = options.resultsPerQuery || 3;
-    this.preferredSource = options.preferredSource || 'pexels';
+    this.provider = options.provider || null;  // null = multi-provider mode
     this.enableAIGeneration = options.enableAIGeneration !== false;
     this.projectDir = options.projectDir || null;
     this.existingResources = options.existingResources || null;
@@ -182,32 +182,97 @@ class ResourceMatcher {
         reason: 'resourceType preference: image'
       };
     }
-    let results = [];
-    let source = null;
 
     try {
-      // Try Pexels first (preferred)
-      if (this.pexelsClient && this.preferredSource === 'pexels') {
-        results = await this.pexelsClient.searchVideos(query, this.resultsPerQuery);
-        source = 'pexels';
-      }
+      // MULTI-PROVIDER MODE: Search all available providers
+      if (!this.provider) {
+        console.log(`[ResourceMatcher] Multi-provider search for video: "${query}"`);
+        const allResults = [];
 
-      // Fallback to Pixabay if no results
-      if (results.length === 0 && this.pixabayClient) {
-        console.log(`[ResourceMatcher] Trying Pixabay fallback for: "${query}"`);
-        results = await this.pixabayClient.searchVideos(query, this.resultsPerQuery);
-        source = 'pixabay';
-      }
+        // Search Pexels if available
+        if (this.pexelsClient) {
+          try {
+            const pexelsResults = await this.pexelsClient.searchVideos(query, this.resultsPerQuery);
+            if (pexelsResults.length > 0) {
+              console.log(`  ✓ Pexels: ${pexelsResults.length} results`);
+              allResults.push({ source: 'pexels', results: pexelsResults });
+            }
+          } catch (err) {
+            console.warn(`  ✗ Pexels error: ${err.message}`);
+          }
+        }
 
-      if (results.length === 0) {
-        console.warn(`[ResourceMatcher] No video results for: "${query}"`);
+        // Search Pixabay if available
+        if (this.pixabayClient) {
+          try {
+            const pixabayResults = await this.pixabayClient.searchVideos(query, this.resultsPerQuery);
+            if (pixabayResults.length > 0) {
+              console.log(`  ✓ Pixabay: ${pixabayResults.length} results`);
+              allResults.push({ source: 'pixabay', results: pixabayResults });
+            }
+          } catch (err) {
+            console.warn(`  ✗ Pixabay error: ${err.message}`);
+          }
+        }
+
+        // Merge and rank all results
+        if (allResults.length === 0) {
+          console.warn(`[ResourceMatcher] No video results from any provider for: "${query}"`);
+          return {
+            sceneId,
+            sceneText,
+            query,
+            source: 'multi-provider',
+            results: [],
+            error: 'No results found from any provider'
+          };
+        }
+
+        // Merge results from all sources
+        const mergedResults = this._mergeMultiProviderResults(allResults);
+        const sources = allResults.map(r => r.source).join('+');
+
+        // Limit to 10 results max per scene to keep resources.json lightweight
+        const limitedResults = mergedResults.slice(0, 10);
+
         return {
           sceneId,
           sceneText,
           query,
-          source: null,
+          source: sources,
+          results: limitedResults
+        };
+      }
+
+      // SINGLE PROVIDER MODE: Search only specified provider (NO FALLBACK)
+      let results = [];
+      let source = null;
+
+      if (this.provider === 'pexels') {
+        if (!this.pexelsClient) {
+          throw new Error('Pexels API key not configured');
+        }
+        results = await this.pexelsClient.searchVideos(query, this.resultsPerQuery);
+        source = 'pexels';
+      } else if (this.provider === 'pixabay') {
+        if (!this.pixabayClient) {
+          throw new Error('Pixabay API key not configured');
+        }
+        results = await this.pixabayClient.searchVideos(query, this.resultsPerQuery);
+        source = 'pixabay';
+      } else {
+        throw new Error(`Unknown provider: ${this.provider}`);
+      }
+
+      if (results.length === 0) {
+        console.warn(`[ResourceMatcher] No video results from ${this.provider} for: "${query}"`);
+        return {
+          sceneId,
+          sceneText,
+          query,
+          source,
           results: [],
-          error: 'No results found'
+          error: `No results found from ${this.provider}`
         };
       }
 
@@ -253,33 +318,122 @@ class ResourceMatcher {
         reason: 'resourceType preference: video'
       };
     }
-    let results = [];
-    let source = null;
 
     try {
-      // Try Pexels first
-      if (this.pexelsClient && this.preferredSource === 'pexels') {
+      // MULTI-PROVIDER MODE: Search all available providers
+      if (!this.provider) {
+        console.log(`[ResourceMatcher] Multi-provider search for image: "${query}"`);
+        const allResults = [];
+
+        // Search Pexels if available
+        if (this.pexelsClient) {
+          try {
+            const pexelsResults = await this.pexelsClient.searchPhotos(query, this.resultsPerQuery);
+            if (pexelsResults.length > 0) {
+              console.log(`  ✓ Pexels: ${pexelsResults.length} results`);
+              allResults.push({ source: 'pexels', results: pexelsResults });
+            }
+          } catch (err) {
+            console.warn(`  ✗ Pexels error: ${err.message}`);
+          }
+        }
+
+        // Search Unsplash if available
+        if (this.unsplashClient) {
+          try {
+            const unsplashResults = await this.unsplashClient.searchPhotos(query, this.resultsPerQuery);
+            if (unsplashResults.length > 0) {
+              console.log(`  ✓ Unsplash: ${unsplashResults.length} results`);
+              allResults.push({ source: 'unsplash', results: unsplashResults });
+            }
+          } catch (err) {
+            console.warn(`  ✗ Unsplash error: ${err.message}`);
+          }
+        }
+
+        // Search Pixabay if available
+        if (this.pixabayClient) {
+          try {
+            const pixabayResults = await this.pixabayClient.searchImages(query, this.resultsPerQuery);
+            if (pixabayResults.length > 0) {
+              console.log(`  ✓ Pixabay: ${pixabayResults.length} results`);
+              allResults.push({ source: 'pixabay', results: pixabayResults });
+            }
+          } catch (err) {
+            console.warn(`  ✗ Pixabay error: ${err.message}`);
+          }
+        }
+
+        // Fallback to AI generation if no stock results and Gemini is available
+        if (allResults.length === 0 && this.geminiClient && this.enableAIGeneration) {
+          console.log(`[ResourceMatcher] No stock results from multi-provider, trying AI generation for: "${query}"`);
+          return await this.generateAIImage({
+            sceneId,
+            sceneText,
+            query,
+            type: 'ai-fallback'
+          });
+        }
+
+        // Merge and rank all results
+        if (allResults.length === 0) {
+          console.warn(`[ResourceMatcher] No image results from any provider for: "${query}"`);
+          return {
+            sceneId,
+            sceneText,
+            query,
+            source: 'multi-provider',
+            results: [],
+            error: 'No results found from any provider',
+            suggestion: this.geminiClient ? 'AI generation failed' : 'Try enabling AI generation with GEMINI_API_KEY'
+          };
+        }
+
+        // Merge results from all sources
+        const mergedResults = this._mergeMultiProviderResults(allResults);
+        const sources = allResults.map(r => r.source).join('+');
+
+        // Limit to 10 results max per scene to keep resources.json lightweight
+        const limitedResults = mergedResults.slice(0, 10);
+
+        return {
+          sceneId,
+          sceneText,
+          query,
+          source: sources,
+          results: limitedResults
+        };
+      }
+
+      // SINGLE PROVIDER MODE: Search only specified provider (NO FALLBACK)
+      let results = [];
+      let source = null;
+
+      if (this.provider === 'pexels') {
+        if (!this.pexelsClient) {
+          throw new Error('Pexels API key not configured');
+        }
         results = await this.pexelsClient.searchPhotos(query, this.resultsPerQuery);
         source = 'pexels';
-      }
-
-      // Fallback to Unsplash (high quality images)
-      if (results.length === 0 && this.unsplashClient) {
-        console.log(`[ResourceMatcher] Trying Unsplash fallback for: "${query}"`);
+      } else if (this.provider === 'unsplash') {
+        if (!this.unsplashClient) {
+          throw new Error('Unsplash API key not configured');
+        }
         results = await this.unsplashClient.searchPhotos(query, this.resultsPerQuery);
         source = 'unsplash';
-      }
-
-      // Fallback to Pixabay
-      if (results.length === 0 && this.pixabayClient) {
-        console.log(`[ResourceMatcher] Trying Pixabay fallback for: "${query}"`);
+      } else if (this.provider === 'pixabay') {
+        if (!this.pixabayClient) {
+          throw new Error('Pixabay API key not configured');
+        }
         results = await this.pixabayClient.searchImages(query, this.resultsPerQuery);
         source = 'pixabay';
+      } else {
+        throw new Error(`Unknown provider: ${this.provider}`);
       }
 
-      // Fallback to AI generation if no stock results and Gemini is available
+      // Fallback to AI if explicitly enabled and no results
       if (results.length === 0 && this.geminiClient && this.enableAIGeneration) {
-        console.log(`[ResourceMatcher] No stock results, trying AI generation for: "${query}"`);
+        console.log(`[ResourceMatcher] No results from ${this.provider}, trying AI generation for: "${query}"`);
         return await this.generateAIImage({
           sceneId,
           sceneText,
@@ -289,15 +443,15 @@ class ResourceMatcher {
       }
 
       if (results.length === 0) {
-        console.warn(`[ResourceMatcher] No image results for: "${query}"`);
+        console.warn(`[ResourceMatcher] No image results from ${this.provider} for: "${query}"`);
         return {
           sceneId,
           sceneText,
           query,
-          source: null,
+          source,
           results: [],
-          error: 'No results found',
-          suggestion: this.geminiClient ? 'AI generation failed' : 'Try enabling AI generation with GEMINI_API_KEY'
+          error: `No results found from ${this.provider}`,
+          suggestion: this.geminiClient ? 'Try --enableAI to use AI generation' : 'Try enabling AI generation with GEMINI_API_KEY'
         };
       }
 
@@ -860,6 +1014,31 @@ class ResourceMatcher {
       // Otherwise, resolve relative to projectDir
       return path.resolve(this.projectDir || '.', ref);
     });
+  }
+
+  /**
+   * Merge results from multiple providers
+   * Interleaves results to provide diversity: provider1[0], provider2[0], provider1[1], provider2[1], ...
+   * @param {Array<Object>} providerResults - Array of {source, results} objects
+   * @returns {Array} Merged and ranked results
+   */
+  _mergeMultiProviderResults(providerResults) {
+    if (!providerResults || providerResults.length === 0) return [];
+    if (providerResults.length === 1) return providerResults[0].results;
+
+    const merged = [];
+    const maxLength = Math.max(...providerResults.map(pr => pr.results.length));
+
+    // Interleave results round-robin style
+    for (let i = 0; i < maxLength; i++) {
+      for (const pr of providerResults) {
+        if (i < pr.results.length) {
+          merged.push(pr.results[i]);
+        }
+      }
+    }
+
+    return merged;
   }
 }
 

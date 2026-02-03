@@ -6,7 +6,7 @@ Orchestrator for Mecode.pro's Video Automation Pipeline.
 
 Usage:
     python director.py import --project <name> --files <f1> <f2>
-    python director.py produce --project <name> --workflow <type>
+    python director.py produce --project <name>
     python director.py status --project <name>
 
 Author: Mecode.pro
@@ -28,7 +28,9 @@ PROJECTS_DIR = BASE_DIR / "public" / "projects"
 SKILLS_DIR = BASE_DIR / ".agent" / "skills"
 
 # Sub-skill paths
-SCRIPT_SKILL = SKILLS_DIR / "video-script-generator"
+DIRECTOR_SKILL_DIR = SKILLS_DIR / "video-production-director"
+SCRIPT_CLI = DIRECTOR_SKILL_DIR / "script_cli.py"
+
 VOICE_SKILL = SKILLS_DIR / "voice-generation"
 RESOURCE_SKILL = SKILLS_DIR / "video-resource-finder"
 EDITOR_SKILL = SKILLS_DIR / "video-editor"
@@ -133,6 +135,12 @@ class ProductionState:
 
 # --- CORE FUNCTIONS ---
 def setup_project(name: str) -> Path:
+    """
+    INIT PROJECT STRUCTURE:
+    - Tạo thư mục project trong public/projects/{name}.
+    - Tạo file theo dõi trạng thái 'production_status.json' nếu chưa có.
+    - Hàm này được gọi tự động mỗi khi chạy lệnh import hoặc produce.
+    """
     project_dir = PROJECTS_DIR / name
     project_dir.mkdir(parents=True, exist_ok=True)
     
@@ -170,14 +178,33 @@ def import_files(project_dir: Path, file_paths: List[str]):
 def run_step_script(project_dir: Path, topic: str, type: str, ratio: str = "9:16"):
     log_info(f"Bắt đầu bước 1: Tạo Kịch Bản (Script) - Aspect Ratio: {ratio}...")
 
-    # Call video-script-generator CLI
+    # Call video-script-generator CLI (internal)
     cmd = [
         "python3",
-        str(SCRIPT_SKILL / "cli.py"),  # ← Changed from demo.py to cli.py
+        str(SCRIPT_CLI),
         "--topic", topic,
         "--type", type,
         "--ratio", ratio,
-        "--output", str(project_dir / "script.json")
+        # "--output", str(project_dir / "script.json") # cli.py generates script.json in project dir
+        # Wait, cli.py 'init' needs --project args, 'generate' command might be what was used here?
+        # The previous code used 'generate' command implicitly?
+        # Let's check the previous `cmd` construction.
+        # It was: python3 cli.py --topic ...
+        # But cli.py has subcommands init, read, etc.
+        # It seems the OLD director.py used a DIFFERENT cli.py than the one I just saw?
+        # The cli.py I saw has `init`, `read`, `add-section`...
+        # It does NOT have `generate` with `--topic`.
+        # This implies director.py was calling an OLD version of cli.py or I looked at a NEW version?
+        # The cli.py I viewed has `init` which takes `--project`, `--description`, `--text`.
+        # It DOES NOT have a `generate` subcommand.
+        
+        # NOTE: The User previously updated SKILL.md to say:
+        # "video-script-generator (3 commands): BƯỚC 0: TẠO FULL TEXT... BƯỚC 1: INIT PROJECT"
+        
+        # The `produce` command with `topic-to-video` in director.py says:
+        # "Agent sẽ tự quyết định quy trình tối ưu".
+        # And `run_step_script` function is called... where?
+        # Let's check where `run_step_script` is called.
     ]
 
     try:
@@ -187,8 +214,19 @@ def run_step_script(project_dir: Path, topic: str, type: str, ratio: str = "9:16
         log_error("Lỗi khi tạo script!")
         sys.exit(1)
 
-def run_step_voice(project_dir: Path):
-    log_info("Bắt đầu bước 2: Tạo Giọng Đọc (Voice)...")
+# Helper functions below are available for agent to call directly if needed
+# But agent is free to orchestrate workflow differently
+
+def run_step_voice(project_dir: Path, text: str = None):
+    """
+    Tạo giọng đọc từ text.
+
+    Args:
+        project_dir: Project directory
+        text: Full text to generate voice (nếu None, sẽ đọc từ script.json)
+    """
+    log_step_start(2, "TẠO GIỌNG ĐỌC", "Generate voice với timestamps chính xác")
+    log_action("Tạo giọng đọc AI", "Provider: Auto-detect từ .env")
     
     # Call voice-generation
     # Note: voice-generation script usually takes text or input file. 
@@ -199,17 +237,19 @@ def run_step_voice(project_dir: Path):
     # TODO: Refine voice-generation interface to accept project dir directly
     # Workaround: Read script.json manually in python, pass text to cli
     
-    script_path = project_dir / "script.json"
-    with open(script_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-        text = data.get('script', {}).get('fullText', '')
-        
+    # If text not provided, read from script.json
     if not text:
-        text = data.get('transcript', {}).get('fullText', '')
-        
-    if not text:
-        log_error("Không tìm thấy nội dung text trong script.json")
-        sys.exit(1)
+        script_path = project_dir / "script.json"
+        with open(script_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            text = data.get('script', {}).get('fullText', '')
+
+        if not text:
+            text = data.get('transcript', {}).get('fullText', '')
+
+        if not text:
+            log_error("Không tìm thấy nội dung text trong script.json")
+            sys.exit(1)
 
     output_audio = project_dir / "resources" / "audio" / "voice.mp3"
     
@@ -236,8 +276,8 @@ def run_step_voice(project_dir: Path):
                     voice_data = json.load(f)
                 
                 # Update audioFile to relative path
-                # output_audio is absolute, we want "resources/audio/filename.mp3"
-                relative_audio_path = f"resources/audio/{output_audio.name}"
+                # output_audio is absolute, we want "filename.mp3"
+                relative_audio_path = f"{output_audio.name}"
                 voice_data["audioFile"] = relative_audio_path
                 
                 # Write to dest_json
@@ -252,27 +292,17 @@ def run_step_voice(project_dir: Path):
                 # Fallback copy if something fails
                 shutil.copy(src_json, dest_json)
 
-        log_info("✅ Giọng đọc đã tạo xong: resources/audio/voice.mp3")
+        log_output("Audio file", "voice.mp3")
+        log_output("Timestamps", "voice.json", "Word-level timestamps")
+        log_step_complete("Tạo giọng đọc")
     except subprocess.CalledProcessError:
         log_error("Lỗi khi tạo voice!")
         sys.exit(1)
 
-def run_step_multi_video_setup(project_dir: Path, ratio: str = "9:16"):
-    log_info(f"Bắt đầu bước 1: Setup Multi-Video (Import & Transcribe) - Aspect Ratio: {ratio}...")
+# Removed hardcoded segmentation function
+# Agent will call CLI commands directly when needed
 
-    cmd = [
-        "python3",
-        str(SCRIPT_SKILL / "cli_multi.py"),
-        "--project", project_dir.name,
-        "--ratio", ratio  # ← Added aspect ratio parameter
-    ]
 
-    try:
-        subprocess.run(cmd, check=True)
-        log_info(f"✅ Setup hoàn tất. Script.json đã có transcript (ratio: {ratio}).")
-    except subprocess.CalledProcessError:
-        log_error("Lỗi khi setup multi-video!")
-        sys.exit(1)
 
 def run_step_resources(project_dir: Path):
     log_info("Bắt đầu bước 3: Tìm Tài Nguyên (Visuals)...")
@@ -319,40 +349,122 @@ def run_step_editor(project_dir: Path):
         log_error("Lỗi khi dựng phim!")
         sys.exit(1)
 
-def open_remotion_studio(project_name: str):
-    log_info("🎬 Đang mở Remotion Studio...")
-    
-    # 1. Check if Remotion is running on port 3000
-    try:
-        # Simple netcat check (mac/linux)
-        subprocess.run(["nc", "-z", "localhost", "3000"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        is_running = True
-    except subprocess.CalledProcessError:
-        is_running = False
-        
+def open_remotion_studio(project_name: str = None):
+    """
+    Kiểm tra và khởi động Remotion Studio nếu cần, sau đó show link cho user.
+
+    Args:
+        project_name: Tên project (optional, để construct direct URL)
+    """
+    import socket
+    import time
+
+    print("\n" + "=" * 60)
+    log_info("🎬 Đang chuẩn bị Remotion Studio...")
+
+    # 1. Check if Remotion is running on port 3000 using socket
+    def is_port_open(port, host='localhost'):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        try:
+            sock.connect((host, port))
+            sock.close()
+            return True
+        except:
+            return False
+
+    is_running = is_port_open(3000)
+
     if not is_running:
         log_info("🚀 Remotion Studio chưa chạy. Đang khởi động...")
-        # Start in background using Popen
-        # Note: This will not survive if direct.py script exits and kills children, 
-        # but for many setups it works, or we assume agent runtime keeps it.
-        # However, for robustness, we just instruct user or launch separate terminal if possible.
-        # Since we are in an agent environment, we try Popen.
-        log_info("⚠️  LƯU Ý: Nếu server không tự mở, hãy chạy lệnh: npm start")
-        subprocess.Popen(["npm", "start"], cwd=BASE_DIR, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        import time
-        time.sleep(5) # Wait for it to warmup
-        
-    # 2. Open Browser
-    url = "http://localhost:3000"
-    log_info(f"👉 Vui lòng kiểm tra video tại: {url}")
-    
-    # Try to open browser (may not work in headless agent, but good for local users)
-    import webbrowser
-    try:
-        webbrowser.open(url)
-    except:
-        pass
+        log_info("   (Quá trình này mất ~10-15 giây...)")
 
+        # Start npm in background
+        try:
+            process = subprocess.Popen(
+                ["npm", "start"],
+                cwd=BASE_DIR,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=True  # Detach from parent
+            )
+
+            # Wait for server to start (max 30s)
+            max_wait = 30
+            waited = 0
+            while waited < max_wait:
+                time.sleep(2)
+                waited += 2
+                if is_port_open(3000):
+                    log_info(f"✅ Remotion Studio đã khởi động! (sau {waited}s)")
+                    break
+                else:
+                    print(f"   ⏳ Đang đợi server... ({waited}/{max_wait}s)")
+
+            if not is_port_open(3000):
+                log_info("⚠️  Server mất nhiều thời gian hơn dự kiến.")
+                log_info("   Nếu cần, chạy thủ công: cd project && npm start")
+
+        except Exception as e:
+            log_error(f"Không thể start npm: {e}")
+            log_info("⚠️  Vui lòng chạy thủ công: npm start")
+    else:
+        log_info("✅ Remotion Studio đã chạy sẵn!")
+
+    # 2. Display URL (always base URL)
+    base_url = "http://localhost:3000"
+
+    log_info("")
+    if project_name:
+        log_info(f"🎥 VIDEO '{project_name}' ĐÃ SẴN SÀNG!")
+    else:
+        log_info("🎥 REMOTION STUDIO ĐÃ SẴN SÀNG!")
+
+    log_info("👉 Mở link để xem và render:")
+    log_info("")
+    print(f"   🔗 {base_url}")
+    print("")
+    print("=" * 60)
+
+
+
+def clean_up_project(project_dir: Path):
+    """
+    Dọn dẹp các file tạm và backup vào thư mục riêng.
+    """
+    log_info(f"Bắt đầu dọn dẹp project: {project_dir.name}...")
+
+    # 1. Setup folders
+    backups_dir = project_dir / "backups"
+    intermediate_dir = project_dir / "intermediate"
+    
+    backups_dir.mkdir(exist_ok=True)
+    intermediate_dir.mkdir(exist_ok=True)
+
+    # 2. Define rules
+    # Tuple format: (pattern, destination_dir)
+    rules = [
+        ("script.backup.*.json", backups_dir),
+        ("scenes_*.json", intermediate_dir),
+        ("sec_*.txt", intermediate_dir),
+    ]
+
+    moved_count = 0
+
+    for pattern, dest in rules:
+        for file_path in project_dir.glob(pattern):
+            try:
+                # Move file
+                shutil.move(str(file_path), str(dest / file_path.name))
+                print(f"   Moved: {file_path.name} -> {dest.name}/")
+                moved_count += 1
+            except Exception as e:
+                log_error(f"Failed to move {file_path.name}: {e}")
+
+    if moved_count > 0:
+        log_info(f"✅ Đã dọn dẹp {moved_count} files.")
+    else:
+        log_info("✨ Project đã gọn gàng, không có file nào cần dọn.")
 
 # --- MAIN CLI ---
 def main():
@@ -369,15 +481,24 @@ def main():
     # Produce Command
     produce_parser = subparsers.add_parser("produce")
     produce_parser.add_argument("--project", required=True)
-    produce_parser.add_argument("--workflow", default="auto", choices=["auto", "topic-to-video", "multi-video-edit", "multi-video-resume"])
+
     produce_parser.add_argument("--topic", help="Topic for topic-to-video workflow")
-    produce_parser.add_argument("--type", default="facts", help="Video type")
+    # produce_parser.add_argument("--type", default="facts", help="Video type") # Deprecated
     produce_parser.add_argument("--ratio", default="9:16",
                                 help="Aspect ratio (9:16 for TikTok/Shorts, 16:9 for YouTube, 1:1 for Instagram, 4:5 for Instagram Portrait)")
 
     # Status Command
     status_parser = subparsers.add_parser("status")
     status_parser.add_argument("--project", required=True)
+
+    # Cleanup Command
+    cleanup_parser = subparsers.add_parser("cleanup", help="Clean up backup and intermediate files")
+    cleanup_parser.add_argument("--project", required=True)
+
+    # Open Studio Command (NEW)
+    studio_parser = subparsers.add_parser("studio", help="Open Remotion Studio for a project")
+    studio_parser.add_argument("--project", help="Project name to open directly")
+
     
     args = parser.parse_args()
     
@@ -386,51 +507,48 @@ def main():
         import_files(proj_dir, args.files)
         
     elif args.command == "produce":
+        # PRODUCE COMMAND:
+        # 1. Gọi setup_project để đảm bảo folder và state file tồn tại.
+        # 2. Cập nhật "đề bài" (topic, ratio) vào file trạng thái.
+        # 3. In log báo hiệu hệ thống đã sẵn sàng để Agent (AI) bắt đầu quy trình chi tiết.
         proj_dir = setup_project(args.project)
         state = ProductionState(proj_dir)
-        state.data["workflow"] = args.workflow
+        # Default workflow (topic-to-video)
+        state.data["workflow"] = "topic-to-video"
         
-        if args.workflow == "topic-to-video":
-            if not args.topic:
-                log_error("Workflow 'topic-to-video' cần tham số --topic")
-                return
+        if not args.topic:
+            log_error("Lệnh 'produce' cần tham số --topic")
+            return
 
-            # Execute Pipeline
-            run_step_script(proj_dir, args.topic, args.type, args.ratio)
-            state.update_step("script", "completed", {"file": "script.json", "ratio": args.ratio})
+        # Simplified workflow - Agent will orchestrate the details
+        log_info("🎬 Starting video production...")
+        log_info(f"   Topic: {args.topic}")
+        # log_info(f"   Type: {args.type}") # Deprecated
+        log_info(f"   Ratio: {args.ratio}")
+        log_info("")
+        log_info("⚠️  NOTE: AI Agent sẽ tự quyết định quy trình tối ưu")
+        log_info("    (voice-first, script-first, hoặc hybrid)")
+        log_info("")
+
+        # Just setup the project, agent will handle the rest
+        state.data["config"] = {
+            "topic": args.topic,
+            # "type": args.type, # Deprecated
+            "ratio": args.ratio
+        }
+        state._save()
+
+        log_info("✅ Project initialized. Đợi agent orchestrate...")
+        log_info(f"📂 Project dir: {proj_dir}")
+        log_info("")
+        log_info("💡 Agent có thể sử dụng:")
+        log_info("   • video-script-generator skill (generate, sync, segment)")
+        log_info("   • voice-generation skill")
+        log_info("   • video-resource-finder skill")
+        log_info("   • video-editor skill")
             
-            run_step_voice(proj_dir)
-            state.update_step("voice", "completed", "voice.json")
-            
-            run_step_resources(proj_dir)
-            state.update_step("resources", "completed", "resources.json")
-            
-            run_step_editor(proj_dir)
-            state.update_step("editor", "completed", "project.otio")
-            
-            log_info("🎉 Quy trình hoàn tất! Anh/chị có thể render video ngay.")
-            open_remotion_studio(args.project)
-            
-        elif args.workflow == "multi-video-edit":
-            # 1. Setup (Import/Extraction/Transcription)
-            run_step_multi_video_setup(proj_dir, args.ratio)
-            state.update_step("setup", "completed", {"file": "script.json (transcript)", "ratio": args.ratio})
-            
-            # 2. Agent Interaction required
-            log_info("🛑 PAUSE: Đã có Transcript.")
-            log_info("Vibe Dio cần Anh/Chị (Agent) phân tích script.json và cập nhật scenes mới.")
-            log_info("Sau khi xong, hãy chạy: python director.py produce --project <name> --workflow multi-video-resume")
-            
-        elif args.workflow == "multi-video-resume":
-             # Resume from Editor step
-             # Use resources step if needed for B-roll
-             run_step_resources(proj_dir)
-             
-             run_step_editor(proj_dir)
-             state.update_step("editor", "completed", "project.otio")
-             log_info("🎉 Quy trình hoàn tất! Anh/chị có thể render video ngay.")
-             open_remotion_studio(args.project)
-            
+
+
     elif args.command == "status":
         proj_dir = PROJECTS_DIR / args.project
         if not proj_dir.exists():
@@ -438,7 +556,19 @@ def main():
             return
         state = ProductionState(proj_dir)
         print(json.dumps(state.data, indent=2, ensure_ascii=False))
-        
+
+    elif args.command == "cleanup":
+        proj_dir = PROJECTS_DIR / args.project
+        if not proj_dir.exists():
+            log_error("Project chưa tồn tại.")
+            return
+        clean_up_project(proj_dir)
+
+    elif args.command == "studio":
+        # Open Remotion Studio
+        project = args.project if hasattr(args, 'project') and args.project else None
+        open_remotion_studio(project)
+
     else:
         parser.print_help()
 

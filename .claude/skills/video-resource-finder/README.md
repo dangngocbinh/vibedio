@@ -4,14 +4,15 @@ Tự động tìm kiếm FREE video/image/music/SFX resources từ Pexels và Pi
 
 ## Features
 
-✅ Tìm stock videos (B-roll) từ Pexels & Pixabay
-✅ Tìm stock images từ Pexels & Pixabay
-✅ Tìm background music từ Pixabay Music
-✅ Tìm sound effects (whoosh, pop, ding)
-✅ Top 3 results mỗi query
-✅ Metadata-only mode (không auto-download)
-✅ Fallback giữa APIs
-✅ Error handling graceful
+✅ Tìm stock videos (B-roll) từ Pexels & Pixabay  
+✅ Tìm stock images từ Pexels & Pixabay  
+✅ Tìm background music từ Pixabay Music  
+✅ Tìm sound effects (whoosh, pop, ding)  
+✅ Multi-provider search (all available APIs)  
+✅ **NEW v1.2**: Intelligent resource selection (AI scoring)  
+✅ **NEW v1.2**: Staging workflow (downloads → selection → imports)  
+✅ Auto-download với quality selection  
+✅ Error handling graceful  
 
 ## Quick Start
 
@@ -46,14 +47,37 @@ Skill đọc từ `script.json` trong project directory:
 
 ```json
 {
-  "scenes": [
+  "metadata": {
+    "projectName": "my-video",
+    "description": "Video về giấc ngủ",
+    "duration": 60.5,
+    "ratio": "9:16"
+  },
+  "sections": [
     {
-      "id": "hook",
-      "text": "Bạn ngủ đủ 8 tiếng...",
-      "visualSuggestion": {
-        "type": "stock",
-        "query": "tired waking up"
-      }
+      "id": "intro",
+      "name": "Giới thiệu",
+      "startTime": 0.0,
+      "endTime": 5.2,
+      "duration": 5.2,
+      "scenes": [
+        {
+          "id": "hook",
+          "type": "media",
+          "startTime": 0.0,
+          "endTime": 5.2,
+          "duration": 5.2,
+          "text": "Bạn ngủ đủ 8 tiếng...",
+          "visualDescription": "Người mệt mỏi thức dậy",
+          "visuals": [
+            {
+              "type": "stock",
+              "query": "tired waking up",
+              "style": "zoom-in"
+            }
+          ]
+        }
+      ]
     }
   ],
   "music": {
@@ -89,30 +113,102 @@ File `resources.json` với metadata và URLs:
 ```bash
 --projectDir         # Required: Path to project directory
 --resultsPerQuery    # Optional: Number of results per query (default: 3)
---preferredSource    # Optional: pexels|pixabay (default: pexels)
+--provider           # Optional: Specific provider to use (default: multi-provider)
+                     #   - null/unset: Search ALL providers with API keys (default)
+                     #   - pexels: Only Pexels (no fallback)
+                     #   - pixabay: Only Pixabay (no fallback)
+                     #   - unsplash: Only Unsplash (no fallback)
 ```
+
+## Workflow
+
+### Traditional Flow (v1.0)
+
+```
+script.json → Search APIs → Download 1 best → resources.json → Build video
+```
+
+### New Selection Flow (v1.2+)
+
+```
+script.json → Search APIs → Download 10 options/scene → downloads/ (staging)
+                                          ↓
+                              ResourceSelector picks best
+                                          ↓
+                              Import selected → imports/
+                                          ↓
+                              Cleanup downloads/
+                                          ↓
+                              Build video from imports/
+```
+
+**Benefits:**
+- 🎯 Better resource matching via intelligent selection
+- 🎨 More variety and quality options
+- 🧹 Clean project structure (only selected resources kept)
+- 💾 Efficient storage (staging area auto-cleaned)
+
+**How it works:**
+
+1.  **Download Phase**: `find-resources.js` downloads 10 resources per scene to `downloads/`
+2.  **Selection Phase**: `select-and-import.js` uses AI to pick best match
+3.  **Import Phase**: Selected resources copied to `imports/`
+4.  **Cleanup Phase**: `downloads/` staging area removed
+5.  **Build Phase**: Video editor uses resources from `imports/`
 
 ## Examples
 
-### Basic usage
+### Basic usage (Multi-provider - searches all available)
 ```bash
 node scripts/find-resources.js \
   --projectDir "../../output/tai-sao-ngu-8-tieng-van-met"
 ```
 
-### Get 5 results per query
+Searches **all providers** with configured API keys (Pexels + Pixabay + Unsplash).
+
+### Get 5 results per query (Multi-provider)
 ```bash
 node scripts/find-resources.js \
   --projectDir "../../output/my-project" \
   --resultsPerQuery 5
 ```
 
-### Prefer Pixabay over Pexels
+Searches all providers and returns up to 5 results per provider.
+
+### Search only from Pixabay (No fallback)
 ```bash
 node scripts/find-resources.js \
   --projectDir "../../output/my-project" \
-  --preferredSource "pixabay"
+  --provider "pixabay"
 ```
+
+Only searches Pixabay. Will NOT fallback to other providers if no results found.
+
+### Search only from Pexels (No fallback)
+```bash
+node scripts/find-resources.js \
+  --projectDir "../../output/my-project" \
+  --provider "pexels"
+```
+
+Only searches Pexels. Will NOT fallback to other providers if no results found.
+
+### Resource Selection & Import (NEW v1.2)
+```bash
+# Step 1: Download 10 resources per scene
+node scripts/find-resources.js \
+  --projectDir "../../output/my-project"
+
+# Step 2: Select best and import to project
+node scripts/select-and-import.js \
+  --projectDir "../../output/my-project"
+```
+
+The selection tool will:
+- ✅ Analyze all downloaded resources
+- ✅ Pick best match using intelligent scoring
+- ✅ Import selected to `imports/`
+- ✅ Auto-cleanup `downloads/` staging area
 
 ## Integration
 
