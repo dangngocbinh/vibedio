@@ -118,16 +118,36 @@ const getTextStyles = (
     textColor: string,
     accentColor: string,
     size: number,
-    fontFamily?: string
+    fontFamily?: string,
+    aspectRatio?: number
 ): React.CSSProperties => {
+    // Điều chỉnh lineHeight và letterSpacing dựa trên aspect ratio
+    let lineHeight = 1.1;
+    let letterSpacing = '-0.02em';
+
+    if (aspectRatio !== undefined) {
+        if (aspectRatio < 0.75) {
+            // Vertical (9:16, 4:5) - tăng line height để dễ đọc hơn
+            lineHeight = 1.15;
+            letterSpacing = '-0.01em';
+        } else if (aspectRatio >= 0.75 && aspectRatio <= 1.25) {
+            // Square (1:1)
+            lineHeight = 1.12;
+            letterSpacing = '-0.015em';
+        }
+        // Horizontal giữ nguyên default
+    }
+
     const baseStyle: React.CSSProperties = {
         color: textColor,
         fontSize: size,
         fontWeight: 900,
         margin: 0,
-        lineHeight: 1.1,
-        letterSpacing: '-0.02em',
+        lineHeight,
+        letterSpacing,
         fontFamily: fontFamily || 'Inter, Montserrat, system-ui, sans-serif',
+        wordWrap: 'break-word', // Tự động xuống dòng nếu chữ quá dài
+        overflowWrap: 'break-word',
     };
 
     switch (style) {
@@ -401,7 +421,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
     animateBackground = true,
 }) => {
     const frame = useCurrentFrame();
-    const { fps, durationInFrames, width } = useVideoConfig();
+    const { fps, durationInFrames, width, height } = useVideoConfig();
 
     // Random default font
     const defaultFont = DEFAULT_FONTS[Math.floor(random(title || 'fullscreen-title') * DEFAULT_FONTS.length)];
@@ -419,11 +439,49 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
         }
     }, [fontFamily]);
 
-    // 1. Tính toán Responsive (Tương tự computed property trong Vue)
-    const scaleFactor = width / 1920; // Giả sử thiết kế gốc là 1080p
-    const scaledTitleSize = titleSize * scaleFactor;
-    const scaledSubtitleSize = subtitleSize * scaleFactor;
-    const scaledPadding = padding * scaleFactor;
+    // 1. Tính toán Responsive dựa trên Aspect Ratio
+    // Phát hiện aspect ratio để điều chỉnh scale phù hợp
+    const aspectRatio = width / height;
+
+    // Xác định loại aspect ratio
+    const isVertical = aspectRatio < 0.75; // 9:16 (0.5625) hoặc 4:5 (0.8)
+    const isSquare = aspectRatio >= 0.75 && aspectRatio <= 1.25; // 1:1
+    const isHorizontal = aspectRatio > 1.25; // 16:9 (1.777)
+
+    // Tính base scale factor dựa trên cả width và height
+    // Sử dụng dimension nhỏ hơn để đảm bảo không bị tràn
+    let baseScaleFactor: number;
+    let titleSizeMultiplier = 1;
+    let subtitleSizeMultiplier = 1;
+    let paddingMultiplier = 1;
+    let maxWidthPercent = 94;
+
+    if (isVertical) {
+        // 9:16 hoặc 4:5 - ưu tiên scale theo width, giảm kích thước chữ
+        baseScaleFactor = width / 1080; // Base cho vertical là 1080px width
+        titleSizeMultiplier = aspectRatio < 0.7 ? 0.65 : 0.75; // 9:16 nhỏ hơn 4:5
+        subtitleSizeMultiplier = aspectRatio < 0.7 ? 0.7 : 0.8;
+        paddingMultiplier = 0.6;
+        maxWidthPercent = 90; // Giảm width để tránh chữ sát mép
+    } else if (isSquare) {
+        // 1:1 - cân bằng
+        baseScaleFactor = Math.min(width / 1080, height / 1080);
+        titleSizeMultiplier = 0.85;
+        subtitleSizeMultiplier = 0.85;
+        paddingMultiplier = 0.7;
+        maxWidthPercent = 88;
+    } else {
+        // 16:9 - scale theo height để tận dụng không gian
+        baseScaleFactor = height / 1080; // Base cho horizontal là 1080px height
+        titleSizeMultiplier = 1;
+        subtitleSizeMultiplier = 1;
+        paddingMultiplier = 1;
+        maxWidthPercent = 94;
+    }
+
+    const scaledTitleSize = titleSize * baseScaleFactor * titleSizeMultiplier;
+    const scaledSubtitleSize = subtitleSize * baseScaleFactor * subtitleSizeMultiplier;
+    const scaledPadding = padding * baseScaleFactor * paddingMultiplier;
 
     // 2. Chuyển động Background (Hiệu ứng premium)
     const { gradientShift, patternOffset, scale: bgScale } = useBackgroundAnimation(animateBackground);
@@ -487,7 +545,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
     };
 
     // 8. Lấy styles cho Text (Default mode)
-    const titleStyles = getTextStyles(textStyle, textColor, accentColor, scaledTitleSize, fontFamily);
+    const titleStyles = getTextStyles(textStyle, textColor, accentColor, scaledTitleSize, fontFamily, aspectRatio);
 
     // 9. Template Renderer (Override default layout if template is chosen)
     const renderContent = () => {
@@ -498,7 +556,7 @@ export const FullscreenTitle: React.FC<FullscreenTitleProps> = ({
                         opacity,
                         transform,
                         filter: filter || undefined,
-                        maxWidth: '94%',
+                        maxWidth: `${maxWidthPercent}%`,
                         ...alignmentStyles as any, // Layout styles
                     }}
                 >

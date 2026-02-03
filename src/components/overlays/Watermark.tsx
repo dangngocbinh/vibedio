@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Img, useVideoConfig } from 'remotion';
-import { WatermarkConfig } from '../types';
+import { WatermarkConfig } from '../../types';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 interface WatermarkProps {
   config: WatermarkConfig;
@@ -12,10 +13,12 @@ interface WatermarkProps {
  */
 export const Watermark: React.FC<WatermarkProps> = ({ config }) => {
   const { width, height } = useVideoConfig();
+  const { scalePixel } = useResponsiveScale();
   const [imageError, setImageError] = useState(false);
 
   const getPosition = (): React.CSSProperties => {
     const { position, padding } = config;
+    const scaledPadding = scalePixel(padding);
 
     const baseStyle: React.CSSProperties = {
       position: 'absolute',
@@ -25,29 +28,29 @@ export const Watermark: React.FC<WatermarkProps> = ({ config }) => {
       case 'top-left':
         return {
           ...baseStyle,
-          top: padding,
-          left: padding,
+          top: scaledPadding,
+          left: scaledPadding,
         };
 
       case 'top-right':
         return {
           ...baseStyle,
-          top: padding,
-          right: padding,
+          top: scaledPadding,
+          right: scaledPadding,
         };
 
       case 'bottom-left':
         return {
           ...baseStyle,
-          bottom: padding,
-          left: padding,
+          bottom: scaledPadding,
+          left: scaledPadding,
         };
 
       case 'bottom-right':
         return {
           ...baseStyle,
-          bottom: padding,
-          right: padding,
+          bottom: scaledPadding,
+          right: scaledPadding,
         };
 
       case 'center':
@@ -61,15 +64,15 @@ export const Watermark: React.FC<WatermarkProps> = ({ config }) => {
       default:
         return {
           ...baseStyle,
-          bottom: padding,
-          right: padding,
+          bottom: scaledPadding,
+          right: scaledPadding,
         };
     }
   };
 
   const logoStyle: React.CSSProperties = {
     ...getPosition(),
-    width: config.size,
+    width: scalePixel(config.size),
     height: 'auto',
     opacity: config.opacity,
     objectFit: 'contain',

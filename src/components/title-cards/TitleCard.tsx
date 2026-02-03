@@ -1,5 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, spring, Img } from 'remotion';
+import { useResponsiveScale } from '../../utils/useResponsiveScale';
 
 export interface TitleCardProps {
     text: string;
@@ -34,12 +35,16 @@ const STYLE_CONFIGS = {
     },
 };
 
-const getPositionStyle = (position: string): React.CSSProperties => {
+const getPositionStyle = (
+    position: string,
+    scalePixel: (val: number) => number,
+    isPortrait: boolean
+): React.CSSProperties => {
     switch (position) {
         case 'top':
-            return { justifyContent: 'flex-start', paddingTop: 120 };
+            return { justifyContent: 'flex-start', paddingTop: isPortrait ? scalePixel(80) : scalePixel(120) };
         case 'bottom':
-            return { justifyContent: 'flex-end', paddingBottom: 120 };
+            return { justifyContent: 'flex-end', paddingBottom: isPortrait ? scalePixel(80) : scalePixel(120) };
         case 'center':
             return { justifyContent: 'center' };
         case 'overlay':
@@ -59,9 +64,13 @@ export const TitleCard: React.FC<TitleCardProps> = ({
     const currentFrame = useCurrentFrame();
     const frame = overrideFrame !== undefined ? overrideFrame : currentFrame;
     const { fps, durationInFrames } = useVideoConfig();
+    const { scalePixel, scaleFontSize, isPortrait } = useResponsiveScale();
 
     const config = STYLE_CONFIGS[style] || STYLE_CONFIGS.minimal;
-    const positionStyle = getPositionStyle(position);
+    const positionStyle = getPositionStyle(position, scalePixel, isPortrait);
+
+    // Scale font size
+    const scaledFontSize = scaleFontSize(config.fontSize);
 
     const fadeInEnd = Math.min(15, durationInFrames / 4);
     const fadeOutStart = Math.max(durationInFrames - 15, durationInFrames * 0.75);
@@ -120,34 +129,36 @@ export const TitleCard: React.FC<TitleCardProps> = ({
                     style={{
                         transform: `translateY(${translateY}px)`,
                         backgroundColor: config.backgroundColor,
-                        padding: '24px 48px',
-                        borderRadius: 8,
+                        padding: `${scalePixel(24)}px ${scalePixel(48)}px`,
+                        borderRadius: scalePixel(8),
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: 12,
+                        gap: scalePixel(12),
                         backdropFilter: backgroundImage ? 'blur(10px)' : undefined,
+                        width: isPortrait ? '90%' : 'auto',
                     }}
                 >
                     <div
                         style={{
                             color: config.textColor,
-                            fontSize: config.fontSize,
+                            fontSize: scaledFontSize,
                             fontWeight: config.fontWeight,
                             fontFamily: 'Inter, Montserrat, sans-serif',
-                            letterSpacing: 2,
+                            letterSpacing: scalePixel(2),
                             textAlign: 'center',
                             textTransform: 'uppercase',
+                            lineHeight: 1.2,
                         }}
                     >
                         {text}
                     </div>
                     <div
                         style={{
-                            height: 3,
+                            height: scalePixel(3),
                             width: `${underlineWidth}%`,
                             backgroundColor: config.underlineColor,
-                            borderRadius: 2,
+                            borderRadius: scalePixel(2),
                             opacity: 0.8,
                         }}
                     />

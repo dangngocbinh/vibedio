@@ -226,12 +226,36 @@ export const LowerThird: React.FC<LowerThirdProps> = ({
                     </div>
                 );
             case 'social-youtube':
+                const iconSize = fontSize * 1.2;
                 return (
-                    <div style={{ position: 'absolute', bottom: 100, left: 80, opacity, display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: 50, padding: '10px 30px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                        <div style={{ width: 50, height: 50, backgroundColor: primaryColor, borderRadius: '50%', marginRight: 15, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fff' }}>YT</div>
+                    <div style={{
+                        position: 'absolute',
+                        bottom: 100,
+                        left: 80,
+                        opacity,
+                        display: 'flex',
+                        alignItems: 'center',
+                        backgroundColor: '#fff',
+                        borderRadius: fontSize,
+                        padding: `${fontSize * 0.2}px ${fontSize * 1.2}px`,
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                    }}>
+                        <div style={{
+                            width: iconSize,
+                            height: iconSize,
+                            backgroundColor: primaryColor,
+                            borderRadius: '50%',
+                            marginRight: fontSize * 0.3,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            color: '#fff',
+                            fontSize: fontSize * 0.6,
+                            fontWeight: 'bold'
+                        }}>YT</div>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: fontSize * 0.8, color: '#000' }}>{title}</h1>
-                            <p style={{ margin: 0, fontSize: fontSize * 0.5, color: '#666' }}>{subtitle}</p>
+                            <h1 style={{ margin: 0, fontSize: fontSize * 0.8, color: '#000', lineHeight: 1 }}>{title}</h1>
+                            <p style={{ margin: 0, fontSize: fontSize * 0.4, color: '#666', marginTop: fontSize * 0.1 }}>{subtitle}</p>
                         </div>
                     </div>
                 );
