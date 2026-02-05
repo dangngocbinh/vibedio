@@ -15,7 +15,7 @@ export const MusicSettings = ({ scriptData, projectSlug, onUpdate }: MusicSettin
     const musicAudioRef = useRef<HTMLAudioElement>(null)
 
     const musicCandidates = scriptData?.music?.candidates || []
-    const selectedMusicId = scriptData?.music?.selectedMusicId
+    // const selectedMusicId = scriptData?.music?.selectedMusicId
     const importedMusicPath = scriptData?.music?.importedMusicPath
 
     // Get current music source (memoized to detect changes)

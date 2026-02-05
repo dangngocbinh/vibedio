@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { Section, ScriptData, ResourceCandidate } from '../types'
 import { formatTime } from '../utils/formatters'
+import { MediaLayerModal } from './MediaLayerModal'
 
 interface SceneEditorProps {
     sections: Section[]
@@ -10,7 +11,7 @@ interface SceneEditorProps {
     getSceneResources: (sceneId: string) => ResourceCandidate[]
     sceneResourceIndex: Record<string, number>
     onResourceIndexChange: (sceneId: string, index: number) => void
-    onLightboxOpen: (url: string, type: 'image' | 'video', title?: string) => void
+    onLightboxOpen?: (url: string, type: 'image' | 'video', title?: string) => void
     onReloadResources: () => Promise<void>
 }
 
@@ -22,12 +23,13 @@ export const SceneEditor = ({
     getSceneResources,
     sceneResourceIndex,
     onResourceIndexChange,
-    onLightboxOpen,
     onReloadResources
 }: SceneEditorProps) => {
+    console.log('[SceneEditor] Rendered with sections:', sections?.length)
     const [dragOverScene, setDragOverScene] = useState<string | null>(null)
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
     const hasInitializedIndexes = useRef(false)
+    const [mediaModalOpen, setMediaModalOpen] = useState<string | null>(null) // sceneId of open modal
 
     // Initialize sceneResourceIndex based on selectedResourceId from script.json
     // Only run once when project first loads
@@ -657,8 +659,8 @@ export const SceneEditor = ({
                                                                             <div
                                                                                 className="w-full h-full cursor-pointer relative group/media-container"
                                                                                 onClick={() => {
-                                                                                    // Open lightbox when clicking on media
-                                                                                    onLightboxOpen(resourcePath, isImage ? "image" : "video", displayResource.title)
+                                                                                    // Open media layer modal instead of lightbox
+                                                                                    setMediaModalOpen(scene.id)
                                                                                 }}
                                                                             >
                                                                                 {/* Drag Overlay */}
@@ -671,52 +673,113 @@ export const SceneEditor = ({
                                                                                     </div>
                                                                                 )}
 
-                                                                                {/* Media Content */}
-                                                                                {isImage ? (
-                                                                                    <img
-                                                                                        src={resourcePath}
-                                                                                        alt={displayResource.title || 'Preview'}
-                                                                                        className="w-full h-full object-cover"
-                                                                                        onError={(e) => {
-                                                                                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3E?%3C/text%3E%3C/svg%3E'
-                                                                                        }}
-                                                                                    />
-                                                                                ) : (
-                                                                                    <video
-                                                                                        src={resourcePath}
-                                                                                        className="w-full h-full object-cover"
-                                                                                        muted
-                                                                                        loop
-                                                                                        onMouseEnter={(e) => e.currentTarget.play()}
-                                                                                        onMouseLeave={(e) => e.currentTarget.pause()}
-                                                                                    />
-                                                                                )}
-
-                                                                                {/* Navigation Arrows */}
-                                                                                {resources.length > 1 && (
-                                                                                    <>
-                                                                                        <button
-                                                                                            onClick={(e) => {
-                                                                                                e.stopPropagation()
-                                                                                                const newIndex = currentIndex > 0 ? currentIndex - 1 : resources.length - 1
-                                                                                                onResourceIndexChange(scene.id, newIndex)
+                                                                                {/* Media Content - Show 3D fan stack if multiple selected */}
+                                                                                {(() => {
+                                                                                    const selectedIds = scene.selectedResourceIds || 
+                                                                                        (scene.selectedResourceId ? [scene.selectedResourceId] : [])
+                                                                                    
+                                                                                    // If multiple layers selected, show them in card stack (like playing cards)
+                                                                                    if (selectedIds.length > 1) {
+                                                                                        const selectedResources = selectedIds
+                                                                                            .map(id => resources.find(r => r.id === id))
+                                                                                            .filter(Boolean) as ResourceCandidate[]
+                                                                                        
+                                                                                        return (
+                                                                                            <div className="w-full h-full relative flex items-center justify-center">
+                                                                                                {selectedResources.map((res, idx) => {
+                                                                                                    const isImg = res.type === 'image'
+                                                                                                    let rawPath = res.localPath || res.downloadUrl
+                                                                                                    
+                                                                                                    if (!rawPath && res.downloadUrls) {
+                                                                                                        rawPath = res.downloadUrls['4k'] ||
+                                                                                                            res.downloadUrls.hd ||
+                                                                                                            res.downloadUrls.large ||
+                                                                                                            res.downloadUrls.medium ||
+                                                                                                            res.downloadUrls.original ||
+                                                                                                            res.downloadUrls.sd
+                                                                                                    }
+                                                                                                    
+                                                                                                    if (!rawPath && res.url) {
+                                                                                                        rawPath = res.url
+                                                                                                    }
+                                                                                                    
+                                                                                                    let resPath: string
+                                                                                                    if (!rawPath) {
+                                                                                                        resPath = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3C/svg%3E'
+                                                                                                    } else if (rawPath.startsWith('http') || rawPath.startsWith('blob:')) {
+                                                                                                        resPath = rawPath
+                                                                                                    } else if (rawPath.startsWith('/Users/') || rawPath.startsWith('/home/')) {
+                                                                                                        const match = rawPath.match(/public\/projects\/(.+)/)
+                                                                                                        if (match) {
+                                                                                                            resPath = `/projects/${match[1]}`
+                                                                                                        } else {
+                                                                                                            const filename = rawPath.split('/').pop()
+                                                                                                            resPath = `/projects/${projectSlug}/uploads/${filename}`
+                                                                                                        }
+                                                                                                    } else {
+                                                                                                        resPath = `/projects/${projectSlug}/${rawPath}`
+                                                                                                    }
+                                                                                                    
+                                                                                                    // Calculate card stack offset (like playing cards)
+                                                                                                    const totalVisible = selectedResources.length
+                                                                                                    const offsetX = idx * 25 // Horizontal offset (stagger right)
+                                                                                                    const offsetY = idx * 25 // Vertical offset (stagger down)
+                                                                                                    
+                                                                                                    return (
+                                                                                                        <div
+                                                                                                            key={res.id}
+                                                                                                            className="absolute rounded-lg overflow-hidden shadow-xl border-2 border-white transition-all duration-300 ease-out"
+                                                                                                            style={{
+                                                                                                                width: '75%',
+                                                                                                                height: '75%',
+                                                                                                                left: `${offsetX}px`,
+                                                                                                                top: `${offsetY}px`,
+                                                                                                                zIndex: totalVisible - idx,
+                                                                                                                boxShadow: `${idx * 3}px ${idx * 3}px ${10 + idx * 5}px rgba(0,0,0,${0.2 + idx * 0.05})`
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            {isImg ? (
+                                                                                                                <img
+                                                                                                                    src={resPath}
+                                                                                                                    alt={res.title || 'Layer'}
+                                                                                                                    className="w-full h-full object-cover"
+                                                                                                                />
+                                                                                                            ) : (
+                                                                                                                <video
+                                                                                                                    src={resPath}
+                                                                                                                    className="w-full h-full object-cover"
+                                                                                                                    muted
+                                                                                                                    loop
+                                                                                                                />
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    )
+                                                                                                })}
+                                                                                            </div>
+                                                                                        )
+                                                                                    }
+                                                                                    
+                                                                                    // Single media - show normally
+                                                                                    return isImage ? (
+                                                                                        <img
+                                                                                            src={resourcePath}
+                                                                                            alt={displayResource.title || 'Preview'}
+                                                                                            className="w-full h-full object-cover"
+                                                                                            onError={(e) => {
+                                                                                                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3E?%3C/text%3E%3C/svg%3E'
                                                                                             }}
-                                                                                            className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover/media-container:opacity-100 transition-opacity z-10"
-                                                                                        >
-                                                                                            <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-                                                                                        </button>
-                                                                                        <button
-                                                                                            onClick={(e) => {
-                                                                                                e.stopPropagation()
-                                                                                                const newIndex = currentIndex < resources.length - 1 ? currentIndex + 1 : 0
-                                                                                                onResourceIndexChange(scene.id, newIndex)
-                                                                                            }}
-                                                                                            className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover/media-container:opacity-100 transition-opacity z-10"
-                                                                                        >
-                                                                                            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                                                                                        </button>
-                                                                                    </>
-                                                                                )}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <video
+                                                                                            src={resourcePath}
+                                                                                            className="w-full h-full object-cover"
+                                                                                            muted
+                                                                                            loop
+                                                                                            onMouseEnter={(e) => e.currentTarget.play()}
+                                                                                            onMouseLeave={(e) => e.currentTarget.pause()}
+                                                                                        />
+                                                                                    )
+                                                                                })()}
 
                                                                                 {/* Counter & Type Badge */}
                                                                                 {resources.length > 0 && (
@@ -777,6 +840,56 @@ export const SceneEditor = ({
                     <p>No script data loaded.</p>
                 </div>
             )}
+
+            {/* Media Layer Modal */}
+            {mediaModalOpen && (() => {
+                console.log('[SceneEditor] Opening modal for scene:', mediaModalOpen)
+                const projectSlug = new URLSearchParams(window.location.search).get('project')
+                
+                // Find the scene
+                let targetScene: any = null
+                let targetSectionIdx = -1
+                let targetSceneIdx = -1
+                
+                scriptData?.sections?.forEach((section, sectionIdx) => {
+                    section.scenes?.forEach((scene, sceneIdx) => {
+                        if (scene.id === mediaModalOpen) {
+                            targetScene = scene
+                            targetSectionIdx = sectionIdx
+                            targetSceneIdx = sceneIdx
+                        }
+                    })
+                })
+
+                if (!targetScene) return null
+
+                const fetchedResources = getSceneResources(targetScene.id)
+                const manualResources = targetScene.resourceCandidates || []
+                const resources = manualResources.length > 0 ? manualResources : fetchedResources
+                const selectedIds = targetScene.selectedResourceIds || 
+                    (targetScene.selectedResourceId ? [targetScene.selectedResourceId] : [])
+
+                return (
+                    <MediaLayerModal
+                        isOpen={true}
+                        onClose={() => setMediaModalOpen(null)}
+                        sceneId={targetScene.id}
+                        sceneName={targetScene.name || targetScene.id}
+                        resources={resources}
+                        selectedResourceIds={selectedIds}
+                        onUpdateSelection={(newIds) => {
+                            updateScene(targetSectionIdx, targetSceneIdx, {
+                                selectedResourceIds: newIds,
+                                selectedResourceId: newIds.length > 0 ? newIds[0] : undefined
+                            })
+                        }}
+                        onUploadFile={async (file) => {
+                            await handleFileSelect(targetScene.id, file)
+                        }}
+                        projectSlug={projectSlug}
+                    />
+                )
+            })()}
         </>
     )
 }

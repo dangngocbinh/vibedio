@@ -190,7 +190,7 @@ function App() {
                             <SceneOverview
                                 sections={scriptData.sections}
                                 onPlayScene={playFromTime}
-                                onSceneClick={(sectionIdx, sceneIdx) => {
+                                onSceneClick={(_sectionIdx, _sceneIdx) => {
                                     // Switch to detail mode when clicking a scene
                                     setViewMode('detail')
                                     // Optional: scroll to the scene (can be enhanced later)

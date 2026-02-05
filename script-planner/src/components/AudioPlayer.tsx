@@ -5,7 +5,7 @@ interface AudioPlayerProps {
     currentTime: number
     duration: number
     onTogglePlay: () => void
-    waveformRef: React.RefObject<HTMLDivElement>
+    waveformRef: React.RefObject<HTMLDivElement | null>
 }
 
 export const AudioPlayer = ({

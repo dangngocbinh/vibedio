@@ -34,4 +34,4 @@ scripts/tmp_scripts/*
 .claude/skills/video-editor/templates/__pycache__/subtitle_generator.cpython-313.pyc
 public/projects-list.json
 src/generated/projects.json
-src/generated/projects.json
+
