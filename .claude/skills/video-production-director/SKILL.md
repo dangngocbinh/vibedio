@@ -66,6 +66,58 @@ description: MASTER SKILL for orchestrating end-to-end video production (Vibe Di
   --project "my-video"  # → public/projects/my-video
   ```
 
+#### 2.5. Tổ chức File Trung Gian (Intermediate Files)
+
+**⚠️ CRITICAL - ĐỌC KỸ ĐỂ TRÁNH RỐI MÃ NGUỒN**
+
+**Quy tắc tổ chức file:**
+- ✅ **TẤT CẢ** file trung gian (sections, scenes) PHẢI lưu trong thư mục `init/`
+- ✅ Cấu trúc bắt buộc: `public/projects/{project-name}/init/`
+- ❌ **TUYỆT ĐỐI KHÔNG** lưu file lung tung ở root project hoặc working directory
+
+**Quy ước đặt tên file:**
+```bash
+# Section text files
+public/projects/my-video/init/sec_intro.txt
+public/projects/my-video/init/sec_fitness.txt
+public/projects/my-video/init/sec_nutrition.txt
+
+# Scenes definition files
+public/projects/my-video/init/scenes_intro.json
+public/projects/my-video/init/scenes_fitness.json
+public/projects/my-video/init/scenes_nutrition.json
+```
+
+**Cách sử dụng với Write tool:**
+```bash
+# ✅ ĐÚNG: Lưu vào thư mục init/
+Write(
+  file_path="public/projects/my-video/init/sec_intro.txt",
+  content="Nội dung section intro..."
+)
+
+# ❌ SAI: Lưu lung tung
+Write(
+  file_path="sec_intro.txt",  # WRONG - sẽ lưu ở working directory
+  content="..."
+)
+```
+
+**Lợi ích của quy tắc này:**
+1. ✅ Code base sạch sẽ, không bị rối
+2. ✅ Dễ tìm kiếm và debug
+3. ✅ Dễ dọn dẹp sau khi hoàn thành
+4. ✅ Tránh conflict khi làm nhiều project cùng lúc
+
+**Cleanup sau khi hoàn thành:**
+```bash
+# Tự động dọn dẹp các file trung gian
+python3 .claude/skills/video-production-director/director.py cleanup \
+  --project "my-video"
+
+# Kết quả: tất cả file trung gian được move vào backups/ hoặc xóa
+```
+
 #### 3. Về Checkpoints (Điểm dừng)
 
 **CHECKPOINT 1** - Confirm Text (SAU tạo script):
@@ -127,48 +179,77 @@ python3 ... rollback --step "timing_synced" --force
 
 ---
 
-## QUY TRÌNH CHÍNH (6 BƯỚC + 2 CHECKPOINTS)
+## QUY TRÌNH CHÍNH (TỐI ƯU - 2 CHECKPOINTS TÁCH BIỆT)
 
-**Workflow Overview:**
+**✨ NEW Workflow (2026-02-05) - Tối ưu hóa để tiết kiệm thời gian:**
+
 ```
 1. Xác nhận Aspect Ratio
    ↓
-2. Tạo Kịch Bản Full Text (từ topic/outline/text có sẵn)
+2. Tạo Full Content Structure (Text + Sections + Scenes)
+   ├─ 2.1: Tạo kịch bản full text
+   ├─ 2.2: Chia sections (intro, body, outro, etc.)
+   └─ 2.3: Breakdown scenes cho từng section (với visual descriptions)
    ↓
-⭐ CHECKPOINT 1: Confirm Text
-   ↓ (sau khi user OK)
-3. Tạo Giọng Đọc (Voice)
+📍 CHECKPOINT 1: Structure Review (Script Planner)
+   ⏸️  DỪNG LẠI - Review cấu trúc content
+   ✓ Check nội dung text có ổn không?
+   ✓ Check sections breakdown hợp lý chưa?
+   ✓ Check scenes có đủ chi tiết không?
+   ✓ User có thể sửa text/structure trực tiếp trong Planner
+   → User confirm "OK" → Tiếp tục
+   ↓
+3. Tạo Giọng Đọc (Voice) - SAU KHI structure đã approved
    ├─ 3.1: Generate voice (skill voice-generation)
-   └─ 3.2: Update voice info vào script.json ⚠️ QUAN TRỌNG
+   ├─ 3.2: Update voice info vào script.json
+   └─ 3.3: Sync timing với voice (sections/scenes đã có sẵn)
    ↓
-4. Tạo Cấu Trúc Kịch Bản (Sections & Scenes)
-   ├─ 4.1: Add Sections (từng section với text)
-   ├─ 4.2: Add Scenes (từng scene với text + visuals)
-   └─ 4.3: Sync Timing với Voice ⚠️ QUAN TRỌNG (phải sau 4.1 và 4.2)
+4. Tìm Tài Nguyên (Resources) - Dựa trên structure đã approved
+   ├─ Tìm videos/images từ APIs (Pexels, Pixabay, DDG)
+   ├─ Generate AI images nếu cần
+   └─ URLs only (CHƯA download)
    ↓
-5. Tìm Tài Nguyên (Resources) → URLs only (KHÔNG download)
+📍 CHECKPOINT 2: Media Review (Script Planner)
+   ⏸️  DỪNG LẠI - Review media resources
+   ✓ Check media có phù hợp với scenes không?
+   ✓ Preview images/videos từ remote URL
+   ✓ User select/change resources nếu cần
+   → User confirm "OK" → Tiếp tục
    ↓
-6. Review Media (Script Planner) → preview từ remote URL
-   ↓
-⭐ CHECKPOINT 2: Confirm Media
-   ↓ (sau khi user OK)
-6.5. Import Selected Resources ⚡
+5. Import Selected Resources
    ├─ Intelligent selection (best from options)
-   └─ Download từ URL → imports/ (chỉ file đã chọn)
+   ├─ Download từ URL → imports/ (chỉ file đã chọn)
+   └─ Update resources.json với imported paths
    ↓
-7. Build Timeline (Video Editor)
+6. Build Timeline (Video Editor)
    ↓
-8. Mở Remotion Studio
+7. Mở Remotion Studio
 ```
 
-**2 Checkpoints quan trọng:**
-- **CHECKPOINT 1** (Text): Tiết kiệm chi phí API, sửa text trước khi tạo voice
-- **CHECKPOINT 2** (Media): Review media/timing trước khi build video
+**🎯 2 Checkpoints tách biệt rõ ràng:**
+
+| Checkpoint | Focus | Lợi ích |
+|------------|-------|---------|
+| **CHECKPOINT 1** (Structure) | Text + Sections + Scenes | ✅ Approve structure TRƯỚC khi tốn API voice<br>✅ Sửa content sớm, không phải find resources lại<br>✅ User có thể adjust scenes detail |
+| **CHECKPOINT 2** (Media) | Resources review | ✅ Focus 100% vào media quality<br>✅ Structure đã locked, chỉ pick media<br>✅ Preview trước khi download |
+
+**💡 Lợi ích so với workflow cũ:**
+
+| Khía cạnh | Workflow Cũ | Workflow Mới ✨ |
+|-----------|-------------|----------------|
+| **Checkpoint 1** | Chỉ text | ✅ Text + Structure |
+| **Hiệu quả** | Find resources → sửa structure → find lại | ✅ Approve structure → find 1 lần |
+| **Chi phí API** | Voice trước → sửa text → voice lại | ✅ Approve text → voice 1 lần |
+| **Clarity** | Review nhiều thứ cùng lúc | ✅ Tách biệt: structure vs media |
+| **Script Planner** | Dùng 1 lần (cuối) | ✅ Dùng 2 lần (structure + media) |
 
 **⚠️ Lưu ý QUAN TRỌNG về thứ tự:**
-- Bước 3.2 (Update voice info) BẮT BUỘC sau khi generate voice
-- Bước 4.3 (Sync timing) BẮT BUỘC sau khi đã add sections và scenes
-- KHÔNG sync trước khi có sections/scenes (sync cần sections/scenes đã tồn tại để update timing)
+
+1. **PHẢI tạo structure TRƯỚC voice**: Sections/scenes phải có sẵn trước khi tạo voice
+2. **PHẢI approve structure TRƯỚC resources**: Tránh lãng phí công find resources cho structure chưa ổn
+3. **Script Planner được dùng 2 lần**:
+   - Lần 1: Review structure (text + sections + scenes)
+   - Lần 2: Review media (images + videos)
 
 ---
 
@@ -202,102 +283,356 @@ AskUserQuestion(
 
 
 
-### Bước 2: Tạo Kịch Bản Full Text
+### Bước 2: Tạo Full Content Structure (Text + Sections + Scenes)
 
-**Mục tiêu**: Tạo nội dung text đầy đủ để làm input cho voice generation.
+**⚠️ THAY ĐỔI QUAN TRỌNG: Bước này tạo TOÀN BỘ cấu trúc content TRƯỚC khi tạo voice**
 
-**Cách tạo text (Agent linh hoạt):**
+**Mục tiêu**: Tạo cấu trúc kịch bản hoàn chỉnh bao gồm:
+1. Full text (nội dung đầy đủ)
+2. **Voice & Music Configuration** (NEW! - Cấu hình voice/music settings)
+3. Sections (phân đoạn: intro, body, outro...)
+4. Scenes (chi tiết từng cảnh với text + visual descriptions)
 
-1. **User đã có full text** → Dùng luôn
-2. **User cho topic/outline** → Agent viết thành full text  
-3. **User mô tả ý tưởng** → Agent viết thành full text
-
-**➡️ Kết quả cuối cùng: LUÔN LUÔN là full text hoàn chỉnh (từ đầu đến cuối như kịch bản đọc)**
+**⚠️ Timing chưa có** - sẽ được sync sau khi tạo voice (Bước 3.3)
 
 ---
+
+#### 2.1: Tạo Full Text
+
+**Cách tạo text (Agent linh hoạt):**
+1. **User đã có full text** → Dùng luôn
+2. **User cho topic/outline** → Agent viết thành full text
+3. **User mô tả ý tưởng** → Agent viết thành full text
 
 **Flow thực thi:**
 
 ```bash
-# 1. Tạo full text (bằng 1 trong 3 cách trên)
-mkdir -p public/projects/my-video
+# 1. Tạo full text (Agent tự dùng tool Write)
+# Dùng tool Write để tạo file raw_script.txt với nội dung đầy đủ
+# KHÔNG dùng command line để truyền text dài
 
-# ✅ ĐÚNG: Dùng write-text.js helper (không bị treo)
-node .claude/skills/video-production-director/scripts/write-text.js \
-  --file "public/projects/my-video/raw_script.txt" \
-  --text "Chào mọi người, hôm nay mình sẽ chia sẻ với các bạn... [Full text content đầy đủ từ đầu đến cuối] ...Cảm ơn các bạn đã theo dõi!"
-
-# ❌ SAI: KHÔNG dùng heredoc (sẽ bị treo terminal)
-# cat > file << 'EOF'
-# ...text...
-# EOF
-
-# 2. Init project (tạo script.json)
+# 2. Init project với FULL config (text + voice + music)
 python3 .claude/skills/video-production-director/script_cli.py init \
   --project "public/projects/my-video" \
   --description "Video về chủ đề X" \
-  --text "public/projects/my-video/raw_script.txt" \
-  --ratio "9:16"
+  --text-path "public/projects/my-video/raw_script.txt" \
+  --ratio "9:16" \
+  --voice-provider "openai" \
+  --voice-id "nova" \
+  --voice-emotion "excited" \
+  --voice-speed 1.0 \
+  --music-genre "upbeat" \
+  --music-mood "energetic" \
+  --music-volume 0.3
 
 # Output:
 # - public/projects/my-video/script.json (metadata + fullText)
 # - public/projects/my-video/raw_script.txt (backup)
+# - public/projects/my-video/voice-config.json (voice settings)
+# - public/projects/my-video/music-config.json (music settings)
+```
+
+**📌 Agent Guidelines: Chọn Voice & Music Parameters**
+
+Agent phải analyze content và chọn parameters phù hợp:
+
+**Voice Selection Rules:**
+
+| Content Type | Provider | Voice ID (OpenAI) | Emotion | Speed |
+|--------------|----------|-------------------|---------|-------|
+| **Giải trí, Gen Z, TikTok** | openai | nova (youthful) | excited/happy | 1.0-1.1 |
+| **Giáo dục, Tutorial** | openai | alloy (neutral) | neutral | 0.9-1.0 |
+| **Corporate, Business** | openai | echo (professional) | neutral | 0.95 |
+| **Truyện kể, Storytelling** | openai | fable (warm) | neutral/happy | 0.9 |
+| **Tin tức, Thông tin** | openai | onyx (authoritative) | neutral | 1.0 |
+| **Tiếng Việt native** | vbee | hn_male_xuantin_news_48k-fhg | neutral | 1.0 |
+
+**Voice Providers:**
+- **openai**: Nhanh, tự nhiên, English tốt, Tiếng Việt OK
+- **elevenlabs**: Chất lượng cao, emotional, đắt
+- **vbee**: Tiếng Việt native, giọng tự nhiên nhất cho VN
+- **gemini**: Multilingual, free, chất lượng vừa
+
+**Music Selection Rules:**
+
+| Video Mood | Genre | Mood | Example Query |
+|------------|-------|------|---------------|
+| **Năng động, sôi động** | upbeat | energetic | "upbeat energetic background music" |
+| **Cảm xúc, drama** | cinematic | inspiring | "cinematic inspiring orchestral" |
+| **Thư giãn, chill** | chill | calm | "chill calm lofi background" |
+| **Doanh nghiệp** | corporate | professional | "corporate uplifting background" |
+| **Hồi hộp, mystery** | dramatic | mysterious | "dramatic mysterious suspense" |
+| **Vui vẻ, hạnh phúc** | upbeat | happy | "upbeat happy positive background" |
+
+**Agent Decision Flow:**
+
+```python
+# Agent analyzes content tone
+content_tone = analyze_content(text)
+
+if "Gen Z" in description or "TikTok" in description:
+    voice_id = "nova"
+    voice_emotion = "excited"
+    music_genre = "upbeat"
+    music_mood = "energetic"
+elif "giáo dục" in description or "hướng dẫn" in description:
+    voice_id = "alloy"
+    voice_emotion = "neutral"
+    music_genre = "chill"
+    music_mood = "calm"
+elif "business" in description or "corporate" in description:
+    voice_id = "echo"
+    voice_emotion = "neutral"
+    music_genre = "corporate"
+    music_mood = "professional"
+# ... more rules
+
+# Use Vietnamese voice if content is primarily Vietnamese
+if is_vietnamese(text) and high_quality_needed:
+    voice_provider = "vbee"
+    voice_id = "hn_male_xuantin_news_48k-fhg"
+```
+
+**Example Agent Execution:**
+
+```bash
+# User request: "Tạo video 30s về Gen Z trên TikTok"
+
+# Agent analyzes:
+# - Platform: TikTok → youthful, energetic
+# - Target: Gen Z → excited tone
+# - Duration: 30s → fast paced
+
+# Agent chooses:
+python3 script_cli.py init \
+  --project "public/projects/genz-tiktok-30s" \
+  --description "Video 30s về Gen Z trên TikTok" \
+  --text-path "public/projects/genz-tiktok-30s/raw_script.txt" \
+  --ratio "9:16" \
+  --voice-provider "openai" \
+  --voice-id "nova" \           # Youthful, energetic voice
+  --voice-emotion "excited" \   # Match Gen Z energy
+  --voice-speed 1.1 \           # Slightly faster for TikTok
+  --music-genre "upbeat" \      # Energetic background
+  --music-mood "energetic" \    # Match tone
+  --music-volume 0.25           # Lower for voice clarity
+```
+
+---
+
+#### 2.2: Add Sections
+
+**Mục đích:** Phân đoạn nội dung thành sections (intro, body, outro...)
+
+**⚠️ Lưu ý:**
+- Mỗi section CẦN có text (phần text tương ứng từ fullText)
+- Text của section = tổng text của scenes bên trong
+- **CHƯA CÓ timing** (sẽ sync sau khi có voice)
+
+**⭐ KHUYẾN NGHỊ: Dùng Batch Script (2+ sections)**
+
+```bash
+node .claude/skills/video-production-director/scripts/add-sections-batch.js \
+  --script "public/projects/my-video/script.json" \
+  --section "intro" "Mở đầu" "Text của section intro..." \
+  --section "body" "Nội dung chính" "Text của section body..." \
+  --section "outro" "Kết thúc" "Text của section outro..."
+```
+
+**Lợi ích:**
+- ✅ Một lệnh duy nhất thay vì nhiều lệnh
+- ✅ Không bị treo terminal (xử lý tuần tự, delay 500ms)
+- ✅ Text tự động được ghi vào file tạm (tránh lỗi shell escaping)
+
+**⚠️ Lưu ý:** Vì chưa có voice.json, sections sẽ không có timing (startTime/endTime = 0)
+
+---
+
+#### 2.3: Add Scenes
+
+**Mục đích:** Tạo scenes cho từng section với text + visual descriptions
+
+**⚠️ Lưu ý:**
+- Mỗi scene CẦN có text (để sync timing sau)
+- Tạo scenes definition file (JSON) trước bằng tool Write
+- **CHƯA CÓ timing** (sẽ sync sau khi có voice)
+
+**Tạo scenes definition file (dùng Write tool):**
+
+```json
+// public/projects/my-video/init/scenes_intro.json
+[
+  {
+    "id": "intro_1",
+    "text": "Chào mọi người...",
+    "visualDescription": "Cảnh mở đầu với...",
+    "type": "video"
+  },
+  {
+    "id": "intro_2",
+    "text": "Hôm nay chúng ta sẽ...",
+    "visualDescription": "Hiển thị...",
+    "type": "image"
+  }
+]
+```
+
+**Add scenes cho từng section:**
+
+```bash
+# Dùng Python CLI để add scenes
+python3 .claude/skills/video-production-director/script_cli.py add-scenes \
+  --script "public/projects/my-video/script.json" \
+  --section "intro" \
+  --scenes-file "public/projects/my-video/init/scenes_intro.json"
+```
+
+**⚠️ Nếu có nhiều sections (3+), dùng batch script:**
+
+```bash
+node .claude/skills/video-production-director/scripts/add-scenes-batch.js \
+  --script "public/projects/my-video/script.json" \
+  --section "intro" "public/projects/my-video/init/scenes_intro.json" \
+  --section "p1" "public/projects/my-video/init/scenes_p1.json" \
+  --section "p2" "public/projects/my-video/init/scenes_p2.json"
+```
+
+---
+
+**Template giao tiếp sau Bước 2:**
+
+```
+✅ Đã tạo xong cấu trúc kịch bản đầy đủ!
+
+📂 Files:
+   • script.json (metadata + fullText + sections + scenes)
+   • raw_script.txt (nội dung gốc)
+   • init/sec_*.txt (text của từng section)
+   • init/scenes_*.json (định nghĩa scenes)
+
+📊 Cấu trúc kịch bản:
+   • Aspect Ratio: [ratio]
+   • Total Sections: 5
+   • Total Scenes: 12
+   • Ước lượng thời lượng: ~[duration]s
+
+🔍 Chi tiết cấu trúc:
+   [intro] - 3 scenes
+   [p1] - 2 scenes
+   [p2] - 3 scenes
+   ...
+
+⚠️ Lưu ý: Timing chưa có (cần tạo voice trước)
+
+👉 Bước tiếp theo: Review cấu trúc trong Script Planner
 ```
 
 **Lưu ý quan trọng:**
-- ✅ Text phải hoàn chỉnh từ đầu đến cuối (như kịch bản đọc)
-- ✅ KHÔNG cần chia scenes ngay bây giờ (sẽ tự động sau khi có voice timestamps)
-- ✅ KHÔNG cần timing (sẽ sync sau khi có voice)
-- ❌ KHÔNG skip bước này - luôn phải có full text trước
+- ✅ Text + Sections + Scenes phải hoàn chỉnh
+- ✅ **KHUYẾN NGHỊ**: Luôn ghi text ra file (dùng tool Write) và dùng `--text-path`
+- ❌ **CẤM**: Truyền trực tiếp văn bản dài (>200 ký tự) vào tham số CLI
+- ⚠️ **CHƯA CÓ timing** - sẽ sync sau khi có voice (Bước 3.3)
+- ❌ KHÔNG skip bước này - cấu trúc phải hoàn chỉnh trước khi tạo voice
 
 ---
 
-### Bước 2.5: Confirm Text với User ⭐ CHECKPOINT 1
+### 📍 CHECKPOINT 1: Structure Review (Script Planner) ⭐
 
-**⚠️ BẮT BUỘC DỪNG LẠI - KHÔNG tự động tạo voice**
+**⚠️ BẮT BUỘC DỪNG LẠI - Review cấu trúc TRƯỚC KHI tạo voice**
 
-**Sau khi tạo script.json**, hiển thị nội dung cho user review:
+**Mục đích:** User review và approve toàn bộ cấu trúc content (text + sections + scenes) TRƯỚC KHI tạo voice.
+
+**Tại sao quan trọng:**
+- ✅ Tiết kiệm chi phí API (voice generation tốn phí)
+- ✅ Tránh lãng phí công find resources cho cấu trúc chưa ổn
+- ✅ User có thể điều chỉnh text, sections, scenes sớm nhất
+- ✅ Cấu trúc được lock trước khi tốn chi phí
+
+**Command:**
+
+```bash
+npm run plan
+```
+
+**⚡ Smart Launcher**: Command này sử dụng smart script để:
+- ✅ Check nếu Script Planner đã running → Chỉ show link, không start lại
+- ✅ Nếu chưa running → Start services và show correct link
+- ✅ Tự động detect actual port (không bị conflict khi chạy nhiều lần)
+
+**Mở giao diện web** tại `http://localhost:3002/?project=my-video`
+
+**User có thể:**
+- ✅ Xem toàn bộ text
+- ✅ Xem cấu trúc sections và scenes
+- ✅ Chỉnh sửa text nếu cần
+- ✅ Adjust visual descriptions
+- ✅ Thêm/bớt/sửa scenes
+- ⚠️ **CHƯA CÓ** audio/waveform (chưa tạo voice)
+- ⚠️ **CHƯA CÓ** timing chính xác (sẽ sync sau)
+- ⚠️ **CHƯA CÓ** resources (sẽ find sau)
 
 **Template giao tiếp:**
+
 ```
-✅ Đã tạo xong kịch bản text!
+✅ Đã tạo xong cấu trúc kịch bản!
 
-📂 Files:
-   • script.json (metadata + fullText)
-   • raw_script.txt (nội dung gốc)
+📁 Files:
+   • script.json (text + sections + scenes)
+   • init/sec_*.txt (section texts)
+   • init/scenes_*.json (scene definitions)
 
-📊 Nội dung kịch bản:
-   • Topic: [topic]
-   • Aspect Ratio: [ratio]
-   • Ước lượng thời lượng: ~[duration]s
+📊 Tổng quan:
+   • Total Sections: 5
+   • Total Scenes: 12
+   • Estimated Duration: ~60s
 
-📝 Nội dung chi tiết:
-───────────────────────────────
-[Hiển thị fullText của script]
-───────────────────────────────
+🚀 Đang khởi động Script Planner để anh/chị review cấu trúc...
 
-⏸️ Anh/chị xem kịch bản có OK không?
-   • Nếu OK → Em sẽ tiến hành tạo giọng đọc (tốn phí API)
-   • Nếu cần sửa → Cho em biết sửa chỗ nào nhé!
+✅ Script Planner đã sẵn sàng!
+🌐 Link: http://localhost:3002/?project=my-video
 
-💡 Lưu ý: Sau bước này sẽ tạo voice (tốn phí), nên text cần chính xác trước.
+📝 Trong Script Planner, anh/chị có thể:
+   ✓ Xem toàn bộ text và cấu trúc
+   ✓ Check sections và scenes
+   ✓ Chỉnh sửa nội dung nếu cần
+   ✓ Adjust visual descriptions
+
+⚠️ Lưu ý:
+   • Timing chưa chính xác (chưa có voice)
+   • Chưa có resources (sẽ tìm sau)
+   • Focus vào TEXT và CẤU TRÚC content
+
+⏸️ Khi cấu trúc đã OK, hãy cho em biết để em:
+   1. Tạo voice (tốn phí API)
+   2. Sync timing chính xác
+   3. Tìm resources cho từng scene
+
+💡 Đây là checkpoint quan trọng - sau bước này sẽ tốn chi phí API voice!
 ```
 
 **DỪNG LẠI chờ user:**
-- "OK", "Được", "Tiếp tục" → Chuyển sang Bước 3
-- "Sửa...", "Đổi..." → Edit script, show lại để confirm
-- "Thêm...", "Bớt..." → Adjust script, show lại để confirm
+- "OK", "Được", "Tiếp tục", "Approve" → Chuyển sang Bước 3 (Tạo Voice)
+- "Sửa...", "Đổi...", "Edit..." → User edit trong Planner hoặc yêu cầu Agent sửa
+- "Thêm scene...", "Bớt section..." → Adjust cấu trúc, show lại để confirm
 
-**Lý do checkpoint này quan trọng:**
-- ✅ Tiết kiệm chi phí API (voice generation tốn phí)
-- ✅ User có cơ hội sửa text trước khi tạo voice
-- ✅ Tránh phải regenerate voice nhiều lần
+**Lý do checkpoint này QUAN TRỌNG:**
+- ✅ Approve cấu trúc TRƯỚC khi tốn API voice
+- ✅ Approve cấu trúc TRƯỚC khi tốn công find resources
+- ✅ Sửa content sớm, không phải làm lại nhiều bước sau
+- ✅ Tách biệt rõ ràng: Structure review vs Media review
 
 ---
 
-### Bước 3: Tạo Giọng Đọc
+### Bước 3: Tạo Giọng Đọc và Sync Timing
 
-**⚠️ Bước này gồm 2 sub-steps BẮT BUỘC**
+**⚠️ CHỈ CHẠY SAU KHI USER APPROVE CẤU TRÚC (CHECKPOINT 1)**
+
+**Bước này gồm 3 sub-steps BẮT BUỘC:**
+1. Generate Voice (tạo audio + timestamps)
+2. Update Voice Info (link audio với script)
+3. Sync Timing (update timing chính xác cho sections/scenes)
+
+---
 
 #### 3.1: Generate Voice (Skill voice-generation)
 
@@ -332,124 +667,15 @@ python3 .claude/skills/video-production-director/script_cli.py update-voice \
 **Chức năng:**
 - Update thông tin voice provider, voice ID vào script.json
 - Liên kết đường dẫn audio file với script
-- Cần thiết cho các bước tiếp theo
+- Cần thiết cho bước sync timing tiếp theo
 
 ---
 
-**Template giao tiếp sau Bước 3:**
-```
-✅ Đã hoàn thành tạo voice!
+#### 3.3: Sync Timing ⚠️ QUAN TRỌNG
 
-📂 Files:
-   • voice.mp3 (audio file)
-   • voice.json (timestamps chi tiết từng từ)
-   • script.json (đã update voice info)
+**⛔ BƯỚC NÀY CHẠY NGAY SAU KHI ĐÃ CÓ VOICE**
 
-📊 Kết quả:
-   • Audio Duration: 62.4s
-   • Voice Provider: openai/alloy
-   • Timestamps: 450 words với timing chính xác
-
-👉 Bước tiếp theo: Tạo cấu trúc sections và scenes
-```
-
----
-
-### Bước 4: Tạo Cấu Trúc Kịch Bản (Sections & Scenes)
-
-**⚠️ QUAN TRỌNG: Bước này TẠO cấu trúc script với sections và scenes, sau đó SYNC timing**
-
-**Flow tuần tự BẮT BUỘC:**
-```
-4.1: Add Sections (tạo sections với text)
-  ↓
-4.2: Add Scenes (tạo scenes với text + visuals)
-  ↓
-4.3: Sync Timing (update timing cho sections/scenes đã có)
-```
-
----
-
-#### 4.1: Add Sections
-
-**Mục đích:** Tạo sections trong script.json (intro, body, outro, etc.)
-
-**⚠️ Lưu ý:**
-- Mỗi section CẦN có text (để sync timing sau này)
-- Text của section = tổng text của scenes bên trong
-- add-section command sẽ TỰ ĐỘNG resolve timing sơ bộ từ voice.json
-
-**Command (cho từng section):**
-```bash
-# Tạo text file cho section trước (dùng write-text.js)
-node .claude/skills/video-production-director/scripts/write-text.js \
-  --file "sec_intro.txt" \
-  --text "Chào mọi người, hôm nay mình sẽ chia sẻ..."
-
-# Add section vào script
-python3 .claude/skills/video-production-director/script_cli.py add-section \
-  --script "public/projects/my-video/script.json" \
-  --voice "public/projects/my-video/voice.json" \
-  --id "intro" \
-  --name "Giới thiệu" \
-  --text "sec_intro.txt" \
-  --pace "medium"
-```
-
-**Lặp lại cho tất cả sections:** intro, p1, p2, p3, outro, etc.
-
----
-
-#### 4.2: Add Scenes
-
-**Mục đích:** Tạo scenes cho từng section với text + visual descriptions
-
-**⚠️ Lưu ý:**
-- Mỗi scene CẦN có text (để sync timing)
-- Tạo scenes definition file (JSON) trước
-- add-scenes command sẽ TỰ ĐỘNG resolve timing sơ bộ từ voice.json
-
-**Tạo scenes definition file (dùng write-text.js):**
-```bash
-node .claude/skills/video-production-director/scripts/write-text.js \
-  --file "scenes_intro.json" \
-  --text '[
-    {
-      "id": "intro_1",
-      "text": "Chào mọi người, hôm nay mình sẽ chia sẻ...",
-      "voiceNotes": "Giọng nhiệt tình",
-      "visualDescription": "Cảnh intro động",
-      "visuals": [{"type": "stock", "mediaType": "video", "query": "happy people"}]
-    }
-  ]'
-```
-
-**Add scenes cho section:**
-```bash
-python3 .claude/skills/video-production-director/script_cli.py add-scenes \
-  --script "public/projects/my-video/script.json" \
-  --voice "public/projects/my-video/voice.json" \
-  --section "intro" \
-  --scenes-file "scenes_intro.json"
-```
-
-**⚠️ Nếu có nhiều sections (3+), dùng batch script:**
-```bash
-node .claude/skills/video-production-director/scripts/add-scenes-batch.js \
-  --script "public/projects/my-video/script.json" \
-  --voice "public/projects/my-video/voice.json" \
-  --section "intro" "scenes_intro.json" \
-  --section "p1" "scenes_p1.json" \
-  --section "p2" "scenes_p2.json"
-```
-
----
-
-#### 4.3: Sync Timing ⚠️ QUAN TRỌNG
-
-**⛔ BƯỚC NÀY CHỈ CHẠY SAU KHI ĐÃ ADD SECTIONS VÀ SCENES**
-
-**Mục đích:** Update timing CHÍNH XÁC cho tất cả sections và scenes đã tạo
+**Mục đích:** Update timing CHÍNH XÁC cho tất cả sections và scenes đã tạo ở Bước 2
 
 **Command:**
 ```bash
@@ -459,7 +685,7 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 ```
 
 **Chức năng:**
-- ✅ Đọc sections và scenes ĐÃ CÓ trong script.json
+- ✅ Đọc sections và scenes ĐÃ CÓ trong script.json (từ Bước 2)
 - ✅ Dùng fuzzy matching để tìm timestamps cho text của từng scene
 - ✅ Update startTime, endTime, duration cho tất cả scenes
 - ✅ Update startTime, endTime, duration cho tất cả sections
@@ -468,7 +694,7 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 **⚠️ LƯU Ý:**
 - Sync command KHÔNG tạo sections/scenes mới
 - Sync command CHỈ update timing cho sections/scenes đã có
-- PHẢI chạy sau khi add-section và add-scenes hoàn tất
+- PHẢI chạy sau khi có voice.json (Bước 3.1)
 
 **Output:**
 - `script.json` đã được update với timing chính xác 100%
@@ -478,20 +704,23 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 
 ---
 
-**Template giao tiếp sau Bước 4:**
+**Template giao tiếp sau Bước 3:**
 ```
-✅ Đã hoàn thành tạo cấu trúc kịch bản và sync timing!
+✅ Đã hoàn thành tạo voice và sync timing!
 
 📂 Files:
-   • script.json (đã có sections, scenes, và timing chính xác)
+   • voice.mp3 (audio file)
+   • voice.json (timestamps chi tiết từng từ)
+   • script.json (đã update voice info + timing chính xác)
 
 📊 Kết quả:
-   • Total Duration: 62.4s (chính xác từ voice)
-   • Sections: 5 sections
-   • Scenes: 12 scenes
-   • Timing: 100% synced với voice timestamps
+   • Audio Duration: 62.4s
+   • Voice Provider: openai/alloy
+   • Timestamps: 450 words với timing chính xác
+   • Sections: 5 sections với timing chính xác
+   • Scenes: 12 scenes với timing chính xác
 
-🔍 Chi tiết:
+🔍 Chi tiết timing:
    [intro] 0.0s → 5.2s (3 scenes)
    [p1] 5.2s → 15.8s (2 scenes)
    [p2] 15.8s → 28.4s (3 scenes)
@@ -502,7 +731,7 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 
 ---
 
-### Bước 5: Tìm Tài Nguyên
+### Bước 4: Tìm Tài Nguyên
 
 **Skill**: `video-resource-finder`
 
@@ -531,53 +760,94 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 
 ---
 
-### Bước 6: Review & Confirm Media (Script Planner) ⭐ CHECKPOINT 2
+### 📍 CHECKPOINT 2: Media Review (Script Planner) ⭐
 
-**⚠️ BẮT BUỘC DỪNG LẠI - Review media & timing**
+**⚠️ BẮT BUỘC DỪNG LẠI - Review media TRƯỚC KHI download/import**
+
+**Mục đích:** User review và select resources tốt nhất cho từng scene TRƯỚC KHI download.
+
+**Tại sao quan trọng:**
+- ✅ Preview media quality trước khi download (tiết kiệm băng thông)
+- ✅ User có quyền chọn resource phù hợp nhất
+- ✅ Có thể thay đổi nếu không hài lòng
+- ✅ Nghe audio với waveform để check timing
 
 **Command:**
+
 ```bash
 npm run plan
 ```
 
-**Mở giao diện web** tại `http://localhost:3001/?project={project}`
+**⚡ Smart Launcher**: Command này sử dụng smart script để:
+- ✅ Check nếu Script Planner đã running → Chỉ show link, không start lại
+- ✅ Nếu chưa running → Start services và show correct link
+- ✅ Tự động detect actual port (không bị conflict khi chạy nhiều lần)
 
-**User có thể**:
+**Mở giao diện web** tại `http://localhost:3002/?project=my-video`
+
+**User có thể:**
 - ✅ Nghe audio với waveform
 - ✅ Xem timing chính xác từng scene
-- ✅ Preview images/videos đã tìm
-- ✅ Chỉnh sửa text, visual descriptions
-- ✅ Thay đổi resources nếu không phù hợp
+- ✅ Preview images/videos đã tìm (từ URL, chưa download)
+- ✅ Chọn resource tốt nhất trong 10 options
+- ✅ Chỉnh sửa visual descriptions nếu cần
+- ✅ Yêu cầu tìm lại nếu không hài lòng
 
-**Template giao tiếp**:
+**Template giao tiếp:**
+
 ```
 ✅ Đã hoàn thành tìm resources!
 
 📁 Files:
-   • script.json (timing chính xác + resources)
+   • script.json (timing chính xác)
    • voice.mp3 (audio đã generate)
-   • resources.json (danh sách media)
-   • Downloaded: 6 videos, 3 images
+   • resources.json (danh sách URLs, tối đa 10 options/scene)
+
+📊 Tổng quan:
+   • Found resources: 120 total (10 options × 12 scenes)
+   • Videos: 80 options
+   • Images: 40 options
 
 🚀 Đang khởi động Script Planner để anh/chị review...
 
 ✅ Script Planner đã sẵn sàng!
-🌐 Link: http://localhost:3001/?project=my-video
+🌐 Link: http://localhost:3002/?project=my-video
 
 📝 Trong Script Planner, anh/chị có thể:
    ✓ Nghe audio với waveform
    ✓ Xem timing chính xác từng scene
-   ✓ Preview media đã tìm
-   ✓ Chỉnh sửa nếu cần
+   ✓ Preview media (từ URL, chưa download)
+   ✓ Select resource tốt nhất
+   ✓ Yêu cầu tìm lại nếu cần
 
-⏸️ Khi đã review và OK, hãy cho em biết để em build video nhé!
+⚠️ Lưu ý:
+   • Resources chưa được download (chỉ có URLs)
+   • Chọn resource trong Planner hoặc để em tự chọn
+   • Download sẽ xảy ra ở bước tiếp theo (chỉ file đã chọn)
+
+⏸️ Khi đã review và OK với media, hãy cho em biết để em:
+   1. Download resources đã chọn
+   2. Build video timeline
+
+💡 Focus vào MEDIA QUALITY - cấu trúc đã được approve ở Checkpoint 1!
 ```
+
+**DỪNG LẠI chờ user:**
+- "OK", "Được", "Tiếp tục", "Approve" → Chuyển sang Bước 5 (Import Resources)
+- "Tìm lại...", "Không hài lòng..." → Re-run resource finder
+- "Chọn khác..." → User chọn trong Planner
+
+**Lý do checkpoint này QUAN TRỌNG:**
+- ✅ Preview media TRƯỚC khi download (tiết kiệm băng thông + time)
+- ✅ User control quality (không bị forced resource tự động chọn)
+- ✅ Có thể adjust visual descriptions nếu resources không match
+- ✅ Tách biệt rõ ràng: Find vs Download vs Build
 
 **⚠️ DỪNG LẠI ở đây, KHÔNG tự động tiếp tục!**
 
 ---
 
-### Bước 6.5: Import Selected Resources ⚡ (SAU KHI USER CONFIRM)
+### Bước 5: Import Selected Resources ⚡ (SAU KHI USER CONFIRM)
 
 **⚠️ BẮT BUỘC: Chạy NGAY sau khi user confirm OK**
 
@@ -651,11 +921,11 @@ node .claude/skills/video-production-director/scripts/resource-import.js \
 
 ---
 
-### Bước 7: Build Timeline (Video Editor)
+### Bước 6: Build Timeline (Video Editor)
 
 **Skill**: `video-editor`
 
-**Khi nào chạy**: Sau khi import resources xong (Bước 5.5).
+**Khi nào chạy**: Sau khi import resources xong (Bước 5).
 
 **Output**:
 - `project.otio`: OpenTimelineIO file
@@ -669,7 +939,7 @@ node .claude/skills/video-production-director/scripts/resource-import.js \
 
 ---
 
-### Bước 8: Mở Remotion Studio
+### Bước 7: Mở Remotion Studio
 
 **⭐ QUAN TRỌNG: Luôn chạy sau khi build xong**
 
@@ -704,55 +974,25 @@ python3 .claude/skills/video-production-director/director.py studio
 
 ## HELPER SCRIPTS
 
-### Write Text Helper (⚡ Non-blocking)
+### Write Text (Sử dụng Tool write_to_file)
 
-**⚠️ QUAN TRỌNG: LUÔN dùng helper này thay vì heredoc**
+**⚠️ QUAN TRỌNG: LUÔN dùng tool `write_to_file` để tạo file text**
 
-**Vấn đề với heredoc:**
-```bash
-# ❌ Pattern này làm TREO terminal (đặc biệt với text dài)
-cat > file.txt << 'EOF'
-...long text...
-EOF
-```
+**Vấn đề:**
+- Dùng `cat > ...` (heredoc) làm treo terminal.
+- Dùng command args `--text "..."` dễ bị lỗi quote/syntax với text dài.
 
 **Giải pháp:**
-```bash
-# ✅ Dùng write-text.js helper (không bị treo)
-node .claude/skills/video-production-director/scripts/write-text.js \
-  --file "path/to/file.txt" \
-  --text "Content here..."
-```
+- Agent hãy sử dụng trực tiếp tool `write_to_file` để tạo file.
+- Sau đó truyền đường dẫn file vào tham số `--text-path` của CLI thay vì `--text`.
 
-**Use Cases:**
-1. Tạo raw_script.txt trước khi init project
-2. Tạo section text files (sec_intro.txt, sec_p1.txt, etc.)
+**Tại sao dùng --text-path?**
+1. **An toàn**: Không bị lỗi parse shell với các ký tự đặc biệt (dấu ngoặc, nhảy dòng).
+2. **Tin cậy**: Tránh tuyệt đối việc treo terminal (`dquote>`).
+3. **Traceability**: File text được lưu lại trong project để kiểm tra sau này.
+2. Tạo section text files (sec_intro.txt, etc.)
 3. Tạo scenes definition files (scenes_intro.json, etc.)
 4. Bất kỳ text file nào cần ghi với nội dung dài
-
-**Parameters:**
-- `--file <path>` (bắt buộc): Đường dẫn file cần ghi
-- `--text <content>` (bắt buộc): Nội dung text cần ghi
-- `--stdin` (optional): Đọc nội dung từ stdin thay vì --text
-
-**Examples:**
-```bash
-# Direct text
-node .claude/skills/video-production-director/scripts/write-text.js \
-  --file "public/projects/demo/sec_intro.txt" \
-  --text "Một. Antigravity không phải là một công cụ đơn lẻ..."
-
-# With stdin (for extremely long text)
-echo "Very long content..." | node .claude/skills/video-production-director/scripts/write-text.js \
-  --file "public/projects/demo/raw_script.txt" \
-  --stdin
-```
-
-**Lưu ý:**
-- ✅ Script tự động tạo thư mục parent nếu chưa tồn tại
-- ✅ Non-blocking, không làm treo terminal
-- ✅ Hỗ trợ text dài (không giới hạn độ dài như command line arguments)
-- ✅ Hiển thị kích thước file sau khi ghi
 
 ---
 
@@ -1537,7 +1777,70 @@ Luôn load skill con (đọc SKILL.md) trước khi gọi:
 
 ---
 
-### 7. Remotion Studio
+### 7. Smart Script Planner Launcher ⚡
+
+**Vấn đề cũ:**
+- Chạy `npm run plan` nhiều lần → mỗi lần port khác nhau (3002 → 3003 → 3004...)
+- Link hiển thị không chính xác
+- Tốn tài nguyên khi start nhiều instance
+
+**Solution mới** (`check-and-start.js`):
+
+```bash
+npm run plan  # Đã tự động dùng smart script
+```
+
+**Chức năng:**
+1. ✅ **Check Port 3002 và 3003**:
+   - Nếu đã running → Chỉ show link, KHÔNG start lại
+   - Nếu chưa running → Start mới
+
+2. ✅ **Health Check**:
+   - Verify services thực sự responding (không chỉ port occupied)
+   - Nếu port bận nhưng service không respond → Offer to kill và restart
+
+3. ✅ **Smart Handling**:
+   - Partial conflict (1 service chạy, 1 không) → Offer restart cả 2
+   - Port conflict → Tự động suggest cleanup command
+
+**Output mẫu:**
+
+```
+🔍 Checking Script Planner status...
+
+   Port 3002 (Vite):  ✅ In use
+   Port 3003 (API):   ✅ In use
+
+✅ Script Planner is already running!
+
+╔═══════════════════════════════════════════════════════╗
+║           Script Planner is Ready!                    ║
+╚═══════════════════════════════════════════════════════╝
+
+🌐 Frontend:  http://localhost:3002
+🔧 API:       http://localhost:3003
+
+🔗 Open in browser:
+
+   http://localhost:3002
+
+💡 Tip: No need to start again. Services are healthy.
+```
+
+**Manual cleanup** (nếu cần):
+```bash
+# Kill tất cả Script Planner processes
+pkill -f "vite.*3002|node.*server.js"
+```
+
+**Technical Details:**
+- File: `script-planner/check-and-start.js`
+- Ports: 3002 (Vite frontend), 3003 (Express API)
+- Method: TCP connection check + process detection
+
+---
+
+### 8. Remotion Studio
 
 **BẮT BUỘC**:
 - Chạy studio command sau khi build xong

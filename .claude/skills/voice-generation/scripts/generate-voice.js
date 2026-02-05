@@ -89,7 +89,7 @@ function slugify(text) {
  */
 async function main() {
     try {
-        const textArg = ARGS.text;
+        const textPathArg = ARGS.text_path || ARGS['text-path'] || null;
         const emotion = ARGS.emotion || 'neutral';
         const title = ARGS.title || null;
 
@@ -100,10 +100,30 @@ async function main() {
         const styleInstruction = ARGS.styleInstruction || null; // Gemini style instruction
         let scriptPath = ARGS.script;
 
-        let finalText = textArg;
+        let finalText = null;
 
-        // If script path is provided, read from it
-        if (scriptPath) {
+        // Priority 1: --text-path (file path)
+        if (textPathArg) {
+            const absoluteTextPath = path.isAbsolute(textPathArg)
+                ? textPathArg
+                : path.join(process.cwd(), textPathArg);
+
+            if (await fs.pathExists(absoluteTextPath) && (await fs.stat(absoluteTextPath)).isFile()) {
+                console.log(`📖 Reading text from path: ${absoluteTextPath}`);
+                finalText = await fs.readFile(absoluteTextPath, 'utf8');
+                finalText = finalText.trim();
+
+                if (!finalText) {
+                    console.error(`❌ Error: Text file is empty: ${textPathArg}`);
+                    process.exit(1);
+                }
+            } else {
+                console.error(`❌ Error: Text path file not found: ${textPathArg}`);
+                process.exit(1);
+            }
+        }
+        // Priority 2: --script (JSON script file)
+        else if (scriptPath) {
             const absoluteScriptPath = path.isAbsolute(scriptPath)
                 ? scriptPath
                 : path.join(process.cwd(), scriptPath);
@@ -115,15 +135,28 @@ async function main() {
                 } else {
                     finalText = await fs.readFile(absoluteScriptPath, 'utf8');
                 }
-                console.log(`Loaded text from: ${absoluteScriptPath}`);
+                console.log(`📖 Loaded text from script: ${absoluteScriptPath}`);
             } else {
-                console.error(`Error: Script file not found: ${absoluteScriptPath}`);
+                console.error(`❌ Error: Script file not found: ${absoluteScriptPath}`);
                 process.exit(1);
             }
         }
 
+        // Validate that we have text
         if (!finalText) {
-            console.error('Error: --text argument or --script file is required');
+            console.error('❌ Error: No text content provided. Use --text-path or --script');
+            console.log('\nUsage:');
+            console.log('  node generate-voice.js [options]');
+            console.log('\nText Input Options (priority order):');
+            console.log('  --text-path <path>    Path to text file (REQUIRED)');
+            console.log('  --script <path>       Path to JSON script file (alternative)');
+            console.log('\nOther Options:');
+            console.log('  --provider <name>     Voice provider (auto|elevenlabs|vbee|openai|gemini)');
+            console.log('  --emotion <name>      Emotion (neutral|happy|sad|angry|excited)');
+            console.log('  --voiceId <id>        Specific voice ID');
+            console.log('  --outputDir <path>    Output directory');
+            console.log('  --title <string>      Custom title for filename');
+            console.log('\nNOTE: --text parameter has been removed. Use --text-path instead.');
             process.exit(1);
         }
 

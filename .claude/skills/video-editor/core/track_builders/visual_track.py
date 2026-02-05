@@ -460,81 +460,90 @@ class VisualTrackBuilder:
         Returns:
             Resource dict or None
         """
-        # Search in videos
-        videos = resources.get('resources', {}).get('videos', [])
-        for video_group in videos:
-            for result in video_group.get('results', []):
-                if result.get('id') == resource_id:
-                    return result
-
-        # Search in images
-        images = resources.get('resources', {}).get('images', [])
-        for image_group in images:
-            for result in image_group.get('results', []):
-                if result.get('id') == resource_id:
-                    return result
-
+        resources_dict = resources.get('resources', {})
+        
+        # Search in all resource categories
+        categories = ['videos', 'images', 'generatedImages', 'pinnedResources']
+        for cat in categories:
+            groups = resources_dict.get(cat, [])
+            for group in groups:
+                for result in group.get('results', []):
+                    if result.get('id') == resource_id:
+                        return result
         return None
 
-    def _get_scene_videos(self, scene_id: str, resources: Dict[str, Any]) -> List[str]:
+    def _get_scene_videos(self, scene_id: str, resources: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get all LOCAL video paths for a scene, sorted by aspect ratio match."""
-        videos = resources.get('resources', {}).get('videos', [])
-        for video_group in videos:
+        resources_dict = resources.get('resources', {})
+        video_groups = resources_dict.get('videos', []) + resources_dict.get('pinnedResources', [])
+        
+        video_entries = []
+        for video_group in video_groups:
             if video_group.get('sceneId') == scene_id:
                 results = video_group.get('results', [])
-                video_entries = []
 
                 for result in results:
-                    # Only use local downloaded files
-                    if 'localPath' in result and result['localPath']:
-                        if self.asset_resolver:
-                            relative_path = self.asset_resolver.sanitize_for_otio(result['localPath'])
-                        else:
-                            relative_path = result['localPath']
+                    # Skip if definitely NOT a video
+                    url = result.get('importedPath') or result.get('localPath') or result.get('url', '')
+                    if url and any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
+                         continue
 
-                        width = result.get('width', 1920)
-                        height = result.get('height', 1080)
+                    # Only use local downloaded files primary, or remote fallback
+                    path = result.get('importedPath') or result.get('localPath') or result.get('url')
+                    if not path:
+                        continue
 
-                        video_entries.append({
-                            'path': relative_path,
-                            'width': width,
-                            'height': height,
-                            'aspect_ratio': width / height if height > 0 else 1.0
-                        })
+                    if self.asset_resolver:
+                        relative_path = self.asset_resolver.sanitize_for_otio(path)
+                    else:
+                        relative_path = path
 
-                return self._sort_by_aspect_ratio(video_entries)
+                    width = result.get('width', 1920)
+                    height = result.get('height', 1080)
 
-        return []
+                    video_entries.append({
+                        'path': relative_path,
+                        'width': width,
+                        'height': height,
+                        'aspect_ratio': width / height if height > 0 else 1.0
+                    })
 
-    def _get_scene_images(self, scene_id: str, resources: Dict[str, Any]) -> List[str]:
+        return self._sort_by_aspect_ratio(video_entries)
+
+    def _get_scene_images(self, scene_id: str, resources: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get all LOCAL image paths for a scene, sorted by aspect ratio match."""
-        images = resources.get('resources', {}).get('images', [])
-        for image_group in images:
+        resources_dict = resources.get('resources', {})
+        image_groups = resources_dict.get('images', []) + \
+                       resources_dict.get('generatedImages', []) + \
+                       resources_dict.get('pinnedResources', [])
+        
+        image_entries = []
+        for image_group in image_groups:
             if image_group.get('sceneId') == scene_id:
                 results = image_group.get('results', [])
-                image_entries = []
 
                 for result in results:
                     # Only use local downloaded files
-                    if 'localPath' in result and result['localPath']:
-                        if self.asset_resolver:
-                            relative_path = self.asset_resolver.sanitize_for_otio(result['localPath'])
-                        else:
-                            relative_path = result['localPath']
+                    path = result.get('importedPath') or result.get('localPath') or result.get('url')
+                    if not path:
+                        continue
+                        
+                    if self.asset_resolver:
+                        relative_path = self.asset_resolver.sanitize_for_otio(path)
+                    else:
+                        relative_path = path
 
-                        width = result.get('width', 1920)
-                        height = result.get('height', 1080)
+                    width = result.get('width', 1920)
+                    height = result.get('height', 1080)
 
-                        image_entries.append({
-                            'path': relative_path,
-                            'width': width,
-                            'height': height,
-                            'aspect_ratio': width / height if height > 0 else 1.0
-                        })
+                    image_entries.append({
+                        'path': relative_path,
+                        'width': width,
+                        'height': height,
+                        'aspect_ratio': width / height if height > 0 else 1.0
+                    })
 
-                return self._sort_by_aspect_ratio(image_entries)
-
-        return []
+        return self._sort_by_aspect_ratio(image_entries)
 
     def _sort_by_aspect_ratio(self, entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Sort entries by aspect ratio match with project target."""

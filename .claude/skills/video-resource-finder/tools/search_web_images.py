@@ -59,15 +59,28 @@ def search_web_images(query: str, max_results: int = 20, retry: int = 3, size: s
                 )
 
                 for idx, result in enumerate(search_results, 1):
+                    image_url = result.get('image', '')
                     results.append({
                         'id': f'ddg-{idx}',
-                        'title': result.get('title', ''),
-                        'image_url': result.get('image', ''),
+                        'title': result.get('title', 'Untitled'),
+                        'url': result.get('source', image_url),  # Page URL for attribution
+                        'image_url': image_url,  # Direct image URL (backward compat)
+                        'downloadUrls': {  # Standardized format like Pexels/Pixabay
+                            'original': image_url,
+                            'large': image_url,
+                            'medium': result.get('thumbnail', image_url),
+                            'small': result.get('thumbnail', image_url)
+                        },
                         'thumbnail': result.get('thumbnail', ''),
-                        'source': result.get('source', ''),
+                        'source': 'duckduckgo',  # Standardized source identifier
                         'width': result.get('width', 0),
                         'height': result.get('height', 0),
-                        'rank': idx
+                        'photographer': 'Web Source',  # Standardized field
+                        'photographerUrl': result.get('source', ''),
+                        'tags': [],
+                        'license': 'Unknown - Verify rights before use',
+                        'rank': idx,
+                        'copyrightWarning': True  # Flag for UI
                     })
 
                 # Success - break retry loop

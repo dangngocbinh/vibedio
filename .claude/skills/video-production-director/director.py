@@ -6,7 +6,7 @@ Orchestrator for Mecode.pro's Video Automation Pipeline.
 
 Usage:
     python director.py import --project <name> --files <f1> <f2>
-    python director.py produce --project <name>
+    python director.py produce --project <name> --topic 
     python director.py status --project <name>
 
 Author: Mecode.pro
@@ -139,7 +139,7 @@ def setup_project(name: str) -> Path:
     INIT PROJECT STRUCTURE:
     - Tạo thư mục project trong public/projects/{name}.
     - Tạo file theo dõi trạng thái 'production_status.json' nếu chưa có.
-    - Hàm này được gọi tự động mỗi khi chạy lệnh import hoặc produce.
+    - Hàm này được gọi tự động mỗi khi chạy lệnh import.
     """
     project_dir = PROJECTS_DIR / name
     project_dir.mkdir(parents=True, exist_ok=True)
@@ -220,26 +220,18 @@ def run_step_script(project_dir: Path, topic: str, type: str, ratio: str = "9:16
 # Helper functions below are available for agent to call directly if needed
 # But agent is free to orchestrate workflow differently
 
-def run_step_voice(project_dir: Path, text: str = None):
+def run_step_voice(project_dir: Path, text: Optional[str] = None) -> None:
     """
-    Tạo giọng đọc từ text.
+    Generate voice from text using voice-generation skill.
 
-    Args:
-        project_dir: Project directory
-        text: Full text to generate voice (nếu None, sẽ đọc từ script.json)
+    NEW: Writes text to raw_script.txt and passes --text-path to avoid CLI limits.
     """
-    log_step_start(2, "TẠO GIỌNG ĐỌC", "Generate voice với timestamps chính xác")
-    log_action("Tạo giọng đọc AI", "Provider: Auto-detect từ .env")
-    
-    # Call voice-generation
-    # Note: voice-generation script usually takes text or input file. 
-    # We need to ensure it reads from script.json
-    # Assume generate-voice.js can read script.json or we pass text?
-    # For now, let's use the standard flow: read script.json -> extract text -> generate
-    
-    # TODO: Refine voice-generation interface to accept project dir directly
-    # Workaround: Read script.json manually in python, pass text to cli
-    
+    log_info("BƯỚC 3: Tạo giọng đọc (Voice Generation)")
+
+    # Ensure audio directory exists
+    audio_dir = project_dir / "resources" / "audio"
+    audio_dir.mkdir(parents=True, exist_ok=True)
+
     # If text not provided, read from script.json
     if not text:
         script_path = project_dir / "script.json"
@@ -254,42 +246,65 @@ def run_step_voice(project_dir: Path, text: str = None):
             log_error("Không tìm thấy nội dung text trong script.json")
             sys.exit(1)
 
+    # NEW: Write text to raw_script.txt (or use existing)
+    raw_script_path = project_dir / "raw_script.txt"
+
+    # If raw_script.txt doesn't exist or is different from current text, update it
+    should_write = True
+    if raw_script_path.exists():
+        try:
+            with open(raw_script_path, 'r', encoding='utf-8') as f:
+                existing_text = f.read().strip()
+            if existing_text == text.strip():
+                should_write = False
+                log_info(f"Sử dụng raw_script.txt có sẵn")
+        except Exception as e:
+            log_info(f"Không đọc được raw_script.txt cũ: {e}")
+
+    if should_write:
+        try:
+            with open(raw_script_path, 'w', encoding='utf-8') as f:
+                f.write(text)
+            log_info(f"Đã lưu nội dung vào: raw_script.txt ({len(text)} ký tự)")
+        except Exception as e:
+            log_error(f"Không thể ghi file raw_script.txt: {e}")
+            sys.exit(1)
+
     output_audio = project_dir / "resources" / "audio" / "voice.mp3"
-    
+
+    # NEW: Use --text-path instead of --text
     cmd = [
         "node",
         str(VOICE_SKILL / "scripts" / "generate-voice.js"),
-        "--text", text,
+        "--text-path", str(raw_script_path),  # CHANGED: use file path
         "--output", str(output_audio),
-        "--provider", "openai" # Default to openai for stability, or auto
+        "--provider", "openai"
     ]
-    
+
     try:
         subprocess.run(cmd, check=True)
-        
+
         # Link voice.json (created by script) to root
-        # The script creates voice.json next to output
         src_json = output_audio.with_suffix('.json')
         dest_json = project_dir / "voice.json"
-        
+
         if src_json.exists():
             # Fix path issue: Ensure audioFile in json is relative to project root
             try:
                 with open(src_json, 'r', encoding='utf-8') as f:
                     voice_data = json.load(f)
-                
+
                 # Update audioFile to relative path
-                # output_audio is absolute, we want "filename.mp3"
                 relative_audio_path = f"{output_audio.name}"
                 voice_data["audioFile"] = relative_audio_path
-                
+
                 # Write to dest_json
                 with open(dest_json, 'w', encoding='utf-8') as f:
                     json.dump(voice_data, f, indent=2, ensure_ascii=False)
-                    
+
                 # Cleanup source json
                 os.remove(src_json)
-                
+
             except Exception as e:
                 log_error(f"Lỗi khi xử lý voice.json: {e}")
                 # Fallback copy if something fails
@@ -297,9 +312,9 @@ def run_step_voice(project_dir: Path, text: str = None):
 
         log_output("Audio file", "voice.mp3")
         log_output("Timestamps", "voice.json", "Word-level timestamps")
-        log_step_complete("Tạo giọng đọc")
-    except subprocess.CalledProcessError:
-        log_error("Lỗi khi tạo voice!")
+
+    except subprocess.CalledProcessError as e:
+        log_error(f"Lỗi khi tạo voice: {e}")
         sys.exit(1)
 
 # Removed hardcoded segmentation function

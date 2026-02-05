@@ -22,31 +22,55 @@ Ensure the `.env` at root project
 To generate voice, you will typically run the Node.js script located at `skill-voice-gen/scripts/generate-voice.js`.
 
 ### 3. Command Line Interface
-The script accepts the following arguments:
+
+#### Text Input Options (Priority Order)
+
+**IMPORTANT**: For long text (>200 chars), always use `--text-path` to avoid terminal limitations.
 
 ```bash
-node skill-voice-gen/scripts/generate-voice.js \
-  --text "Your text here" \ # should use for short text
-  --script "path/to/script.json" \ # should use for long text: path to script.json
-  --provider "elevenlabs" \    # options: elevenlabs, vbee, openai, gemini
-  --emotion "happy" \          # optional: happy, sad, angry, neutral, excited
-  --voiceId "specific_id" \    # optional: override automatic selection
-  --styleInstruction "Trầm – ấm – chậm – rất đời" \  # optional (Gemini only): custom voice style
-  --outputDir "public/projects/folder"  # optional: custom output directory
-```
-
-**IMPORTANT**: When generating voice for a script, always use `--outputDir` to match the script folder:
-```bash
-NOTE: If timestamps are not generated, you must create them according to section 5.
-
+# Option 1: File path (RECOMMENDED)
 node .claude/skills/voice-generation/scripts/generate-voice.js \
-  --text "Your text here" \ # should use for short text
-  --script "path/to/script.json" \ # should use for long text: path to script.json
+  --text-path "public/projects/my-video/raw_script.txt" \
   --provider "gemini" \
-  --voiceId "Charon" \
-  --styleInstruction "Trầm – ấm – chậm – rất đời" \  # Custom style for Gemini
-  --outputDir "public/projects/ten-kich-ban"  # Same folder as script.json
+  --outputDir "public/projects/my-video"
+
+# Option 2: JSON script file (alternative)
+node .claude/skills/voice-generation/scripts/generate-voice.js \
+  --script "public/projects/my-video/script.json" \
+  --provider "elevenlabs"
 ```
+
+**Priority Resolution**:
+1. `--text-path` (highest priority) - Path to text file
+2. `--script` (fallback) - Path to JSON script file containing text
+
+**Additional Options**:
+```bash
+--provider "gemini"                           # Voice provider (auto|elevenlabs|vbee|openai|gemini)
+--emotion "happy"                             # Emotion (neutral|happy|sad|angry|excited)
+--voiceId "Charon"                            # Specific voice ID
+--styleInstruction "Trầm – ấm – chậm – rất đời"  # Gemini only: custom voice style
+--outputDir "public/projects/folder"          # Output directory
+--title "My Video"                            # Custom title for filename
+```
+
+#### Migration Guide (BREAKING CHANGE)
+
+**REMOVED**: `--text` parameter no longer exists. You MUST migrate to `--text-path`:
+
+```bash
+# BEFORE (NO LONGER WORKS):
+node generate-voice.js --text "Any text here..."
+
+# AFTER (REQUIRED):
+# 1. Save text to a file:
+echo "Any text here..." > public/projects/my-video/raw_script.txt
+
+# 2. Use --text-path:
+node generate-voice.js --text-path "public/projects/my-video/raw_script.txt"
+```
+
+**If you're using `director.py`**: ✅ No changes needed! It automatically uses `raw_script.txt`.
 
 ### 3.1. Style Instruction (Gemini Only)
 
@@ -126,8 +150,8 @@ Nếu bạn đã có voice file từ nguồn khác (thu âm, tải về, hoặc 
 ```bash
 node .claude/skills/voice-generation/scripts/generate-timestamps.js \
   --audio "path/to/voice.mp3" \
-  --text "Optional: original text for better accuracy" \
-  --provider "auto"  # Options: elevenlabs, whisper, auto (default: auto)
+  --text-path "path/to/text.txt" \  # Optional: original text file for better accuracy
+  --provider "auto" \                # Options: elevenlabs, whisper, auto (default: auto)
   --outputDir "public/projects/folder"  # Optional: custom output directory
 ```
 
@@ -135,7 +159,7 @@ node .claude/skills/voice-generation/scripts/generate-timestamps.js \
 ```bash
 node .claude/skills/voice-generation/scripts/generate-timestamps.js \
   --audio "public/projects/my-video/voice.mp3" \
-  --text "Xin chào các bạn, hôm nay tôi sẽ hướng dẫn các bạn..."
+  --text-path "public/projects/my-video/raw_script.txt"
 ```
 
 **Example 2: Force ElevenLabs Scribe v2 (higher accuracy)**
@@ -143,7 +167,7 @@ node .claude/skills/voice-generation/scripts/generate-timestamps.js \
 node .claude/skills/voice-generation/scripts/generate-timestamps.js \
   --audio "public/projects/my-video/voice.mp3" \
   --provider elevenlabs \
-  --text "Xin chào các bạn"
+  --text-path "public/projects/my-video/raw_script.txt"
 ```
 
 **Example 3: Force Whisper**
@@ -152,6 +176,8 @@ node .claude/skills/voice-generation/scripts/generate-timestamps.js \
   --audio "public/projects/my-video/voice.mp3" \
   --provider whisper
 ```
+
+**NOTE**: `--text` parameter has been removed. Use `--text-path` to pass text from a file instead.
 
 **Output**:
 - Tạo file `voice.json` cùng thư mục với audio file

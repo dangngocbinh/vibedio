@@ -221,9 +221,28 @@ function selectProvider(requestedProvider) {
 async function main() {
     try {
         const audioPath = ARGS.audio;
-        const originalText = ARGS.text || null;
+        let originalText = null;
+        const textPathArg = ARGS.text_path || ARGS['text-path'] || null;
         const outputDir = ARGS.outputDir || null;
         const requestedProvider = ARGS.provider || 'auto';
+
+        // Resolve text from file path only
+        if (textPathArg) {
+            const absoluteTextPath = path.isAbsolute(textPathArg)
+                ? textPathArg
+                : path.join(process.cwd(), textPathArg);
+
+            if (fs.existsSync(absoluteTextPath) && fs.lstatSync(absoluteTextPath).isFile()) {
+                console.log(`📖 Reading original text from path: ${absoluteTextPath}`);
+                originalText = fs.readFileSync(absoluteTextPath, 'utf8').trim();
+
+                if (!originalText) {
+                    throw new Error(`❌ Text file is empty: ${textPathArg}`);
+                }
+            } else {
+                throw new Error(`❌ Text path file not found: ${textPathArg}`);
+            }
+        }
 
         if (!audioPath) {
             console.error('❌ Error: --audio argument is required');
@@ -231,25 +250,10 @@ async function main() {
             console.log('  node generate-timestamps.js --audio "path/to/voice.mp3" [options]');
             console.log('\nOptions:');
             console.log('  --audio         Path to audio file (required)');
-            console.log('  --text          Original text for better accuracy (optional)');
-            console.log('  --provider      STT provider: elevenlabs, whisper, auto (default: auto)');
-            console.log('                  auto = ElevenLabs if key exists, else Whisper');
-            console.log('  --outputDir     Custom output directory (optional, default: same as audio file)');
-            console.log('\nExamples:');
-            console.log('  # Auto-select best provider (ElevenLabs > Whisper)');
-            console.log('  node .claude/skills/voice-generation/scripts/generate-timestamps.js \\');
-            console.log('    --audio "public/projects/my-video/voice.mp3" \\');
-            console.log('    --text "Xin chào các bạn"');
-            console.log('');
-            console.log('  # Force ElevenLabs Scribe v2');
-            console.log('  node .claude/skills/voice-generation/scripts/generate-timestamps.js \\');
-            console.log('    --audio "public/projects/my-video/voice.mp3" \\');
-            console.log('    --provider elevenlabs');
-            console.log('');
-            console.log('  # Force Whisper');
-            console.log('  node .claude/skills/voice-generation/scripts/generate-timestamps.js \\');
-            console.log('    --audio "public/projects/my-video/voice.mp3" \\');
-            console.log('    --provider whisper');
+            console.log('  --text-path     Path to original text file (optional, for better accuracy)');
+            console.log('  --provider      Timestamp provider (auto|elevenlabs|whisper)');
+            console.log('  --outputDir     Output directory');
+            console.log('\nNOTE: --text parameter has been removed. Use --text-path instead.');
             process.exit(1);
         }
 

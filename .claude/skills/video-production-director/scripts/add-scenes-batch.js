@@ -51,10 +51,10 @@ async function main() {
   }
 
   // Validation
-  if (!scriptPath || !voicePath || sections.length === 0) {
+  if (!scriptPath || sections.length === 0) {
     console.error('Usage: node add-scenes-batch.js \\');
     console.error('  --script <path> \\');
-    console.error('  --voice <path> \\');
+    console.error('  [--voice <path>] (optional) \\');
     console.error('  --section <id> <scenes-file> \\');
     console.error('  [--section <id> <scenes-file> ...]');
     console.error('');
@@ -65,6 +65,8 @@ async function main() {
     console.error('    --section "intro" "scenes_intro.json" \\');
     console.error('    --section "p1" "scenes_p1.json" \\');
     console.error('    --section "p2" "scenes_p2.json"');
+    console.error('');
+    console.error('Note: --voice is optional. If not provided, default timing will be used.');
     process.exit(1);
   }
 
@@ -74,7 +76,7 @@ async function main() {
     process.exit(1);
   }
 
-  if (!fs.existsSync(voicePath)) {
+  if (voicePath && !fs.existsSync(voicePath)) {
     console.error(`❌ Voice file not found: ${voicePath}`);
     process.exit(1);
   }
@@ -88,7 +90,7 @@ async function main() {
 
   console.log(`\n📦 Batch Add Scenes`);
   console.log(`   Script: ${scriptPath}`);
-  console.log(`   Voice: ${voicePath}`);
+  console.log(`   Voice: ${voicePath || '(not provided - using default timing)'}`);
   console.log(`   Sections: ${sections.length}\n`);
 
   const cliPath = path.join(__dirname, '..', 'script_cli.py');
@@ -100,7 +102,11 @@ async function main() {
     console.log(`\n[${i + 1}/${sections.length}] Processing section: ${sectionId}`);
     console.log(`   Scenes file: ${scenesFile}`);
 
-    const cmd = `python3 "${cliPath}" add-scenes --script "${scriptPath}" --voice "${voicePath}" --section "${sectionId}" --scenes-file "${scenesFile}"`;
+    let cmd = `python3 "${cliPath}" add-scenes --script "${scriptPath}"`;
+    if (voicePath) {
+      cmd += ` --voice "${voicePath}"`;
+    }
+    cmd += ` --section "${sectionId}" --scenes-file "${scenesFile}"`;
 
     try {
       execSync(cmd, { stdio: 'inherit' });

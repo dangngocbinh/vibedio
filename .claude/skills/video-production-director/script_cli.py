@@ -28,50 +28,65 @@ from utils.synchronizer import ScriptSynchronizer
 from utils.status_manager import StatusManager
 import os
 
-def _resolve_text(text_arg: str, cwd: Optional[str] = None) -> str:
+def _get_default_voice_id(provider: str) -> str:
+    """Get default voice ID for provider."""
+    defaults = {
+        'openai': 'alloy',
+        'elevenlabs': 'EXAVITQu4vr4xnSDxMaL',  # Default voice
+        'vbee': 'hn_male_xuantin_news_48k-fhg',
+        'gemini': 'en-US-Journey-D'
+    }
+    return defaults.get(provider, 'alloy')
+
+def _get_voice_model(provider: str) -> str:
+    """Get voice model for provider."""
+    models = {
+        'openai': 'tts-1',
+        'elevenlabs': 'eleven_multilingual_v2',
+        'vbee': 'default',
+        'gemini': 'default'
+    }
+    return models.get(provider, 'tts-1')
+
+def _resolve_text(text: Optional[str] = None, text_path: Optional[str] = None, cwd: Optional[str] = None) -> str:
     """
-    Resolve text argument.
-    If text_arg is a valid file path, read content from file.
-    Otherwise return text_arg as is.
+    Resolve text from either direct string or file path.
     
     Args:
-        text_arg: The text content OR a path to a text file.
+        text: Direct text content.
+        text_path: Path to a text file.
         cwd: Optional directory to resolve relative paths against.
     """
-    if not text_arg:
-        return ""
+    # 1. If text_path is provided, prioritize it
+    if text_path:
+        path_obj = Path(text_path)
+        if cwd and not path_obj.is_absolute():
+            potential_path = Path(cwd) / text_path
+            if potential_path.is_file():
+                path_obj = potential_path
         
-    path_obj = Path(text_arg)
-    
-    # Try relative to cwd if provided
-    if cwd and not path_obj.is_absolute():
-        potential_path = Path(cwd) / text_arg
-        if potential_path.is_file():
-            path_obj = potential_path
+        if path_obj.is_file():
+            try:
+                with open(path_obj, 'r', encoding='utf-8') as f:
+                    return f.read().strip()
+            except Exception as e:
+                print(f"⚠️  Could not read text file {path_obj}: {e}")
+                raise
+        else:
+            raise FileNotFoundError(f"❌ Text path file not found: {text_path}")
 
-    # If it's a file, read it
-    if path_obj.is_file():
-        try:
-            with open(path_obj, 'r', encoding='utf-8') as f:
-                return f.read().strip()
-        except Exception as e:
-            print(f"⚠️  Could not read file {path_obj}: {e}")
-            raise
+    # 2. If direct text is provided, validate length
+    if text:
+        # Safety check for long strings in CLI
+        if len(text) > 200:
+            raise ValueError(
+                f"❌ The provided text is too long ({len(text)} chars) to be passed directly via --text.\n"
+                f"To avoid terminal hang and shell parsing errors, please use --text-path instead.\n"
+                f"Example: --text-path \"public/projects/my-video/raw_script.txt\""
+            )
+        return text
 
-    # Safeguard: if it looks like a project path or has a text extension but wasn't found
-    likely_path = (
-        text_arg.startswith('public/projects/') or 
-        text_arg.endswith('.txt') or 
-        text_arg.endswith('.md') or
-        '/' in text_arg or
-        '\\' in text_arg
-    )
-    
-    if likely_path and not path_obj.exists():
-        raise ValueError(f"Input '{text_arg}' looks like a file path but file was not found. "
-                         f"Please provide valid text content or a valid file path.")
-        
-    return text_arg
+    return ""
 
 
 # ============================================================================
@@ -89,10 +104,14 @@ def cmd_init(args):
     initializer = ProjectInitializer()
 
     try:
+        full_text = _resolve_text(text=args.text, text_path=args.text_path, cwd=args.project)
+        if not full_text:
+            raise ValueError("❌ No text content provided. Use --text or --text-path")
+
         summary = initializer.create_initial_script(
             project_dir=args.project,
             description=args.description,
-            full_text=_resolve_text(args.text, cwd=args.project),
+            full_text=full_text,
             ratio=args.ratio,
             resources=resources
         )
@@ -114,20 +133,73 @@ def cmd_init(args):
                     print(f"     📐 Resolution: {res['resolution']}")
         
         # Save raw script file if provided
-        if args.text and os.path.exists(args.text) and os.path.isfile(args.text):
+        # Save raw script file if provided via text or copy if provided via path
+        text_source = args.text_path or args.text
+        if text_source and os.path.exists(text_source) and os.path.isfile(text_source):
             try:
                 import shutil
                 project_path = Path(args.project)
                 dest_path = project_path / 'raw_script.txt'
 
                 # Check if source and destination are the same file
-                if os.path.abspath(args.text) != os.path.abspath(str(dest_path)):
-                    shutil.copy2(args.text, dest_path)
+                if os.path.abspath(text_source) != os.path.abspath(str(dest_path)):
+                    shutil.copy2(text_source, dest_path)
                     print(f"   📄 Raw Script Saved: {dest_path}")
                 else:
                     print(f"   📄 Raw Script: {dest_path} (already exists)")
             except Exception as e:
                 print(f"⚠️  Could not save raw script: {e}")
+        elif args.text: # If provided as direct text, save it to raw_script.txt
+            try:
+                project_path = Path(args.project)
+                dest_path = project_path / 'raw_script.txt'
+                with open(dest_path, 'w', encoding='utf-8') as f:
+                    f.write(args.text)
+                print(f"   📄 Raw Script Saved from text: {dest_path}")
+            except Exception as e:
+                print(f"⚠️  Could not save raw script from text: {e}")
+
+        # Save voice configuration
+        project_path = Path(args.project)
+        voice_config = {
+            'provider': args.voice_provider,
+            'voiceId': args.voice_id or _get_default_voice_id(args.voice_provider),
+            'emotion': args.voice_emotion,
+            'speed': args.voice_speed,
+            'model': _get_voice_model(args.voice_provider)
+        }
+        voice_config_path = project_path / 'voice-config.json'
+        try:
+            with open(voice_config_path, 'w', encoding='utf-8') as f:
+                json.dump(voice_config, f, indent=2, ensure_ascii=False)
+            print(f"\n🎤 Voice Configuration:")
+            print(f"   Provider: {voice_config['provider']}")
+            print(f"   Voice ID: {voice_config['voiceId']}")
+            print(f"   Emotion: {voice_config['emotion']}")
+            print(f"   Speed: {voice_config['speed']}x")
+        except Exception as e:
+            print(f"⚠️  Could not save voice config: {e}")
+
+        # Save music configuration
+        music_config = {
+            'genre': args.music_genre or 'upbeat',
+            'mood': args.music_mood or 'energetic',
+            'query': args.music_query or f"{args.music_genre or 'upbeat'} {args.music_mood or 'energetic'} background music",
+            'volume': args.music_volume,
+            'fadeIn': 2.0,
+            'fadeOut': 3.0
+        }
+        music_config_path = project_path / 'music-config.json'
+        try:
+            with open(music_config_path, 'w', encoding='utf-8') as f:
+                json.dump(music_config, f, indent=2, ensure_ascii=False)
+            print(f"\n🎵 Music Configuration:")
+            print(f"   Genre: {music_config['genre']}")
+            print(f"   Mood: {music_config['mood']}")
+            print(f"   Query: {music_config['query']}")
+            print(f"   Volume: {music_config['volume']}")
+        except Exception as e:
+            print(f"⚠️  Could not save music config: {e}")
 
         # Automate project list update
         _update_project_list()
@@ -326,25 +398,40 @@ def cmd_add_section(args):
         with open(args.script, 'r', encoding='utf-8') as f:
             script = json.load(f)
 
-        # Load voice
-        with open(args.voice, 'r', encoding='utf-8') as f:
-            voice = json.load(f)
+        # Load voice (OPTIONAL - may not exist yet in new workflow)
+        voice = None
+        if args.voice and os.path.exists(args.voice):
+            try:
+                with open(args.voice, 'r', encoding='utf-8') as f:
+                    voice = json.load(f)
+                print(f"   ✓ Voice file loaded: {args.voice}")
+            except Exception as e:
+                print(f"   ⚠️  Could not load voice file: {e}")
 
-        # Resolve timing using fuzzy matching
+        # Resolve timing using fuzzy matching (ONLY if voice available)
         synchronizer = ScriptSynchronizer()
-        resolved_text = _resolve_text(args.text, cwd=os.path.dirname(args.script))
-        timing = synchronizer.resolve_timing(resolved_text, voice, threshold=75)
+        resolved_text = _resolve_text(text=args.text, text_path=args.text_path, cwd=os.path.dirname(args.script))
+
+        if not resolved_text:
+            raise ValueError("❌ No text content provided for section. Use --text or --text-path")
+
+        timing = None
+        if voice:
+            timing = synchronizer.resolve_timing(resolved_text, voice, threshold=75)
+            if timing:
+                print(f"   ✓ Timing resolved from voice (score: {timing['score']})")
 
         if not timing:
-            print(f"⚠️  Warning: Could not resolve timing for section text. Using defaults.")
+            if voice:
+                print(f"⚠️  Warning: Could not resolve timing from voice. Using defaults.")
+            else:
+                print(f"ℹ️  No voice file provided. Using default timing (will sync later).")
             timing = {
                 'startTime': 0.0,
                 'endTime': len(resolved_text.split()) * 0.4,
                 'duration': len(resolved_text.split()) * 0.4,
                 'score': 0
             }
-        else:
-            print(f"   ✓ Timing resolved (score: {timing['score']})")
 
         # Build section
         section = {
@@ -397,15 +484,21 @@ def cmd_add_scenes(args):
         with open(args.script, 'r', encoding='utf-8') as f:
             script = json.load(f)
 
-        # Load voice
-        with open(args.voice, 'r', encoding='utf-8') as f:
-            voice = json.load(f)
+        # Load voice (OPTIONAL - may not exist yet in new workflow)
+        voice = None
+        if args.voice and os.path.exists(args.voice):
+            try:
+                with open(args.voice, 'r', encoding='utf-8') as f:
+                    voice = json.load(f)
+                print(f"   ✓ Voice file loaded: {args.voice}")
+            except Exception as e:
+                print(f"   ⚠️  Could not load voice file: {e}")
 
         # Load scenes definition
         with open(args.scenes_file, 'r', encoding='utf-8') as f:
             scenes_def = json.load(f)
 
-        # Resolve timing for each scene
+        # Resolve timing for each scene (ONLY if voice available)
         synchronizer = ScriptSynchronizer()
         resolved_scenes = []
 
@@ -415,18 +508,21 @@ def cmd_add_scenes(args):
                 print(f"⚠️  Warning: Scene {scene.get('id', 'unknown')} has no text. Skipping.")
                 continue
 
-            timing = synchronizer.resolve_timing(text, voice, threshold=75)
+            timing = None
+            if voice:
+                timing = synchronizer.resolve_timing(text, voice, threshold=75)
+                if timing:
+                    print(f"   ✓ {scene['id']}: {timing['startTime']:.1f}s → {timing['endTime']:.1f}s (score: {timing['score']})")
 
             if not timing:
-                print(f"⚠️  Warning: Could not resolve timing for scene {scene['id']}. Using defaults.")
+                if voice:
+                    print(f"⚠️  Warning: Could not resolve timing for scene {scene['id']}. Using defaults.")
                 timing = {
                     'startTime': 0.0,
                     'endTime': len(text.split()) * 0.4,
                     'duration': len(text.split()) * 0.4,
                     'score': 0
                 }
-            else:
-                print(f"   ✓ {scene['id']}: {timing['startTime']:.1f}s → {timing['endTime']:.1f}s (score: {timing['score']})")
 
             # Build scene
             resolved_scene = {
@@ -496,8 +592,8 @@ def cmd_update_scene(args):
 
             updates['visuals'] = [visual]
         
-        if args.text:
-            updates['text'] = _resolve_text(args.text, cwd=os.path.dirname(args.script))
+        if args.text or args.text_path:
+            updates['text'] = _resolve_text(text=args.text, text_path=args.text_path, cwd=os.path.dirname(args.script))
 
         if args.voice_notes:
             updates['voiceNotes'] = args.voice_notes
@@ -1011,9 +1107,30 @@ def main():
     init_parser = subparsers.add_parser('init', help='Initialize project')
     init_parser.add_argument('--project', required=True, help='Project directory')
     init_parser.add_argument('--description', required=True, help='Video description')
-    init_parser.add_argument('--text', required=True, help='Full narration text')
+    init_parser.add_argument('--text', help='Full narration text (short strings)')
+    init_parser.add_argument('--text-path', help='Path to full narration text file (recommended)')
     init_parser.add_argument('--ratio', default='9:16', help='Aspect ratio (9:16, 16:9, 1:1, 4:5)')
     init_parser.add_argument('--resources', nargs='*', help='Resource file paths (video, audio, image)')
+
+    # Voice configuration (agent should choose based on content tone)
+    init_parser.add_argument('--voice-provider', default='openai',
+                            help='Voice provider: openai|elevenlabs|vbee|gemini (default: openai)')
+    init_parser.add_argument('--voice-id',
+                            help='Voice ID (e.g., alloy, echo, nova for OpenAI)')
+    init_parser.add_argument('--voice-emotion', default='neutral',
+                            help='Voice emotion: neutral|happy|sad|angry|excited (default: neutral)')
+    init_parser.add_argument('--voice-speed', type=float, default=1.0,
+                            help='Voice speed multiplier (default: 1.0)')
+
+    # Music configuration (agent should choose based on video mood)
+    init_parser.add_argument('--music-genre',
+                            help='Music genre: upbeat|cinematic|chill|corporate|dramatic')
+    init_parser.add_argument('--music-mood',
+                            help='Music mood: energetic|calm|inspiring|mysterious|happy')
+    init_parser.add_argument('--music-query',
+                            help='Music search query (custom, overrides genre/mood)')
+    init_parser.add_argument('--music-volume', type=float, default=0.3,
+                            help='Music volume (0.0-1.0, default: 0.3)')
 
     # ========== read ==========
     read_parser = subparsers.add_parser('read', help='Read script')
@@ -1024,16 +1141,17 @@ def main():
     # ========== add-section ==========
     add_section_parser = subparsers.add_parser('add-section', help='Add section')
     add_section_parser.add_argument('--script', required=True, help='Path to script.json')
-    add_section_parser.add_argument('--voice', required=True, help='Path to voice.json')
+    add_section_parser.add_argument('--voice', required=False, help='Path to voice.json (optional, for timing resolution)')
     add_section_parser.add_argument('--id', required=True, help='Section ID')
     add_section_parser.add_argument('--name', required=True, help='Section name')
-    add_section_parser.add_argument('--text', required=True, help='Section text')
+    add_section_parser.add_argument('--text', help='Section text (short strings)')
+    add_section_parser.add_argument('--text-path', help='Path to section text file (recommended)')
     add_section_parser.add_argument('--pace', default='medium', help='Pace (slow, medium, fast)')
 
     # ========== add-scenes ==========
     add_scenes_parser = subparsers.add_parser('add-scenes', help='Add scenes to section')
     add_scenes_parser.add_argument('--script', required=True, help='Path to script.json')
-    add_scenes_parser.add_argument('--voice', required=True, help='Path to voice.json')
+    add_scenes_parser.add_argument('--voice', required=False, help='Path to voice.json (optional, for timing resolution)')
     add_scenes_parser.add_argument('--section', required=True, help='Section ID')
     add_scenes_parser.add_argument('--scenes-file', required=True, help='Path to scenes definition JSON')
 
@@ -1045,7 +1163,8 @@ def main():
     update_scene_parser.add_argument('--visual-path', help='Visual file path (for pinned)')
     update_scene_parser.add_argument('--visual-query', help='Visual search query (for stock/ai)')
     update_scene_parser.add_argument('--visual-style', help='Visual style (zoom-in, ken-burns, slide)')
-    update_scene_parser.add_argument('--text', help='Scene text')
+    update_scene_parser.add_argument('--text', help='Scene text (short strings)')
+    update_scene_parser.add_argument('--text-path', help='Path to scene text file')
     update_scene_parser.add_argument('--voice-notes', help='Voice notes')
 
     # ========== rebuild-section ==========

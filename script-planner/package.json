@@ -7,6 +7,7 @@
     "dev": "vite",
     "server": "node server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
+    "dev:smart": "node check-and-start.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

@@ -11,7 +11,7 @@
     "upgrade": "remotion upgrade",
     "setup:all": "node scripts/setup-dependencies.js",
     "preplan": "node scripts/generate-project-list.js",
-    "plan": "cd script-planner && npm run dev:all"
+    "plan": "cd script-planner && npm run dev:smart"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",
