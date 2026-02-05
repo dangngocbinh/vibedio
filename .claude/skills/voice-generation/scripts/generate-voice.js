@@ -7,6 +7,21 @@ const { OpenAI } = require('openai');
 const textToSpeech = require('@google-cloud/text-to-speech');
 const { execSync } = require('child_process');
 
+/**
+ * Update production status after voice generation
+ * @param {string} outputDir - Output directory (project directory)
+ */
+function updateProductionStatus(outputDir) {
+    try {
+        const statusManagerPath = path.join(__dirname, '..', '..', 'video-production-director', 'utils', 'status_manager.py');
+        // outputDir is the project directory
+        const cmd = `python3 "${statusManagerPath}" "${outputDir}" complete voice_generated`;
+        execSync(cmd, { stdio: 'pipe' });
+    } catch (error) {
+        // Silently ignore status update errors
+    }
+}
+
 // Load environment variables
 // NOTE FOR VUE DEVELOPER:
 // __dirname là biến global trong Node.js, tương tự như import.meta.url trong Vue/Vite
@@ -189,6 +204,9 @@ async function main() {
             console.log(`Metadata: ${result.jsonPath}`);
         }
 
+        // Update production status
+        updateProductionStatus(CONFIG.outputDir);
+
     } catch (error) {
         console.logError(error);
         process.exit(1);
@@ -323,8 +341,11 @@ async function generateGemini(text, voiceId, emotion, baseFilename, styleInstruc
             {
                 role: "user",
                 parts: [
-                    // Nếu có styleInstruction, thêm vào đầu text để Gemini hiểu style
-                    { text: styleInstruction ? `${styleInstruction}\n\n${text}` : text }
+                    // Explicitly separate instruction from text to prevent reading the instruction
+                    {
+                        // Use simple format: "Instruction \n Text" to prevent instruction bleeding
+                        text: styleInstruction ? `${styleInstruction}\n${text}` : text
+                    }
                 ]
             }
         ],

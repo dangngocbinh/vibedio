@@ -318,7 +318,8 @@ export const OtioClip: React.FC<{
     }
 
     // Style Metadata Handling
-    const customStyle: React.CSSProperties = clip.metadata?.style || {};
+    const rawStyle = clip.metadata?.style;
+    const customStyle: React.CSSProperties = (typeof rawStyle === 'object' && rawStyle !== null) ? rawStyle : {};
 
     // Logic default objectFit: Nếu là video dọc (height > width), mặc định là contain để không bị cover mất nội dung
     const defaultObjectFit = height > width ? 'contain' : 'cover';

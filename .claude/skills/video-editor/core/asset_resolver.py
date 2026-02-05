@@ -56,37 +56,62 @@ class AssetResolver:
         """
         Resolve resource URL from resources.json entry.
 
-        Priority:
-        1. localPath (downloaded file - top priority for performance/stability)
-        2. downloadUrls.hd (remote fallback)
-        ...
+        Priority (ưu tiên local trước):
+        1. importedPath (đã import về local) - VALIDATE EXISTS
+        2. relativePath (relative path trong project) - VALIDATE EXISTS
+        3. localPath (downloaded file) - VALIDATE EXISTS
+        4. downloadUrls.hd/sd/4k (remote CDN)
+        5. downloadUrl (single remote URL)
+        6. url (page URL - chỉ nếu là direct media URL)
         """
-        # [NEW] Prefer local downloaded file if available
-        if "localPath" in resource and resource["localPath"]:
-            return self.sanitize_for_otio(resource["localPath"])
+        # 1. Check local paths FIRST - với validation
+        for key in ["importedPath", "relativePath", "localPath"]:
+            if resource.get(key):
+                full_path = self._resolve_full_path(resource[key])
+                if full_path.exists():
+                    return self.sanitize_for_otio(resource[key])
+                else:
+                    # Log warning nếu path không tồn tại
+                    print(f"⚠️ {key} not found: {resource[key]}")
 
-        # Try downloadUrls if local file missing or not downloaded
+        # 2. Fallback to remote URLs
         if "downloadUrls" in resource:
-            urls = resource["downloadUrls"]
-            # Check all quality levels
             for quality in ["hd", "sd", "4k", "original", "large", "medium"]:
-                if quality in urls and urls[quality]:
-                    return urls[quality]
+                if resource["downloadUrls"].get(quality):
+                    return resource["downloadUrls"][quality]
 
-        # Fallback to single downloadUrl
-        if "downloadUrl" in resource and resource["downloadUrl"]:
+        if resource.get("downloadUrl"):
             return resource["downloadUrl"]
 
-        # [REFINED] Only fallback to page URL if it's not a restricted/unplayable one (like Pexels page)
-        if "url" in resource and resource["url"]:
-            url = resource["url"]
-            # Skip Pexels/Pixabay view pages as they don't work in Remotion for direct playback
-            if "pexels.com/video/" in url or "pixabay.com/videos/" in url:
-                pass 
-            else:
-                return url
+        # 3. Last resort: url (nếu là direct media URL)
+        if resource.get("url") and self._is_direct_media_url(resource["url"]):
+            return resource["url"]
 
-        return "" # Return empty instead of raising error to allow the caller to try next result
+        return ""  # Empty = no valid URL found
+
+    def _resolve_full_path(self, path_str: str) -> Path:
+        """Resolve relative path to full path for existence check."""
+        if path_str.startswith('/'):
+            return Path(path_str)
+        if path_str.startswith('..'):
+            return (self.project_dir / path_str).resolve()
+        return self.project_dir / path_str
+
+    def _is_direct_media_url(self, url: str) -> bool:
+        """Check if URL is direct media (not a page view)."""
+        # Reject page URLs
+        if "pexels.com/video/" in url or "pixabay.com/videos/" in url:
+            return False
+        if "pexels.com/photo/" in url or "pixabay.com/photos/" in url:
+            return False
+        # Accept direct CDN URLs
+        if any(cdn in url for cdn in ["cdn.pexels.com", "cdn.pixabay.com", "vimeo.com", "player.vimeo.com"]):
+            return True
+        # Accept URLs ending with media extensions
+        media_extensions = ['.mp4', '.mov', '.webm', '.jpg', '.jpeg', '.png', '.webp', '.gif']
+        if any(url.lower().endswith(ext) for ext in media_extensions):
+            return True
+        return False  # Conservative: reject unknown URLs
 
     def sanitize_for_otio(self, path_or_url: str) -> str:
         """
@@ -183,10 +208,11 @@ class AssetResolver:
         """
         Extract and resolve music URL from resources.json.
 
-        Supports multiple formats:
-        - Format 1 (nested): resources.music[].results[].downloadUrl
-        - Format 2 (flat): resources.music[].downloadUrl
-        - Format 3 (direct): resources.music[].url
+        Priority order (similar to resolve_resource_url):
+        1. importedPath (imported local file) - VALIDATE EXISTS
+        2. localPath (downloaded file) - VALIDATE EXISTS
+        3. downloadUrl (remote URL)
+        4. url (page URL)
 
         Args:
             resources: Parsed resources.json content
@@ -205,17 +231,34 @@ class AssetResolver:
         # Format 1: Nested results array (from find-resources.js)
         if "results" in first_music and len(first_music["results"]) > 0:
             music_resource = first_music["results"][0]
+            # Use resolve_resource_url for consistent priority handling
             return self.resolve_resource_url(music_resource)
 
-        # Format 2: Direct downloadUrl on music entry (from add-music script)
+        # Format 2: Check importedPath on music entry (from import)
+        if first_music.get("importedPath"):
+            full_path = self._resolve_full_path(first_music["importedPath"])
+            if full_path.exists():
+                return self.sanitize_for_otio(first_music["importedPath"])
+            else:
+                print(f"⚠️ Music importedPath not found: {first_music['importedPath']}")
+
+        # Format 3: Check localPath on music entry
+        if first_music.get("localPath"):
+            full_path = self._resolve_full_path(first_music["localPath"])
+            if full_path.exists():
+                return self.sanitize_for_otio(first_music["localPath"])
+            else:
+                print(f"⚠️ Music localPath not found: {first_music['localPath']}")
+
+        # Format 4: Direct downloadUrl on music entry (from add-music script)
         if "downloadUrl" in first_music and first_music["downloadUrl"]:
             return first_music["downloadUrl"]
 
-        # Format 3: Direct url field
+        # Format 5: Direct url field
         if "url" in first_music and first_music["url"]:
             return first_music["url"]
 
-        # Format 4: sourceUrl (original remote URL)
+        # Format 6: sourceUrl (original remote URL)
         if "sourceUrl" in first_music and first_music["sourceUrl"]:
             return first_music["sourceUrl"]
 
@@ -282,7 +325,13 @@ class AssetResolver:
             if video_entry.get("sceneId") == scene_id:
                 results = video_entry.get("results", [])
                 
-                # FIRST PASS: Look for any result with a localPath (downloaded)
+                # FIRST PASS: Look for any result with an imported/relative path
+                for key in ["importedPath", "relativePath"]:
+                    for result in results:
+                        if result.get(key):
+                            return self.sanitize_for_otio(result[key])
+
+                # SECOND PASS: Look for any result with a localPath (downloaded)
                 for result in results:
                     if result.get("localPath"):
                         return self.sanitize_for_otio(result["localPath"])
@@ -328,7 +377,13 @@ class AssetResolver:
             if image_entry.get("sceneId") == scene_id:
                 results = image_entry.get("results", [])
                 
-                # FIRST PASS: Look for local file
+                # FIRST PASS: Look for any result with an imported/relative path
+                for key in ["importedPath", "relativePath"]:
+                    for result in results:
+                        if result.get(key):
+                            return self.sanitize_for_otio(result[key])
+
+                # SECOND PASS: Look for local file
                 for result in results:
                     if result.get("localPath"):
                         return self.sanitize_for_otio(result["localPath"])

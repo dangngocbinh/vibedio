@@ -59,8 +59,12 @@ Gemini API hỗ trợ **style instruction** - mô tả tự do về cách bạn 
 - `"Nhẹ nhàng – êm dịu – thư giãn"` - Giọng dịu dàng, meditation
 
 **Lưu ý**: 
-- Style instruction chỉ hoạt động với provider `gemini`
-- Nó sẽ bị bỏ qua với các provider khác (elevenlabs, openai, vbee)
+- Style instruction được đưa vào **dòng đầu tiên** của prompt (format: `Instruction \n Text`)
+- Để tránh bị đọc thành tiếng, nên dùng câu mệnh lệnh rõ ràng:
+  - ✅ `"Read in a warm, friendly tone:"`
+  - ✅ `"Giọng đọc trầm ấm, chậm rãi:"`
+- Tránh dùng tính từ ngắn cộc lốc có thể bị hiểu nhầm là text:
+  - ⚠️ `"Vui tươi"` (Có thể bị đọc "Vui tươi. Xin chào...")
 - Kết hợp với `voiceId` để tùy chỉnh cả giọng nói và phong cách
 
 ### 4. Voice Provider Priority Strategy (Quality First)

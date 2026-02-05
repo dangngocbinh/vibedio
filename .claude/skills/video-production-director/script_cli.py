@@ -18,13 +18,14 @@ Commands:
 import argparse
 import json
 import sys
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from utils.project_initializer import ProjectInitializer
 from utils.json_builder import JSONBuilder
-
 from utils.synchronizer import ScriptSynchronizer
+from utils.status_manager import StatusManager
 import os
 
 def _resolve_text(text_arg: str, cwd: Optional[str] = None) -> str:
@@ -128,6 +129,14 @@ def cmd_init(args):
             except Exception as e:
                 print(f"⚠️  Could not save raw script: {e}")
 
+        # Automate project list update
+        _update_project_list()
+
+        # Update status
+        status_manager = StatusManager(args.project)
+        status_manager.complete_step("script_created", f"Init project: {summary['projectName']}")
+        print(f"\n📊 Status: {status_manager.get_current_step_name()}")
+
         return 0
 
     except Exception as e:
@@ -135,6 +144,17 @@ def cmd_init(args):
         import traceback
         traceback.print_exc()
         return 1
+
+
+def _update_project_list():
+    """Run npm run prestart to update the project list."""
+    print(f"\n🔄 Updating project list...")
+    try:
+        # Resolve the root directory (assuming script is in .claude/skills/video-production-director/)
+        root_dir = Path(__file__).resolve().parent.parent.parent.parent
+        subprocess.run(["npm", "run", "prestart"], cwd=str(root_dir), check=False)
+    except Exception as e:
+        print(f"⚠️  Could not update project list: {e}")
 
 
 # ============================================================================
@@ -350,6 +370,11 @@ def cmd_add_section(args):
         print(f"   Name: {section['name']}")
         print(f"   ⏱️  {section['startTime']:.1f}s → {section['endTime']:.1f}s ({section['duration']:.1f}s)")
 
+        # Update status
+        project_dir = Path(args.script).parent
+        status_manager = StatusManager(str(project_dir))
+        status_manager.complete_step("structure_created", f"Add section: {section['id']}")
+
         return 0
 
     except Exception as e:
@@ -429,6 +454,11 @@ def cmd_add_scenes(args):
             json.dump(script, f, indent=2, ensure_ascii=False)
 
         print(f"\n✅ {len(resolved_scenes)} scenes added to section {args.section}!")
+
+        # Update status
+        project_dir = Path(args.script).parent
+        status_manager = StatusManager(str(project_dir))
+        status_manager.complete_step("structure_created", f"Add {len(resolved_scenes)} scenes to {args.section}")
 
         return 0
 
@@ -609,6 +639,12 @@ def cmd_sync(args):
         print(f"\n✅ Synced successfully!")
         print(f"   Total Duration: {duration}s")
 
+        # Update status
+        project_dir = Path(args.script).parent
+        status_manager = StatusManager(str(project_dir))
+        status_manager.complete_step("timing_synced", f"Sync timing: {duration}s")
+        print(f"📊 Status: {status_manager.get_current_step_name()}")
+
         return 0
 
     except Exception as e:
@@ -650,20 +686,19 @@ def cmd_merge_resources(args):
         merged_count = 0
 
         # Helper function to convert absolute path to relative
-        def to_relative_path(abs_path: str, base_dir: Path) -> str:
-            """Convert absolute path to relative path from project directory"""
-            if not abs_path:
-                return abs_path
+        def to_relative_path(path_str: str, base_dir: Path) -> str:
+            """Ensure path is absolute and resolved for consistent processing"""
+            if not path_str:
+                return path_str
             try:
-                abs_path_obj = Path(abs_path)
-                if abs_path_obj.is_absolute():
-                    # Resolve base_dir to absolute path
-                    base_dir_resolved = base_dir.resolve()
-                    return str(abs_path_obj.relative_to(base_dir_resolved))
-                return abs_path
+                path_obj = Path(path_str)
+                if not path_obj.is_absolute():
+                    path_obj = (base_dir / path_obj).resolve()
+                else:
+                    path_obj = path_obj.resolve()
+                return str(path_obj)
             except (ValueError, Exception):
-                # If path is not under base_dir or any error, return as-is
-                return abs_path
+                return path_str
 
         for section in script.get('sections', []):
             for scene in section.get('scenes', []):
@@ -676,28 +711,82 @@ def cmd_merge_resources(args):
                 for video_group in resources.get('resources', {}).get('videos', []):
                     if video_group.get('sceneId') == scene_id:
                         for result in video_group.get('results', []):
-                            if result.get('localPath'):
-                                candidates.append({
+                            local_path = result.get('importedPath') or result.get('localPath')
+                            if local_path:
+                                candidate = {
                                     'id': result.get('id'),
                                     'type': 'video',
                                     'url': result.get('url'),
-                                    'localPath': to_relative_path(result['localPath'], project_path),
+                                    'localPath': to_relative_path(local_path, project_path),
                                     'duration': result.get('duration'),
                                     'resolution': f"{result.get('width', 0)}x{result.get('height', 0)}"
-                                })
+                                }
+                                candidates.append(candidate)
+                                if result.get('selected'):
+                                    scene['selectedResourceId'] = candidate['id']
 
                 # Search in images
                 for image_group in resources.get('resources', {}).get('images', []):
                     if image_group.get('sceneId') == scene_id:
                         for result in image_group.get('results', []):
-                            if result.get('localPath'):
-                                candidates.append({
+                            local_path = result.get('importedPath') or result.get('localPath')
+                            if local_path:
+                                candidate = {
                                     'id': result.get('id'),
                                     'type': 'image',
                                     'url': result.get('url'),
-                                    'localPath': to_relative_path(result['localPath'], project_path),
+                                    'localPath': to_relative_path(local_path, project_path),
                                     'resolution': f"{result.get('width', 0)}x{result.get('height', 0)}"
-                                })
+                                }
+                                candidates.append(candidate)
+                                if result.get('selected'):
+                                    scene['selectedResourceId'] = candidate['id']
+                                    if 'selectedResourceIds' not in scene:
+                                        scene['selectedResourceIds'] = []
+                                    if candidate['id'] not in scene['selectedResourceIds']:
+                                        scene['selectedResourceIds'].append(candidate['id'])
+
+                # Search in generatedImages
+                for gen_group in resources.get('resources', {}).get('generatedImages', []):
+                    if gen_group.get('sceneId') == scene_id:
+                        for result in gen_group.get('results', []):
+                            local_path = result.get('importedPath') or result.get('localPath')
+                            if local_path:
+                                candidate = {
+                                    'id': result.get('id'),
+                                    'type': 'image',
+                                    'url': result.get('url'),
+                                    'localPath': to_relative_path(local_path, project_path),
+                                    'generated': True
+                                }
+                                candidates.append(candidate)
+                                if result.get('selected'):
+                                    scene['selectedResourceId'] = candidate['id']
+                                    if 'selectedResourceIds' not in scene:
+                                        scene['selectedResourceIds'] = []
+                                    if candidate['id'] not in scene['selectedResourceIds']:
+                                        scene['selectedResourceIds'].append(candidate['id'])
+
+                # Search in pinnedResources
+                for pinned_group in resources.get('resources', {}).get('pinnedResources', []):
+                    if pinned_group.get('sceneId') == scene_id:
+                        for result in pinned_group.get('results', []):
+                            local_path = result.get('importedPath') or result.get('localPath')
+                            if local_path:
+                                candidate = {
+                                    'id': result.get('id'),
+                                    'type': result.get('mediaType', 'image'),
+                                    'url': result.get('url'),
+                                    'localPath': to_relative_path(local_path, project_path),
+                                    'pinned': True
+                                }
+                                candidates.append(candidate)
+                                if result.get('selected'):
+                                    scene['selectedResourceId'] = candidate['id']
+                                    if 'selectedResourceIds' not in scene:
+                                        scene['selectedResourceIds'] = []
+                                    if candidate['id'] not in scene['selectedResourceIds']:
+                                        scene['selectedResourceIds'].append(candidate['id'])
 
                 if candidates:
                     scene['resourceCandidates'] = candidates
@@ -738,12 +827,77 @@ def cmd_merge_resources(args):
         if music_merged > 0:
             print(f"   Added {music_merged} music candidates")
 
+        # Update status
+        status_manager = StatusManager(args.project_dir)
+        status_manager.complete_step("resources_found", f"Merged {merged_count} resources")
+
         return 0
 
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
+        return 1
+
+
+# ============================================================================
+# COMMAND: status
+# ============================================================================
+
+def cmd_status(args):
+    """Show project status."""
+    try:
+        status_manager = StatusManager(args.project)
+        print(status_manager.get_status_summary())
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return 1
+
+
+# ============================================================================
+# COMMAND: confirm-text
+# ============================================================================
+
+def cmd_confirm_text(args):
+    """Mark text as confirmed by user (Checkpoint 1)."""
+    try:
+        status_manager = StatusManager(args.project)
+        status_manager.complete_step("text_confirmed", "User confirmed script text")
+        print(f"✅ Text confirmed!")
+        print(f"📊 Status: {status_manager.get_current_step_name()}")
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return 1
+
+
+# ============================================================================
+# COMMAND: rollback
+# ============================================================================
+
+def cmd_rollback(args):
+    """Rollback project to a previous step."""
+    try:
+        status_manager = StatusManager(args.project)
+
+        # Check for warning
+        if status_manager.should_warn_rebuild(args.step):
+            print(status_manager.get_rebuild_warning_message())
+            if not args.force:
+                print("\n❌ Cancelled. Use --force to override.")
+                return 1
+            print("\n⚠️ Force mode enabled. Proceeding...")
+
+        status_manager.rollback_to_step(args.step)
+        print(f"✅ Rolled back to: {args.step}")
+        print(status_manager.get_status_summary())
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
         return 1
 
 
@@ -782,6 +936,55 @@ def cmd_update_voice(args):
         print(f"   Provider: {script['voice'].get('provider', 'N/A')}")
         print(f"   Voice ID: {script['voice'].get('voiceId', 'N/A')}")
         print(f"   Audio Path: {script['voice'].get('audioPath', 'N/A')}")
+
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+# ============================================================================
+# COMMAND: update-music
+# ============================================================================
+
+def cmd_update_music(args):
+    """Update music configuration in script."""
+    print(f"🎵 Updating music config...")
+
+    try:
+        # Load script
+        with open(args.script, 'r', encoding='utf-8') as f:
+            script = json.load(f)
+
+        # Ensure music dict exists
+        if 'music' not in script:
+            script['music'] = {}
+
+        # Update fields
+        if args.mood:
+            script['music']['mood'] = args.mood
+        if args.query:
+            script['music']['query'] = args.query
+        if args.volume is not None:
+            script['music']['volume'] = args.volume
+        if args.fade_in is not None:
+            script['music']['fadeIn'] = args.fade_in
+        if args.fade_out is not None:
+            script['music']['fadeOut'] = args.fade_out
+
+        # Save
+        with open(args.script, 'w', encoding='utf-8') as f:
+            json.dump(script, f, indent=2, ensure_ascii=False)
+
+        print(f"\n✅ Music config updated!")
+        print(f"   Mood: {script['music'].get('mood', 'N/A')}")
+        print(f"   Query: {script['music'].get('query', 'N/A')}")
+        print(f"   Volume: {script['music'].get('volume', 'N/A')}")
+        print(f"   Fade In: {script['music'].get('fadeIn', 'N/A')}s")
+        print(f"   Fade Out: {script['music'].get('fadeOut', 'N/A')}s")
 
         return 0
 
@@ -869,6 +1072,29 @@ def main():
     update_voice_parser.add_argument('--speed', help='Voice speed')
     update_voice_parser.add_argument('--audio-path', help='Audio file path relative to project')
 
+    # ========== update-music ==========
+    update_music_parser = subparsers.add_parser('update-music', help='Update music config')
+    update_music_parser.add_argument('--script', required=True, help='Path to script.json')
+    update_music_parser.add_argument('--mood', help='Music mood (calm, epic, happy, sad, inspiring, etc.)')
+    update_music_parser.add_argument('--query', help='Music search query (e.g., "epic cinematic orchestral")')
+    update_music_parser.add_argument('--volume', type=float, help='Music volume (0.0 - 1.0)')
+    update_music_parser.add_argument('--fade-in', type=float, help='Fade in duration (seconds)')
+    update_music_parser.add_argument('--fade-out', type=float, help='Fade out duration (seconds)')
+
+    # ========== status ==========
+    status_parser = subparsers.add_parser('status', help='Show project status')
+    status_parser.add_argument('--project', required=True, help='Project directory')
+
+    # ========== confirm-text ==========
+    confirm_text_parser = subparsers.add_parser('confirm-text', help='Mark text as confirmed (Checkpoint 1)')
+    confirm_text_parser.add_argument('--project', required=True, help='Project directory')
+
+    # ========== rollback ==========
+    rollback_parser = subparsers.add_parser('rollback', help='Rollback to a previous step')
+    rollback_parser.add_argument('--project', required=True, help='Project directory')
+    rollback_parser.add_argument('--step', required=True, help='Step to rollback to')
+    rollback_parser.add_argument('--force', action='store_true', help='Force rollback even with OTIO edits')
+
     # Parse args
     args = parser.parse_args()
 
@@ -886,7 +1112,11 @@ def main():
         'rebuild-section': cmd_rebuild_section,
         'sync': cmd_sync,
         'merge-resources': cmd_merge_resources,
-        'update-voice': cmd_update_voice
+        'update-voice': cmd_update_voice,
+        'update-music': cmd_update_music,
+        'status': cmd_status,
+        'confirm-text': cmd_confirm_text,
+        'rollback': cmd_rollback
     }
 
     handler = commands.get(args.command)

@@ -5,6 +5,21 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..
 const minimist = require('minimist');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
+
+/**
+ * Update production status after finding resources
+ * @param {string} projectDir - Project directory
+ */
+function updateProductionStatus(projectDir) {
+  try {
+    const statusManagerPath = path.join(__dirname, '..', '..', 'video-production-director', 'utils', 'status_manager.py');
+    const cmd = `python3 "${statusManagerPath}" "${projectDir}" complete resources_found`;
+    execSync(cmd, { stdio: 'pipe' });
+  } catch (error) {
+    // Silently ignore status update errors
+  }
+}
 
 // Import modules
 const PexelsClient = require('./api/pexels-client');
@@ -37,12 +52,12 @@ async function main() {
       resultsPerQuery: 3,
       provider: null,           // null = multi-provider (search all available)
       enableAI: true,
-      download: true,           // Enable download by default
-      skipDownload: false,      // Explicit skip
+      download: false,          // v2.0: Disable download by default - only return URLs
+      skipDownload: false,      // Explicit skip (legacy compat)
       quality: 'best',          // best | hd | sd | medium
       storage: 'local',         // local | cloud (future)
       concurrency: 3,           // Parallel downloads
-      downloadCount: 10,        // Download 10 results per scene for selection
+      downloadCount: 10,        // Download 10 results per scene for selection (if download enabled)
       batchSize: 0              // 0 = unlimited, otherwise limit number of AI generation requests
     }
   });
@@ -56,10 +71,10 @@ async function main() {
     console.log('  --projectDir         Path to project directory (required)');
     console.log('  --resultsPerQuery    Number of results per query (default: 3)');
     console.log('  --provider           Specific provider: pexels|pixabay|unsplash (default: all available)');
-    console.log('  --download           Enable download (default: true)');
-    console.log('  --skipDownload       Skip downloading, only get URLs');
+    console.log('  --download           Enable download to staging (default: false - URL only mode)');
+    console.log('  --skipDownload       Skip downloading, only get URLs (legacy, same as default)');
     console.log('  --quality            Quality preference: best|hd|sd|medium (default: best)');
-    console.log('  --downloadCount      Number of results to download per scene (default: 1)');
+    console.log('  --downloadCount      Number of results to download per scene if download enabled (default: 10)');
     console.log('  --concurrency        Parallel download threads (default: 3)');
     console.log('  --storage            Storage type: local|cloud (default: local)');
     console.log('  --batchSize          Limit number of new AI generation requests (0 = unlimited)');
@@ -82,9 +97,11 @@ async function main() {
 
   console.log(`📁 Project Directory: ${projectDir}`);
   console.log(`🔍 Provider Mode: ${args.provider || 'multi-provider (all available)'}`);
-  console.log(`📥 Download: ${args.download && !args.skipDownload ? 'enabled' : 'disabled'}`);
+  console.log(`📥 Download: ${args.download && !args.skipDownload ? 'enabled (staging)' : 'disabled (URL-only mode)'}`);
   if (args.download && !args.skipDownload) {
     console.log(`   Quality: ${args.quality}, Count per scene: ${args.downloadCount}`);
+  } else {
+    console.log(`   → Resources will be downloaded during Import step (resource-import.js)`);
   }
   if (args.batchSize > 0) {
     console.log(`   Batch Size: ${args.batchSize} (AI generation limited)`);
@@ -244,6 +261,9 @@ async function main() {
     }
 
     const outputPath = await jsonBuilder.saveToFile(projectDir, resourcesJSON);
+
+    // Update production status
+    updateProductionStatus(projectDir);
 
     // Step 7: Print summary
     console.log('\n╔═══════════════════════════════════════════════════════╗');

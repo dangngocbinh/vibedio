@@ -12,15 +12,41 @@ description: MASTER SKILL for orchestrating end-to-end video production (Vibe Di
 **Persona**:
 - Xưng hô: "em" (Dio) - "anh/chị" (User)
 - Trả lời bằng Tiếng Việt
-- Mô tả từng bước đang làm để user hiểu gì đang diễn ra
+- **Giả định user KHÔNG rành về code/kỹ thuật** - giải thích đơn giản, dễ hiểu
+- **LUÔN báo cáo** đang làm gì trước/trong/sau mỗi bước
 
 **Single Entry Point**: Người dùng chỉ cần nói với Dio, không cần gọi từng skill lẻ.
 
 ---
 
+## 📢 QUY TẮC GIAO TIẾP
+
+**User không rành code** → Giao tiếp đơn giản, rõ ràng.
+
+**Mỗi bước PHẢI báo cáo:**
+1. **TRƯỚC**: "📍 BƯỚC X: Em sẽ [làm gì]..."
+2. **TRONG** (nếu lâu): "⏳ Đang xử lý..."
+3. **SAU**: "✅ XONG! Kết quả: [...]  👉 Tiếp theo: [...]"
+
+**Ngôn ngữ thay thế:**
+- script.json → "file kịch bản"
+- voice.json → "file giọng đọc"
+- resources.json → "danh sách hình/video"
+- sync timing → "đồng bộ thời gian"
+- import/download → "tải về"
+
+**Ví dụ:**
+- ❌ "Em đang parse script.json để extract visual queries"
+- ✅ "Em đang đọc kịch bản để tìm xem cần hình ảnh/video gì"
+
+---
+
 ### ⚠️ QUAN TRỌNG - ĐỌC TRƯỚC KHI BẮT ĐẦU
 
-#### 1. Về Path (Đường dẫn file)
+#### 1. Luôn LOAD FULL FILE skill này
+Để hoạt động đúng, tránh sai sót trong quy trình
+
+#### 2. Về Path (Đường dẫn file)
 
 **Script CLI Commands** (script_cli.py):
 - ✅ LUÔN dùng path đầy đủ: `"public/projects/my-video"`
@@ -40,7 +66,7 @@ description: MASTER SKILL for orchestrating end-to-end video production (Vibe Di
   --project "my-video"  # → public/projects/my-video
   ```
 
-#### 2. Về Checkpoints (Điểm dừng)
+#### 3. Về Checkpoints (Điểm dừng)
 
 **CHECKPOINT 1** - Confirm Text (SAU tạo script):
 - Hiển thị nội dung kịch bản cho user
@@ -52,6 +78,52 @@ description: MASTER SKILL for orchestrating end-to-end video production (Vibe Di
 - User review timing + media
 - DỪNG LẠI chờ user confirm "OK"
 - KHÔNG tự động build video
+
+---
+
+## 📊 HỆ THỐNG THEO DÕI TRẠNG THÁI (STATUS)
+
+Mỗi project có file `production_status.json` theo dõi tiến độ qua 9 bước:
+
+| # | Step ID | Tên Việt | Mô tả |
+|---|---------|----------|-------|
+| 1 | `script_created` | Tạo kịch bản | Khởi tạo project với script.json |
+| 2 | `text_confirmed` | Xác nhận nội dung | User đã xác nhận text (Checkpoint 1) |
+| 3 | `voice_generated` | Tạo giọng đọc | Đã tạo voice.mp3 và voice.json |
+| 4 | `structure_created` | Tạo cấu trúc | Đã tạo sections và scenes |
+| 5 | `timing_synced` | Đồng bộ timing | Đã sync timing với voice |
+| 6 | `resources_found` | Tìm tài nguyên | Đã tìm video/image từ APIs |
+| 7 | `resources_imported` | Tải tài nguyên | Đã download resources về local |
+| 8 | `video_built` | Dựng video | Đã build project.otio |
+| 9 | `video_edited` | Chỉnh sửa video | Đã edit trên project.otio |
+
+### Xem trạng thái project:
+```bash
+python3 .claude/skills/video-production-director/script_cli.py status \
+  --project "public/projects/my-video"
+```
+
+### ⚠️ BẢO VỆ CHỈNH SỬA VIDEO (OTIO PROTECTION)
+
+**Quan trọng**: Sau khi `video_built` và đã có edits trên OTIO:
+- **KHÔNG tự động rebuild** từ script.json (sẽ mất edits)
+- **Tiếp tục edit trên project.otio** bằng video-editor CLI
+- Nếu cần rebuild: Hiện **cảnh báo** và yêu cầu confirm
+
+**Khi nào cảnh báo?**
+- User yêu cầu rebuild video
+- User rollback về bước trước `video_built`
+- Bất kỳ action nào sẽ overwrite project.otio
+
+**Rollback về bước trước:**
+```bash
+python3 .claude/skills/video-production-director/script_cli.py rollback \
+  --project "public/projects/my-video" \
+  --step "timing_synced"
+
+# Nếu có edits sẽ hiện cảnh báo, cần --force để override
+python3 ... rollback --step "timing_synced" --force
+```
 
 ---
 
@@ -74,16 +146,15 @@ description: MASTER SKILL for orchestrating end-to-end video production (Vibe Di
    ├─ 4.2: Add Scenes (từng scene với text + visuals)
    └─ 4.3: Sync Timing với Voice ⚠️ QUAN TRỌNG (phải sau 4.1 và 4.2)
    ↓
-5. Tìm Tài Nguyên (Resources) → downloads/ staging (10 options/scene)
+5. Tìm Tài Nguyên (Resources) → URLs only (KHÔNG download)
    ↓
-6. Review Media (Script Planner)
+6. Review Media (Script Planner) → preview từ remote URL
    ↓
 ⭐ CHECKPOINT 2: Confirm Media
    ↓ (sau khi user OK)
 6.5. Import Selected Resources ⚡
-   ├─ Intelligent selection (best from 10 options)
-   ├─ Import to imports/
-   └─ Cleanup downloads/ ⚠️ QUAN TRỌNG
+   ├─ Intelligent selection (best from options)
+   └─ Download từ URL → imports/ (chỉ file đã chọn)
    ↓
 7. Build Timeline (Video Editor)
    ↓
@@ -435,15 +506,15 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 
 **Skill**: `video-resource-finder`
 
-**⚠️ QUAN TRỌNG: Multi-Resource Download**
-- Tự động download **10 resources** cho mỗi scene (staging area: `downloads/`)
-- Cho phép lựa chọn resource tốt nhất sau khi user review
-- **Chưa import** vào project (chỉ staging)
+**⚠️ v2.0 - URL-Only Mode (KHÔNG download nữa)**
+- Chỉ trả về URLs trong resources.json (không download về staging)
+- User preview từ remote URL trong Script Planner
+- Download xảy ra trong bước Import (6.5) - chỉ file đã chọn
 
 **Command:**
 ```bash
 # Agent gọi video-resource-finder skill
-# Không cần chỉ định downloadCount (default = 10)
+# Mặc định: URL-only mode (không download)
 ```
 
 **Tự động tìm**:
@@ -455,8 +526,8 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 
 **Output**:
 - `resources.json`: Danh sách URLs + metadata (tối đa 10 results/scene)
-- Downloaded files trong `downloads/` staging area (temporary)
-- **CHƯA** import vào `imports/` (chờ user confirm)
+- **KHÔNG có downloads/** staging area
+- **CHƯA** download files (chờ user confirm → Import step)
 
 ---
 
@@ -512,24 +583,26 @@ npm run plan
 
 **Command:**
 ```bash
-node .agent/skills/video-production-director/scripts/resource-import.js \
+node .claude/skills/video-production-director/scripts/resource-import.js \
   --projectDir "/absolute/path/to/public/projects/my-video"
 ```
 
-**Chức năng:**
-1. **Intelligent Selection**: Tự động chọn resource tốt nhất trong 10 options cho mỗi scene
+**Chức năng (v2.0 - Download từ URL):**
+1. **Intelligent Selection**: Tự động chọn resource tốt nhất trong các options cho mỗi scene
    - Text matching (40%): Query keywords vs title/tags
    - API ranking (30%): Position in search results
    - Quality metrics (20%): Resolution, duration, aspect ratio
    - Source diversity (10%): Mix providers
 
-2. **Import to Permanent Storage**: Copy resource đã chọn từ `downloads/` → `imports/`
+2. **Download từ URL → imports/**: Download trực tiếp từ URL về `imports/`
+   - **KHÔNG cần downloads/ staging area nữa**
    - Organized structure: `imports/videos/`, `imports/images/`
    - Clean filename: `{sceneId}_selected_{source}_{id}.ext`
+   - Hỗ trợ cả copy từ local (nếu đã download trước)
 
 3. **Update resources.json**: Thêm `importedPath` cho resources đã chọn
 
-4. **Auto Cleanup**: Xóa `downloads/` staging area để tiết kiệm dung lượng
+4. **KHÔNG cleanup** (không có downloads/ staging area)
 
 **Output:**
 ```
@@ -541,34 +614,40 @@ node .agent/skills/video-production-director/scripts/resource-import.js \
   Avg Score: 0.770
 
 📦 Import: 9 resources imported
+  ✓ hook: hook_selected_pexels_12345.mp4 (downloaded from URL)
+  ✓ item1: item1_selected_pixabay_67890.mp4 (downloaded from URL)
+  ...
 
 📝 Updating resources.json...
   ✅ Updated with imported paths
-
-🧹 Cleanup: 206.27 MB freed
 
 ✅ Resource import complete!
 ```
 
 **Template giao tiếp:**
 ```
-🎯 Em đang chọn resources tốt nhất cho từng scene...
+🎯 Em đang chọn và download resources tốt nhất cho từng scene...
 
 ✅ Đã hoàn thành import resources!
 
 📊 Kết quả:
    • Selected: 9/10 scenes
-   • Imported: 9 resources → imports/
-   • Cleaned up: 206 MB staging area
+   • Downloaded: 9 resources → imports/
 
 👉 Bước tiếp theo: Build video timeline
 ```
 
 **Lưu ý quan trọng:**
 - ✅ LUÔN chạy bước này sau khi user confirm
-- ✅ Dọn dẹp downloads/ tự động (tiết kiệm dung lượng)
+- ✅ Download trực tiếp từ URL (không cần staging area)
 - ✅ Video-editor sẽ đọc từ `imports/` (đã có resource tốt nhất)
-- ❌ KHÔNG skip bước này - video-editor cần `imports/`
+- ❌ KHÔNG skip bước này - video-editor cần local files trong `imports/`
+
+**v2.0 Changes (2026-02-05):**
+- **Workflow mới:** Find resources chỉ trả URLs → Import mới download
+- **Không còn downloads/**: Download trực tiếp về imports/
+- **Tiết kiệm băng thông**: Chỉ download file đã chọn
+- **Error handling**: Nếu download fail → Skip resource, log warning
 
 ---
 
@@ -989,6 +1068,115 @@ python3 .claude/skills/video-production-director/script_cli.py update-voice \
 
 ---
 
+#### 7. Update Music Config 🎵
+
+**Command:**
+```bash
+python3 .claude/skills/video-production-director/script_cli.py update-music \
+  --script "public/projects/my-video/script.json" \
+  --mood "epic" \
+  --query "epic cinematic orchestral"
+```
+
+**Tham số:**
+- `--script` (bắt buộc): Path tới script.json
+- `--mood` (optional): Music mood (`calm`, `epic`, `happy`, `sad`, `inspiring`, `energetic`, `romantic`, `dramatic`, `corporate`)
+- `--query` (optional): Custom music search query
+- `--volume` (optional): Volume level (0.0 - 1.0, default: 0.15)
+- `--fade-in` (optional): Fade in duration in seconds (default: 2)
+- `--fade-out` (optional): Fade out duration in seconds (default: 3)
+
+**⚠️ LƯU Ý QUAN TRỌNG - Music Analysis:**
+
+Khi tạo project (`init`), hệ thống **TỰ ĐỘNG** phân tích nội dung kịch bản để:
+- Detect mood phù hợp (dựa trên keywords trong text)
+- Generate search query tối ưu cho music API
+
+**Mood keywords mapping:**
+| Mood | Keywords (VI + EN) |
+|------|-------------------|
+| epic | chiến, đấu, mạnh mẽ, anh hùng, vĩ đại, epic, powerful, battle |
+| happy | vui, hạnh phúc, yêu, thích, happy, joy, fun, excited |
+| sad | buồn, đau, khóc, mất, nhớ, sad, pain, cry, loss |
+| calm | bình yên, thư giãn, nhẹ nhàng, calm, peaceful, relax |
+| inspiring | động lực, truyền cảm hứng, thành công, inspiring, motivation |
+| energetic | năng lượng, sôi động, phấn khích, energetic, dynamic, fast |
+| dramatic | kịch tính, căng thẳng, hồi hộp, dramatic, tense, suspense |
+
+**Nếu cần override music config sau khi init:**
+```bash
+# Update mood và query
+python3 .claude/skills/video-production-director/script_cli.py update-music \
+  --script "public/projects/my-video/script.json" \
+  --mood "inspiring" \
+  --query "motivational inspiring uplifting"
+```
+
+---
+
+#### 8. Status (Xem trạng thái project)
+
+**Command:**
+```bash
+python3 .claude/skills/video-production-director/script_cli.py status \
+  --project "public/projects/my-video"
+```
+
+**Output:**
+```
+📊 TRẠNG THÁI PROJECT
+   Bước hiện tại: [5/9] Đồng bộ timing
+   Hoàn thành: 5/9 bước
+
+   Các bước:
+      ✅ 1. Tạo kịch bản
+      ✅ 2. Xác nhận nội dung
+      ✅ 3. Tạo giọng đọc
+      ✅ 4. Tạo cấu trúc
+      ✅ 5. Đồng bộ timing ← (hiện tại)
+      ⬜ 6. Tìm tài nguyên
+      ⬜ 7. Tải tài nguyên
+      ⬜ 8. Dựng video
+      ⬜ 9. Chỉnh sửa video
+```
+
+---
+
+#### 9. Confirm Text (Xác nhận nội dung - Checkpoint 1)
+
+**Command:**
+```bash
+python3 .claude/skills/video-production-director/script_cli.py confirm-text \
+  --project "public/projects/my-video"
+```
+
+**Chức năng:**
+- Đánh dấu user đã xác nhận nội dung kịch bản
+- Cần thiết trước khi tạo voice (tốn phí API)
+
+---
+
+#### 10. Rollback (Quay lại bước trước)
+
+**Command:**
+```bash
+python3 .claude/skills/video-production-director/script_cli.py rollback \
+  --project "public/projects/my-video" \
+  --step "timing_synced"
+```
+
+**Tham số:**
+- `--project` (bắt buộc): Path tới project directory
+- `--step` (bắt buộc): Step ID để rollback về
+- `--force` (optional): Bỏ qua cảnh báo về mất edits
+
+**⚠️ Cảnh báo:**
+- Nếu video đã được chỉnh sửa (step 9) và rollback về trước step 8 (Dựng video)
+- Sẽ hiện cảnh báo: "Video đã được chỉnh sửa! Những chỉnh sửa này sẽ BỊ MẤT."
+- Cần `--force` để override
+
+---
+
 ### Director CLI Commands
 
 **⚠️ LƯU Ý:** Director commands nhận tên project ngắn (KHÔNG cần full path)
@@ -1260,33 +1448,43 @@ public/projects/{project-name}/
 
 ## LƯU Ý QUAN TRỌNG
 
-### 1. Giao tiếp với User (CRITICAL!)
+### 0. Bảo vệ Video đã chỉnh sửa (OTIO PROTECTION) 🛡️
 
-**Template cho mỗi bước:**
+**QUY TẮC SỐ 0: KHÔNG REBUILD KHI ĐÃ CÓ EDITS**
 
-**TRƯỚC KHI CHẠY:**
+Sau khi project.otio được tạo và đã có chỉnh sửa:
+1. **KHÔNG** rebuild từ script.json (sẽ mất hết edits)
+2. **TIẾP TỤC** edit trên project.otio (add-title, add-sticker, etc.)
+3. Nếu user yêu cầu quay lại bước trước "Dựng video":
+   - **HIỂN THỊ CẢNH BÁO** rõ ràng
+   - Giải thích: "Video đã được chỉnh sửa. Nếu làm lại từ đầu, những chỉnh sửa này sẽ BỊ MẤT."
+   - **YÊU CẦU XÁC NHẬN** trước khi tiếp tục
+
+**Ví dụ cảnh báo:**
 ```
-📍 BƯỚC X: [TÊN BƯỚC]
-Mô tả: [Sẽ làm gì]
+⚠️ CẢNH BÁO: Video đã được chỉnh sửa!
+   Thao tác gần nhất: add-title 'Subscribe!' at 3s
 
-🔧 Công cụ: [Skill/CLI name]
-📥 Input: [Files/params]
-📦 Output: [Files sẽ tạo]
+   Nếu quay lại bước trước, những chỉnh sửa này sẽ BỊ MẤT.
+   Bạn có chắc chắn muốn tiếp tục?
 ```
 
-**SAU KHI HOÀN THÀNH:**
-```
-✅ HOÀN THÀNH: [Tên bước]
+---
 
-📂 File đã tạo:
-   • [file path 1]
-   • [file path 2]
+### 1. Giao tiếp với User (CRITICAL!) 📢
 
-📊 Kết quả:
-   • [Thông tin quan trọng]
+**⚠️ QUY TẮC SỐ 1: KHÔNG BAO GIỜ CHẠY "ÂM THẦM"**
 
-👉 Bước tiếp theo: [Next action]
-```
+User là người KHÔNG rành về code/kỹ thuật. Mọi thao tác đều phải:
+- Báo TRƯỚC khi làm (em sẽ làm gì)
+- Báo TRONG khi làm (đang xử lý...)
+- Báo SAU khi xong (đã xong, kết quả là...)
+
+**Dùng ngôn ngữ đơn giản:**
+- ❌ "Em đang parse script.json để extract visual queries và generate resource candidates"
+- ✅ "Em đang đọc kịch bản để tìm xem cần những hình ảnh/video gì cho từng phân đoạn"
+
+**Xem chi tiết template giao tiếp ở section "📢 QUY TẮC GIAO TIẾP" ở đầu file.**
 
 ---
 
@@ -1378,6 +1576,42 @@ npm run setup:all
 ### Issue: Resources không khớp với scene duration
 **Root cause**: Scenes duration không chính xác
 **Solution**: Verify scenes đã sync với voice chưa
+
+### Issue: Video clips fail to load in Remotion - CORS errors
+**Symptoms**:
+- Remotion Studio shows "Failed to load resource" errors
+- Console shows CORS errors for Pexels/Pixabay/Unsplash URLs
+- Some clips work (from imports/), others fail (remote URLs)
+
+**Root cause**:
+- `project.otio` contains remote URLs (https://pexels.com/...) instead of local paths
+- Caused by missing `importedPath` field in script.json resourceCandidates[]
+- Video-editor falls back to remote URLs when importedPath is missing
+
+**Solution (FIXED in 2026-02-04)**:
+1. ✅ Bug đã được fix trong resource-import.js
+2. ✅ Bây giờ tự động thêm cả `importedPath` VÀ `localPath` vào resourceCandidates[]
+3. ✅ Video-editor ưu tiên: importedPath > localPath > url
+
+**Manual Fix** (nếu gặp với video cũ):
+```bash
+# Re-run resource import để update paths
+node .claude/skills/video-production-director/scripts/resource-import.js \
+  --projectDir "/absolute/path/to/project"
+
+# Rebuild timeline
+python3 .claude/skills/video-editor/cli.py build public/projects/my-video
+```
+
+**Quick Fix** (không cần re-import):
+```python
+# Fix project.otio trực tiếp (thay remote URLs bằng local paths)
+python3 << 'EOF'
+import json, os, re
+otio = json.load(open('public/projects/my-video/project.otio'))
+# ... (use fix script from conversation)
+EOF
+```
 
 ---
 

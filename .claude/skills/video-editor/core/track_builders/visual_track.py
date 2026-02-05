@@ -287,7 +287,7 @@ class VisualTrackBuilder:
             clips = self._create_clips_from_selected_ids(selected_ids, scene, resources, duration)
         else:
             # Fallback to searching resources by scene ID
-            clips = self._create_clips_from_resources(scene_id, resources, duration)
+            clips = self._create_clips_from_resources(scene_id, scene, resources, duration)
 
         # If no clips found, create a placeholder
         if not clips:
@@ -330,20 +330,41 @@ class VisualTrackBuilder:
                 resource = self._find_resource_by_id(resource_id, resources)
 
             if resource:
-                # Get local path
-                local_path = resource.get('localPath')
-                if local_path and self.asset_resolver:
-                    url = self.asset_resolver.sanitize_for_otio(local_path)
+                # Resolve URL using AssetResolver for consistent priority (importedPath > localPath > url)
+                if self.asset_resolver:
+                    url = self.asset_resolver.resolve_resource_url(resource)
                 else:
-                    url = resource.get('url', '')
+                    url = resource.get('importedPath') or resource.get('localPath') or resource.get('url', '')
+
+                # Log warning when using remote URL instead of local
+                if url and url.startswith('http'):
+                    print(f"⚠️ Scene {i+1}: Using remote URL (no local file): {url[:80]}...")
 
                 if url:
+                    # Check if image
+                    path_lower = url.lower()
+                    is_image = path_lower.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'))
+
                     # Create clip
                     metadata = resource.get('metadata', {})
                     if resource.get('width'):
                         metadata['original_width'] = resource['width']
                     if resource.get('height'):
                         metadata['original_height'] = resource['height']
+
+                    # Apply image effect (default to ken-burns if not specified)
+                    if is_image:
+                        # Try to get style from scene visuals or visualDescription
+                        scene_style = 'ken-burns'
+                        visuals = scene.get('visuals', [])
+                        if visuals:
+                            for v in visuals:
+                                if v.get('style'):
+                                    scene_style = v.get('style')
+                                    break
+                        
+                        metadata['effect'] = scene_style
+                        metadata['is_image'] = True
 
                     clip = self._create_clip_from_url(
                         url=url,
@@ -360,6 +381,7 @@ class VisualTrackBuilder:
     def _create_clips_from_resources(
         self,
         scene_id: str,
+        scene: Dict[str, Any],
         resources: Dict[str, Any],
         target_duration: float
     ) -> List[otio.schema.Clip]:
@@ -396,6 +418,20 @@ class VisualTrackBuilder:
         path_lower = resource_url.lower()
         is_image = path_lower.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'))
         
+        # Apply image effect
+        if is_image:
+            # Try to get style from scene visuals
+            scene_style = 'ken-burns'
+            visuals = scene.get('visuals', [])
+            if visuals:
+                for v in visuals:
+                    if v.get('style'):
+                        scene_style = v.get('style')
+                        break
+            
+            metadata['effect'] = scene_style
+            metadata['is_image'] = True
+
         clip = self._create_clip_from_url(
             url=resource_url,
             name=f"{scene_id} {'Image' if is_image else 'Video'} 1",

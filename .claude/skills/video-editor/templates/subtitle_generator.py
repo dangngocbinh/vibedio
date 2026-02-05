@@ -171,7 +171,7 @@ class SubtitleGenerator:
         clip.metadata['props'] = {
             'text': phrase['text'],
             'words': phrase['words'],
-            'theme': subtitle_style.get('theme', 'clean-minimal'),  # Default theme
+            'theme': subtitle_style.get('theme', 'gold-bold'),  # Default theme
             'position': subtitle_style.get('position', 'bottom'),  # Default to bottom for TikTok style
             'font': subtitle_style.get('font'),  # Let theme handle default
             'highlightColor': subtitle_style.get('highlightColor'),  # Let theme handle default

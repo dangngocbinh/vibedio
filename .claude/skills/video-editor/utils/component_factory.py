@@ -57,6 +57,60 @@ class ComponentFactory:
         return clip
 
     @staticmethod
+    def create_lower_third(
+        title: str,
+        start_time: float,
+        duration: float,
+        template: str = 'modern-skew',
+        subtitle: str = '',
+        primary_color: str = '#3498db',
+        secondary_color: str = '#ffffff',
+        text_color: str = '#2c3e50',
+        fps: int = 30
+    ) -> otio.schema.Clip:
+        """
+        Create LowerThird overlay clip.
+
+        Args:
+            title: Main title text
+            start_time: Start time in seconds
+            duration: Duration in seconds
+            template: Template name
+            subtitle: Optional subtitle text
+            primary_color: Primary color hex
+            secondary_color: Secondary color hex
+            text_color: Text color hex
+            fps: Frames per second
+
+        Returns:
+            OTIO Clip with LowerThird metadata
+        """
+        timing = TimingCalculator(fps)
+        media_ref = otio.schema.MissingReference()
+        source_range = timing.create_time_range(start_time, duration)
+
+        clip = otio.schema.Clip(
+            name=f"LowerThird: {title[:20]}",
+            media_reference=media_ref,
+            source_range=source_range
+        )
+
+        clip.metadata['remotion_component'] = 'LowerThird'
+        clip.metadata['globalTimelineStart'] = str(start_time)
+        clip.metadata['props'] = {
+            'title': title,
+            'template': template,
+            'primaryColor': primary_color,
+            'secondaryColor': secondary_color,
+            'textColor': text_color,
+        }
+
+        if subtitle:
+            clip.metadata['props']['subtitle'] = subtitle
+
+        return clip
+
+    @staticmethod
     def create_section_title_card(
         text: str,
         duration: float,

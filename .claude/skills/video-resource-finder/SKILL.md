@@ -6,19 +6,20 @@ description: Tự động tìm kiếm, tải về stock resources (video, image,
 
 ## MỤC ĐÍCH
 
-Tự động tìm kiếm và **tải về** FREE resources cho video production từ nhiều nguồn:
+Tự động tìm kiếm FREE resources cho video production từ nhiều nguồn:
 - **Stock Videos (B-roll)** - Từ Pexels, Pixabay
 - **Stock Images** - Từ Pexels, Unsplash, Pixabay
-- **Web Images** - 🆕 Từ DuckDuckGo web search (có thể download, với cảnh báo bản quyền)
+- **Web Images** - Từ DuckDuckGo web search (với cảnh báo bản quyền)
 - **AI Generated Images** - Từ Gemini Nano Banana (cho nội dung sáng tạo/minh họa)
 - **Background Music** - Từ Pixabay Music
 - **Sound Effects** - Từ Pixabay SFX
 
-**🆕 v1.1 - Auto Download:**
-- Tự động tải resources về local để tránh lỗi CORS khi sử dụng
-- Lưu trữ theo cấu trúc: `downloads/videos/`, `downloads/images/`, `downloads/music/`, `downloads/sfx/`
-- Hỗ trợ chọn quality: best (4K/original), hd, sd, medium
-- Thiết kế sẵn cho cloud storage integration trong tương lai
+**🆕 v2.0 - URL-Only Mode (Default):**
+- Mặc định KHÔNG download - chỉ trả về URLs trong resources.json
+- Resources được download trong bước Import (resource-import.js)
+- Tiết kiệm băng thông và thời gian (chỉ download file đã chọn)
+- User preview từ remote URL trong Script Planner
+- Download staging vẫn có thể bật với `--download` flag nếu cần
 
 **🆕 AI Image Generation:**
 - Tự động generate ảnh khi scene có `type: "ai-generated"` hoặc `type: "illustration"`
@@ -28,14 +29,16 @@ Tự động tìm kiếm và **tải về** FREE resources cho video production 
 **🆕 Pinned Resources (User-provided assets):**
 - Scene có `type: "pinned"` → skip API search, dùng file/URL user cung cấp
 - Local files ngoài project tự động copy vào `imports/{videos,images,music,sfx}/`
-- Hỗ trợ path: absolute, `~/...`, relative to project, hoặc remote URL
+- Hỗ trợ path: relative to project, hoặc remote URL
 - Tên file được expand rõ ràng: `import_{sceneId}_{description}_{originalName}.ext`
 - Kết quả lưu trong `resources.pinnedResources[]` trong resources.json
 
 ## WORKFLOW
 
+### NEW Workflow (v2.0 - URL-Only Mode - Default)
+
 ```
-script.json → Read Scenes → Extract Queries → Call APIs/AI → Download → Build resources.json
+script.json → Read Scenes → Extract Queries → Call APIs/AI → Build resources.json (URLs only)
                                 ↓
                     [Stock Queries]    [AI Queries]
                           ↓                  ↓
@@ -43,7 +46,13 @@ script.json → Read Scenes → Extract Queries → Call APIs/AI → Download �
                           ↓                  ↓
                       Fallback ────────→ AI Generation
                           ↓
-                    📥 Download to local (downloads/)
+                    📄 resources.json (URLs, không có localPath)
+                          ↓
+                    👀 Script Planner (preview từ remote URL)
+                          ↓
+                    ✅ User Select → resource-import.js
+                          ↓
+                    📥 Download về imports/ (chỉ file đã chọn)
 ```
 
 **Chi tiết:**
@@ -58,8 +67,18 @@ script.json → Read Scenes → Extract Queries → Call APIs/AI → Download �
 6. Call Pixabay API cho music/SFX (và backup cho videos/images)
 7. Call Gemini API cho AI-generated images
 8. Fallback sang Gemini nếu stock search không có kết quả
-9. **📥 Tải resources về local** (mặc định tải 1 result tốt nhất mỗi scene)
-10. Lưu kết quả vào `resources.json` với localPath cho mỗi resource
+9. **Lưu kết quả vào `resources.json`** với downloadUrls (KHÔNG download file)
+10. **Download trong Import step** (resource-import.js) - chỉ file đã chọn
+
+### Legacy Workflow (với --download flag)
+
+Nếu cần download staging area (10 options/scene để preview local):
+
+```bash
+node scripts/find-resources.js --projectDir "..." --download
+```
+
+Workflow cũ: tìm → download 10 results/scene → downloads/ → select → import → cleanup
 
 ## INPUT PARAMETERS
 
@@ -74,16 +93,22 @@ script.json → Read Scenes → Extract Queries → Call APIs/AI → Download �
 - **`--enableAI`**: Bật AI image generation (default: true nếu có GEMINI_API_KEY)
 - **`--noAI`**: Tắt AI image generation (chỉ dùng stock)
 
-### Download Options (v1.1)
-- **`--download`**: Bật download (default: true)
-- **`--skipDownload`**: Tắt download, chỉ lấy URLs
-- **`--quality`**: Chọn quality: best | hd | sd | medium (default: best)
+### Download Options (v2.0 - Updated)
+- **`--download`**: Bật download staging (default: **false** - URL-only mode)
+- **`--skipDownload`**: Tắt download, chỉ lấy URLs (legacy, giống default mới)
+- **`--quality`**: Chọn quality khi download: best | hd | sd | medium (default: best)
   - `best`: Video 4K > HD, Image original > large
   - `hd`: Video HD, Image large
   - `sd`: Video SD, Image medium
-- **`--downloadCount`**: Số results tải mỗi scene (default: 1)
+- **`--downloadCount`**: Số results tải mỗi scene nếu download enabled (default: 10)
 - **`--concurrency`**: Số download song song (default: 3)
 - **`--storage`**: Loại storage: local | cloud (default: local, cloud cho tương lai)
+
+**Lưu ý v2.0:**
+- Mặc định KHÔNG download nữa
+- Resources được download trong bước Import (`resource-import.js`)
+- Chỉ file đã chọn mới được download về `imports/`
+- Không có `downloads/` staging area → không cần cleanup
 
 ### Execution Options (v1.2)
 - **`--batchSize`**: Giới hạn số lượng AI generation request mới (default: 0 = unlimited).
@@ -459,7 +484,7 @@ GEMINI_API_KEY=AIza...your_gemini_key...
 
 ## USAGE EXAMPLES
 
-### Example 1: Basic Usage (với download mặc định)
+### Example 1: Basic Usage (URL-only mode - Default)
 
 ```bash
 cd .claude/skills/video-resource-finder
@@ -467,30 +492,29 @@ cd .claude/skills/video-resource-finder
 # Install dependencies (first time only)
 npm install
 
-# Run skill - mặc định sẽ download với quality=best, 1 result mỗi scene
+# Run skill - mặc định chỉ trả về URLs, không download
 node scripts/find-resources.js \
   --projectDir "../../public/projects/tai-sao-ngu-8-tieng-van-met"
 ```
 
 **Output:**
 ```
-📥 Download: enabled
-   Quality: best, Count per scene: 1
+📥 Download: disabled (URL-only mode)
+   → Resources will be downloaded during Import step (resource-import.js)
 
 ✅ Found 15 videos, 6 images, 6 music tracks, 9 sound effects
-📥 Downloaded: 7 files to downloads/
 📄 resources.json saved to: public/projects/tai-sao-ngu-8-tieng-van-met/resources.json
 ```
 
-### Example 2: Chỉ lấy URLs (không download)
+### Example 2: Download Staging (Legacy workflow)
 
 ```bash
 node scripts/find-resources.js \
   --projectDir "../../public/projects/my-project" \
-  --skipDownload
+  --download
 ```
 
-Sẽ chỉ trả về URLs trong resources.json, không tải files về.
+Sẽ download files về `downloads/` staging area (workflow cũ).
 
 ### Example 3: Tùy chỉnh số lượng results và download
 

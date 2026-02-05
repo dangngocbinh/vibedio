@@ -22,7 +22,19 @@ class ProjectInitializer:
 
     def __init__(self):
         """Initialize ProjectInitializer."""
-        pass
+        # Mood detection keywords (Vietnamese + English)
+        self.mood_keywords = {
+            'epic': ['chiến', 'đấu', 'mạnh mẽ', 'anh hùng', 'vĩ đại', 'epic', 'powerful', 'battle', 'fight', 'warrior', 'hero'],
+            'happy': ['vui', 'hạnh phúc', 'yêu', 'thích', 'tuyệt vời', 'happy', 'joy', 'love', 'fun', 'excited', 'amazing', 'great'],
+            'sad': ['buồn', 'đau', 'khóc', 'mất', 'nhớ', 'sad', 'pain', 'cry', 'loss', 'miss', 'lonely', 'heartbreak'],
+            'calm': ['bình yên', 'thư giãn', 'nhẹ nhàng', 'yên tĩnh', 'calm', 'peaceful', 'relax', 'gentle', 'soft', 'quiet', 'meditation'],
+            'inspiring': ['động lực', 'truyền cảm hứng', 'thành công', 'mục tiêu', 'inspiring', 'motivation', 'success', 'goal', 'dream', 'achieve'],
+            'mysterious': ['bí ẩn', 'kỳ lạ', 'sự thật', 'khám phá', 'mystery', 'strange', 'secret', 'discover', 'unknown', 'curious'],
+            'energetic': ['năng lượng', 'sôi động', 'phấn khích', 'nhanh', 'energetic', 'dynamic', 'fast', 'active', 'upbeat', 'pumped'],
+            'romantic': ['lãng mạn', 'tình yêu', 'cặp đôi', 'hẹn hò', 'romantic', 'love', 'couple', 'date', 'heart', 'wedding'],
+            'dramatic': ['kịch tính', 'căng thẳng', 'hồi hộp', 'bất ngờ', 'dramatic', 'tense', 'suspense', 'twist', 'shocking'],
+            'corporate': ['công ty', 'doanh nghiệp', 'chuyên nghiệp', 'business', 'corporate', 'professional', 'company', 'startup', 'enterprise']
+        }
 
     @staticmethod
     def check_ffprobe() -> bool:
@@ -190,6 +202,61 @@ class ProjectInitializer:
             'fileSize': file_size
         }
 
+    def _analyze_music_mood(self, full_text: str, description: str) -> str:
+        """
+        Analyze script content to determine appropriate music mood.
+
+        Args:
+            full_text: Full script/narration text
+            description: Video description
+
+        Returns:
+            Mood string: 'calm', 'epic', 'happy', 'sad', 'inspiring', etc.
+        """
+        # Combine text for analysis
+        combined_text = f"{description} {full_text}".lower()
+
+        # Count keyword matches for each mood
+        mood_scores = {}
+        for mood, keywords in self.mood_keywords.items():
+            score = sum(1 for keyword in keywords if keyword.lower() in combined_text)
+            if score > 0:
+                mood_scores[mood] = score
+
+        # Return highest scoring mood, or 'calm' as default
+        if mood_scores:
+            return max(mood_scores, key=mood_scores.get)
+        return 'calm'
+
+    def _generate_music_query(self, full_text: str, description: str) -> str:
+        """
+        Generate music search query based on script content.
+
+        Args:
+            full_text: Full script/narration text
+            description: Video description
+
+        Returns:
+            Search query string for music API
+        """
+        mood = self._analyze_music_mood(full_text, description)
+
+        # Mood to query mapping
+        mood_queries = {
+            'epic': 'epic cinematic orchestral',
+            'happy': 'upbeat happy cheerful',
+            'sad': 'emotional piano melancholy',
+            'calm': 'calm ambient peaceful',
+            'inspiring': 'motivational inspiring uplifting',
+            'mysterious': 'mysterious dark ambient',
+            'energetic': 'energetic upbeat electronic',
+            'romantic': 'romantic piano love',
+            'dramatic': 'dramatic tension cinematic',
+            'corporate': 'corporate upbeat professional'
+        }
+
+        return mood_queries.get(mood, 'background ambient calm')
+
     def create_initial_script(
         self,
         project_dir: str,
@@ -311,14 +378,15 @@ class ProjectInitializer:
                 'audioPath': None
             },
             'music': {
-                'mood': 'calm',
+                'mood': self._analyze_music_mood(full_text, description),
+                'query': self._generate_music_query(full_text, description),
                 'volume': 0.15,
                 'fadeIn': 2,
                 'fadeOut': 3
             },
             'subtitle': {
                 'enabled': True,
-                'style': 'gold-bold',
+                'theme': 'gold-bold',
                 'position': 'bottom'
             }
         }

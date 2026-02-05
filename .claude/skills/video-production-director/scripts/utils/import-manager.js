@@ -1,14 +1,21 @@
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 /**
- * ImportManager - Manages resource import from staging to permanent storage
- * 
- * Workflow:
- * 1. Copy selected resources from downloads/ → imports/
+ * ImportManager - Manages resource import from URLs or staging to permanent storage
+ *
+ * NEW Workflow (v2.0 - URL-first):
+ * 1. Download from URL → imports/ (chỉ file đã chọn)
  * 2. Update resource paths to point to imports/
- * 3. Cleanup downloads/ staging area
+ * 3. NO cleanup (không có downloads/ staging nữa)
+ *
+ * Legacy Workflow (vẫn hỗ trợ):
+ * 1. Copy từ downloads/ → imports/ (nếu có localPath)
+ * 2. Update resource paths to point to imports/
+ * 3. Cleanup downloads/ staging area (optional)
  */
 class ImportManager {
     constructor(projectDir, options = {}) {
@@ -16,6 +23,7 @@ class ImportManager {
         this.downloadsDir = path.join(projectDir, 'downloads');
         this.importsDir = path.join(projectDir, 'imports');
         this.autoCleanup = options.autoCleanup !== false; // Default: true
+        this.downloadTimeout = options.downloadTimeout || 60000; // 60s default
     }
 
     /**
@@ -57,54 +65,219 @@ class ImportManager {
     }
 
     /**
-     * Import a single resource
+     * Import a single resource - supports both URL download and local copy
      * @param {Object} selection - {sceneId, resource} object
      * @returns {Promise<Object>} Updated resource with importedPath
      */
     async importSingleResource(selection) {
         const { sceneId, resource } = selection;
 
-        if (!resource.localPath) {
-            throw new Error(`Resource has no localPath to import`);
-        }
-
-        // Handle relative paths
-        let sourcePath = resource.localPath;
-        if (!path.isAbsolute(sourcePath)) {
-            sourcePath = path.resolve(this.projectDir, sourcePath);
-        }
-
-        // Check if file exists
-        try {
-            await fsp.access(sourcePath);
-        } catch (err) {
-            throw new Error(`Source file not found: ${sourcePath}`);
-        }
-
         // Determine resource type and target directory
         const type = this.detectResourceType(resource);
         const targetDir = path.join(this.importsDir, type);
-
         await fsp.mkdir(targetDir, { recursive: true });
 
-        // Generate import filename
-        const ext = path.extname(sourcePath);
+        // Strategy 1: Check if localPath exists (legacy workflow - copy from downloads/)
+        if (resource.localPath) {
+            let sourcePath = resource.localPath;
+            if (!path.isAbsolute(sourcePath)) {
+                sourcePath = path.resolve(this.projectDir, sourcePath);
+            }
+
+            try {
+                await fsp.access(sourcePath);
+                // File exists locally - copy it
+                const ext = path.extname(sourcePath);
+                const filename = this.generateImportFilename(sceneId, resource, ext);
+                const targetPath = path.join(targetDir, filename);
+
+                await fsp.copyFile(sourcePath, targetPath);
+                console.log(`  ✓ ${sceneId}: ${filename} (copied from local)`);
+
+                return {
+                    ...resource,
+                    sceneId, // Ensure sceneId is included for mapping
+                    importedPath: targetPath,
+                    relativePath: path.relative(this.projectDir, targetPath),
+                    originalDownloadPath: resource.localPath,
+                    importedAt: new Date().toISOString()
+                };
+            } catch (err) {
+                // Local file doesn't exist, try URL download
+                console.log(`  ℹ️ ${sceneId}: Local file not found, trying URL download...`);
+            }
+        }
+
+        // Strategy 2: Download from URL (NEW workflow)
+        const downloadUrl = this.getDownloadUrl(resource);
+        if (!downloadUrl) {
+            throw new Error(`Resource has no valid URL or localPath to import`);
+        }
+
+        // Generate filename from URL
+        const ext = this.getExtensionFromUrl(downloadUrl, type);
         const filename = this.generateImportFilename(sceneId, resource, ext);
         const targetPath = path.join(targetDir, filename);
 
-        // Copy file to imports/
-        await fsp.copyFile(sourcePath, targetPath);
+        // Download file
+        await this.downloadFromUrl(downloadUrl, targetPath);
+        console.log(`  ✓ ${sceneId}: ${filename} (downloaded from URL)`);
 
-        console.log(`  ✓ ${sceneId}: ${filename}`);
-
-        // Return updated resource
         return {
             ...resource,
+            sceneId, // Ensure sceneId is included for mapping
             importedPath: targetPath,
             relativePath: path.relative(this.projectDir, targetPath),
-            originalDownloadPath: resource.localPath,
+            downloadedFrom: downloadUrl,
             importedAt: new Date().toISOString()
         };
+    }
+
+    /**
+     * Get the best download URL from resource
+     * Priority: downloadUrls.hd > downloadUrls.sd > downloadUrl > url
+     */
+    getDownloadUrl(resource) {
+        // Check downloadUrls object
+        if (resource.downloadUrls) {
+            for (const quality of ['hd', 'sd', '4k', 'original', 'large', 'medium']) {
+                if (resource.downloadUrls[quality]) {
+                    return resource.downloadUrls[quality];
+                }
+            }
+        }
+
+        // Fallback to single downloadUrl
+        if (resource.downloadUrl) {
+            return resource.downloadUrl;
+        }
+
+        // Last resort: url (only if it looks like a direct media URL)
+        if (resource.url && this.isDirectMediaUrl(resource.url)) {
+            return resource.url;
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if URL is a direct media URL (not a page view)
+     */
+    isDirectMediaUrl(url) {
+        // Reject page URLs
+        if (url.includes('pexels.com/video/') || url.includes('pixabay.com/videos/')) {
+            return false;
+        }
+        if (url.includes('pexels.com/photo/') || url.includes('pixabay.com/photos/')) {
+            return false;
+        }
+        // Accept direct CDN URLs
+        const cdnPatterns = ['cdn.pexels.com', 'cdn.pixabay.com', 'vimeo.com', 'player.vimeo.com'];
+        if (cdnPatterns.some(cdn => url.includes(cdn))) {
+            return true;
+        }
+        // Accept URLs ending with media extensions
+        const mediaExts = ['.mp4', '.mov', '.webm', '.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp3', '.wav'];
+        if (mediaExts.some(ext => url.toLowerCase().endsWith(ext))) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get file extension from URL or default based on type
+     */
+    getExtensionFromUrl(url, type) {
+        // Try to extract from URL
+        const urlPath = new URL(url).pathname;
+        const ext = path.extname(urlPath);
+        if (ext && ext.length <= 5) {
+            return ext;
+        }
+
+        // Default extensions by type
+        const defaults = {
+            'videos': '.mp4',
+            'images': '.jpg',
+            'music': '.mp3',
+            'sfx': '.mp3',
+            'misc': ''
+        };
+        return defaults[type] || '';
+    }
+
+    /**
+     * Download file from URL to destination path
+     * @param {string} url - URL to download from
+     * @param {string} destPath - Destination file path
+     */
+    async downloadFromUrl(url, destPath) {
+        return new Promise((resolve, reject) => {
+            const protocol = url.startsWith('https') ? https : http;
+            const tempPath = destPath + '.tmp';
+
+            const file = fs.createWriteStream(tempPath);
+            let redirectCount = 0;
+            const maxRedirects = 5;
+
+            const makeRequest = (requestUrl) => {
+                const request = protocol.get(requestUrl, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+                    },
+                    timeout: this.downloadTimeout
+                }, (response) => {
+                    // Handle redirects
+                    if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                        redirectCount++;
+                        if (redirectCount > maxRedirects) {
+                            file.close();
+                            fs.unlinkSync(tempPath);
+                            reject(new Error(`Too many redirects for: ${url}`));
+                            return;
+                        }
+                        file.close();
+                        // Follow redirect
+                        const redirectUrl = response.headers.location.startsWith('http')
+                            ? response.headers.location
+                            : new URL(response.headers.location, requestUrl).href;
+                        makeRequest(redirectUrl);
+                        return;
+                    }
+
+                    if (response.statusCode !== 200) {
+                        file.close();
+                        fs.unlinkSync(tempPath);
+                        reject(new Error(`Failed to download: ${url} (status: ${response.statusCode})`));
+                        return;
+                    }
+
+                    response.pipe(file);
+
+                    file.on('finish', () => {
+                        file.close();
+                        // Rename temp file to final
+                        fs.renameSync(tempPath, destPath);
+                        resolve();
+                    });
+                });
+
+                request.on('error', (err) => {
+                    file.close();
+                    try { fs.unlinkSync(tempPath); } catch (e) { }
+                    reject(new Error(`Download error for ${url}: ${err.message}`));
+                });
+
+                request.on('timeout', () => {
+                    request.destroy();
+                    file.close();
+                    try { fs.unlinkSync(tempPath); } catch (e) { }
+                    reject(new Error(`Download timeout for: ${url}`));
+                });
+            };
+
+            makeRequest(url);
+        });
     }
 
     /**
@@ -113,6 +286,14 @@ class ImportManager {
      * @returns {string} Type: 'videos', 'images', 'music', 'sfx'
      */
     detectResourceType(resource) {
+        // Check explicit type field first
+        if (resource.type) {
+            if (resource.type === 'video') return 'videos';
+            if (resource.type === 'image') return 'images';
+            if (resource.type === 'music' || resource.type === 'audio') return 'music';
+            if (resource.type === 'sfx') return 'sfx';
+        }
+
         // Check explicit source
         if (resource.source) {
             if (resource.source.includes('music') || resource.source === 'pixabay-scraper') {
@@ -123,8 +304,9 @@ class ImportManager {
             }
         }
 
-        // Check file extension
-        const ext = path.extname(resource.localPath || '').toLowerCase();
+        // Check file extension from localPath or URL
+        const urlForExt = resource.localPath || resource.downloadUrl || resource.url || '';
+        const ext = path.extname(new URL(urlForExt, 'file://').pathname || '').toLowerCase();
 
         const videoExts = ['.mp4', '.mov', '.webm', '.avi', '.mkv'];
         const imageExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
@@ -159,6 +341,7 @@ class ImportManager {
 
     /**
      * Import music to imports/music/ directory
+     * Supports both local copy and URL download
      * @param {Object} musicResource - Music resource object from resources.json
      * @returns {Promise<Object>} Import result with music info
      */
@@ -166,38 +349,59 @@ class ImportManager {
         console.log(`\n🎵 Importing background music...`);
 
         try {
-            if (!musicResource.localPath) {
-                throw new Error(`Music resource has no localPath to import`);
-            }
-
-            // Handle relative paths
-            let sourcePath = musicResource.localPath;
-            if (!path.isAbsolute(sourcePath)) {
-                sourcePath = path.resolve(this.projectDir, sourcePath);
-            }
-
-            // Check if file exists
-            try {
-                await fsp.access(sourcePath);
-            } catch (err) {
-                throw new Error(`Music file not found: ${sourcePath}`);
-            }
-
             // Create music directory
             const musicDir = path.join(this.importsDir, 'music');
             await fsp.mkdir(musicDir, { recursive: true });
 
-            // Generate filename: background-music_{source}_{id}.ext
-            const ext = path.extname(sourcePath);
             const source = (musicResource.source || 'unknown').split('-')[0];
             const id = musicResource.id ? String(musicResource.id).split('-').pop() : 'unknown';
+
+            // Strategy 1: Try local file first
+            if (musicResource.localPath) {
+                let sourcePath = musicResource.localPath;
+                if (!path.isAbsolute(sourcePath)) {
+                    sourcePath = path.resolve(this.projectDir, sourcePath);
+                }
+
+                try {
+                    await fsp.access(sourcePath);
+                    // File exists locally - copy it
+                    const ext = path.extname(sourcePath);
+                    const filename = `background-music_${source}_${id}${ext}`;
+                    const targetPath = path.join(musicDir, filename);
+
+                    await fsp.copyFile(sourcePath, targetPath);
+                    console.log(`  ✓ ${musicResource.title || filename} (copied from local)`);
+
+                    return {
+                        success: true,
+                        music: {
+                            ...musicResource,
+                            id: musicResource.id,
+                            title: musicResource.title,
+                            importedPath: targetPath,
+                            relativePath: path.relative(this.projectDir, targetPath),
+                            originalDownloadPath: musicResource.localPath,
+                            importedAt: new Date().toISOString()
+                        }
+                    };
+                } catch (err) {
+                    console.log(`  ℹ️ Music local file not found, trying URL download...`);
+                }
+            }
+
+            // Strategy 2: Download from URL
+            const downloadUrl = this.getDownloadUrl(musicResource);
+            if (!downloadUrl) {
+                throw new Error(`Music resource has no valid URL or localPath to import`);
+            }
+
+            const ext = this.getExtensionFromUrl(downloadUrl, 'music');
             const filename = `background-music_${source}_${id}${ext}`;
             const targetPath = path.join(musicDir, filename);
 
-            // Copy file to imports/music/
-            await fsp.copyFile(sourcePath, targetPath);
-
-            console.log(`  ✓ ${musicResource.title || filename}`);
+            await this.downloadFromUrl(downloadUrl, targetPath);
+            console.log(`  ✓ ${musicResource.title || filename} (downloaded from URL)`);
 
             return {
                 success: true,
@@ -207,7 +411,7 @@ class ImportManager {
                     title: musicResource.title,
                     importedPath: targetPath,
                     relativePath: path.relative(this.projectDir, targetPath),
-                    originalDownloadPath: musicResource.localPath,
+                    downloadedFrom: downloadUrl,
                     importedAt: new Date().toISOString()
                 }
             };

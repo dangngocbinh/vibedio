@@ -54,6 +54,47 @@ class OverlayEditor:
         insert_index = self._find_insert_index(overlays_track, at_second)
         overlays_track.insert(insert_index, clip)
 
+    def add_lower_third(
+        self,
+        title: str,
+        at_second: float,
+        duration: float,
+        template: str = 'modern-skew',
+        subtitle: str = '',
+        primary_color: str = '#3498db',
+        secondary_color: str = '#ffffff',
+        text_color: str = '#2c3e50'
+    ) -> None:
+        """
+        Add lower-third overlay to timeline.
+
+        Args:
+            title: Main title text
+            at_second: Start time in seconds
+            duration: Duration in seconds
+            template: Lower third template
+            subtitle: Optional subtitle text
+            primary_color: Primary color hex
+            secondary_color: Secondary color hex
+            text_color: Text color hex
+        """
+        overlays_track = self._get_or_create_overlay_track()
+
+        clip = ComponentFactory.create_lower_third(
+            title=title,
+            start_time=at_second,
+            duration=duration,
+            template=template,
+            subtitle=subtitle,
+            primary_color=primary_color,
+            secondary_color=secondary_color,
+            text_color=text_color,
+            fps=self.fps
+        )
+
+        insert_index = self._find_insert_index(overlays_track, at_second)
+        overlays_track.insert(insert_index, clip)
+
     def add_sticker(
         self,
         emoji: str,
@@ -61,7 +102,8 @@ class OverlayEditor:
         duration: float,
         position: str = 'center',
         size: str = 'medium',
-        animation: str = 'bounce'
+        animation: str = 'bounce',
+        track_name: str = "Overlays"
     ) -> None:
         """
         Add sticker overlay to timeline.
@@ -73,8 +115,9 @@ class OverlayEditor:
             position: Position on screen
             size: Sticker size
             animation: Animation type
+            track_name: Name of the track to add to
         """
-        overlays_track = self._get_or_create_overlay_track()
+        target_track = self._get_or_create_track(track_name)
 
         clip = ComponentFactory.create_sticker(
             emoji=emoji,
@@ -86,8 +129,8 @@ class OverlayEditor:
             fps=self.fps
         )
 
-        insert_index = self._find_insert_index(overlays_track, at_second)
-        overlays_track.insert(insert_index, clip)
+        insert_index = self._find_insert_index(target_track, at_second)
+        target_track.insert(insert_index, clip)
 
     def add_effect(
         self,
@@ -179,22 +222,27 @@ class OverlayEditor:
 
         return False
 
+    def _get_or_create_track(self, name: str) -> otio.schema.Track:
+        """Get existing track or create new one."""
+        for track in self.timeline.tracks:
+            if track.name == name:
+                return track
+        
+        # Create new track
+        track = otio.schema.Track(name=name, kind=otio.schema.TrackKind.Video)
+        
+        # Insert before captions track (if exists) or at end
+        captions_index = self._find_captions_track_index()
+        if captions_index is not None:
+            self.timeline.tracks.insert(captions_index, track)
+        else:
+            self.timeline.tracks.append(track)
+            
+        return track
+
     def _get_or_create_overlay_track(self) -> otio.schema.Track:
         """Get existing overlay track or create new one."""
-        overlays_track = self._get_overlay_track()
-
-        if not overlays_track:
-            # Create new overlay track
-            overlays_track = otio.schema.Track(name="Overlays", kind=otio.schema.TrackKind.Video)
-
-            # Insert before captions track (if exists) or at end
-            captions_index = self._find_captions_track_index()
-            if captions_index is not None:
-                self.timeline.tracks.insert(captions_index, overlays_track)
-            else:
-                self.timeline.tracks.append(overlays_track)
-
-        return overlays_track
+        return self._get_or_create_track("Overlays")
 
     def _get_overlay_track(self) -> Optional[otio.schema.Track]:
         """Get existing overlay track."""

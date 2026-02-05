@@ -149,19 +149,20 @@ class ScriptReader {
       return null;
     }
 
-    const { mood, suggestions } = script.music;
+    const { mood, query, suggestions } = script.music;
 
-    if (!mood) {
+    if (!mood && !query) {
       return null;
     }
 
+    // Priority: explicit query > mood-based query
     const musicQuery = {
-      mood: mood,
+      mood: mood || 'calm',
       suggestions: suggestions || [],
-      query: `${mood} background music`
+      query: query || `${mood} background music`
     };
 
-    console.log(`[ScriptReader] Extracted music query: "${musicQuery.query}"`);
+    console.log(`[ScriptReader] Extracted music query: "${musicQuery.query}" (mood: ${musicQuery.mood})`);
     return musicQuery;
   }
 

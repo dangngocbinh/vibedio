@@ -217,6 +217,7 @@ const stickerTemplates: Record<string, string> = {
 
 export interface StickerProps {
     src?: string;                // URL hoặc đường dẫn local
+    emoji?: string;             // Emoji character hoặc template name
     template?: string;          // Tên mẫu (like, heart, fire...)
     style?: StickerStyle;       // Vị trí định sẵn
     top?: number | string;      // Vị trí tùy chỉnh (nếu style='custom')
@@ -375,6 +376,7 @@ const useStickerAnimation = (
 // ============ MAIN COMPONENT ============
 export const Sticker: React.FC<StickerProps> = ({
     src: srcProp,
+    emoji,
     template,
     style = 'random',
     top,
@@ -397,8 +399,31 @@ export const Sticker: React.FC<StickerProps> = ({
     const scaledWidth = typeof width === 'number' ? scalePixel(width) : width;
     const scaledHeight = typeof height === 'number' ? scalePixel(height) : height;
 
-    // Resolve source: template first, then srcProp, then fallback
-    const src = (template ? stickerTemplates[template] : srcProp) || stickerTemplates['face-laughing'];
+    // mapping emoji shortcut to template name
+    const emojiMap: Record<string, string> = {
+        '🎬': 'lottie-clapper',
+        '🎬\ufe0f': 'lottie-clapper',
+        '✨': 'lottie-sparkles',
+        '✨\ufe0f': 'lottie-sparkles',
+        '🎥': 'lottie-clapper', // Fallback
+        '🔥': 'lottie-fire',
+        '❤️': 'lottie-heart-red',
+        '🚀': 'lottie-rocket',
+        '💡': 'lottie-bulb',
+        '✅': 'lottie-check',
+        '❌': 'lottie-cross',
+        '⚠️': 'lottie-warning',
+        '💯': 'lottie-hundred',
+    };
+
+    // Resolve template priority: 
+    // 1. template prop
+    // 2. emoji mapping if it's a known char
+    // 3. emoji if it's already a template name (like 'lottie-clapper')
+    const effectiveTemplate = template || emojiMap[emoji || ''] || (emoji && stickerTemplates[emoji] ? emoji : null);
+
+    // Resolve source
+    const src = effectiveTemplate ? stickerTemplates[effectiveTemplate] : srcProp;
 
     // Animation timings
     const enterDuration = enterDurationProp ?? Math.round(fps * 0.5);
@@ -418,8 +443,10 @@ export const Sticker: React.FC<StickerProps> = ({
     let posStyle: React.CSSProperties = { position: 'absolute' };
     let baseRotation = rotation;
 
+    const seedVal = src || emoji || 'default';
+
     if (style === 'random') {
-        const randomPos = getRandomPosition(src);
+        const randomPos = getRandomPosition(seedVal);
         posStyle.top = randomPos.top;
         posStyle.left = randomPos.left;
         baseRotation += randomPos.rotation;
@@ -457,17 +484,29 @@ export const Sticker: React.FC<StickerProps> = ({
         animTransform
     ].filter(Boolean).join(' ');
 
-    const isLottie = src.toLowerCase().endsWith('.json');
+    const isLottie = src?.toLowerCase().endsWith('.json');
     const [lottieData, setLottieData] = React.useState<LottieAnimationData | null>(null);
+    const [fetchError, setFetchError] = React.useState<boolean>(false);
 
     React.useEffect(() => {
-        if (isLottie) {
+        if (isLottie && src) {
+            setFetchError(false);
+            console.log(`[Sticker Debug] Fetching Lottie for: ${effectiveTemplate} from ${src}`);
             fetch(src)
-                .then(res => res.json())
-                .then(data => setLottieData(data))
-                .catch(err => console.error("Failed to load lottie", err));
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    console.log(`[Sticker Debug] Lottie loaded: ${effectiveTemplate}`);
+                    setLottieData(data);
+                })
+                .catch(err => {
+                    console.error(`[Sticker Debug] Failed to load lottie: ${src}`, err);
+                    setFetchError(true);
+                });
         }
-    }, [src, isLottie]);
+    }, [src, isLottie, effectiveTemplate]);
 
     return (
         <AbsoluteFill style={{ pointerEvents: 'none' }}>
@@ -485,8 +524,8 @@ export const Sticker: React.FC<StickerProps> = ({
                     zIndex: 200,
                 }}
             >
-                {isLottie ? (
-                    lottieData && (
+                {isLottie && !fetchError ? (
+                    lottieData ? (
                         <Lottie
                             animationData={lottieData}
                             style={{
@@ -494,8 +533,16 @@ export const Sticker: React.FC<StickerProps> = ({
                                 height: '100%',
                             }}
                         />
+                    ) : (
+                        // Placeholder while loading or showing the emoji character
+                        <div style={{
+                            fontSize: typeof width === 'number' ? scalePixel(width * 0.8) : '100px',
+                            filter: 'drop-shadow(0px 5px 15px rgba(0,0,0,0.3))'
+                        }}>
+                            {emoji}
+                        </div>
                     )
-                ) : (
+                ) : src && !isLottie ? (
                     <Img
                         src={src}
                         style={{
@@ -503,6 +550,22 @@ export const Sticker: React.FC<StickerProps> = ({
                             height: '100%',
                             objectFit: 'contain',
                             filter: 'drop-shadow(0px 5px 15px rgba(0,0,0,0.3))'
+                        }}
+                    />
+                ) : emoji ? (
+                    <div style={{
+                        fontSize: typeof width === 'number' ? scalePixel(width * 0.8) : '100px',
+                        filter: 'drop-shadow(0px 5px 15px rgba(0,0,0,0.3))'
+                    }}>
+                        {emoji}
+                    </div>
+                ) : (
+                    <Img
+                        src={stickerTemplates['face-laughing']}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
                         }}
                     />
                 )}

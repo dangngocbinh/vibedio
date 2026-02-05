@@ -147,6 +147,9 @@ def setup_project(name: str) -> Path:
     # Init state file immediately
     ProductionState(project_dir)._save()
     
+    # Refresh project list so the new project shows up in UI
+    refresh_project_list()
+    
     return project_dir
 
 def import_files(project_dir: Path, file_paths: List[str]):

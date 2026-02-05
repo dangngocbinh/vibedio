@@ -12,8 +12,24 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const ResourceSelector = require('./utils/resource-selector');
 const ImportManager = require('./utils/import-manager');
+
+/**
+ * Update production status after successful import
+ * @param {string} projectDir - Project directory
+ * @param {number} importedCount - Number of imported resources
+ */
+function updateProductionStatus(projectDir, importedCount) {
+    try {
+        const statusManagerPath = path.join(__dirname, '../utils/status_manager.py');
+        const cmd = `python3 "${statusManagerPath}" "${projectDir}" complete resources_imported`;
+        execSync(cmd, { stdio: 'pipe' });
+    } catch (error) {
+        // Silently ignore status update errors
+    }
+}
 
 /**
  * Update script.json with imported resource paths
@@ -73,14 +89,24 @@ async function updateScriptJSON(scriptPath, importedResources, importedMusic = n
 
                             // UPDATE: Fix localPath in resourceCandidates[]
                             if (scene.resourceCandidates && Array.isArray(scene.resourceCandidates)) {
+                                // Strategy: Update ALL candidates that match ANY ID in the chain
+                                // This handles both scene.selectedResourceIds AND mapEntry.selectedResourceIds
+                                const allSelectedIds = new Set([
+                                    ...(scene.selectedResourceIds || []),
+                                    ...(mapEntry.selectedResourceIds || [])
+                                ]);
+
                                 for (const candidate of scene.resourceCandidates) {
-                                    // If this candidate was selected and imported
-                                    if (mapEntry.selectedResourceIds.includes(candidate.id)) {
-                                        // Find the imported path for this specific resource
-                                        const resourceIndex = mapEntry.selectedResourceIds.indexOf(candidate.id);
-                                        if (resourceIndex !== -1 && mapEntry.importedPaths[resourceIndex]) {
-                                            // Update localPath to point to imports/ instead of downloads/
-                                            candidate.localPath = mapEntry.importedPaths[resourceIndex];
+                                    // Check if this candidate ID matches any selected ID
+                                    if (allSelectedIds.has(candidate.id)) {
+                                        // Find the imported path (use first path if multiple)
+                                        const importedPath = mapEntry.importedPaths[0];
+                                        if (importedPath) {
+                                            // ⚠️ CRITICAL FIX: Add importedPath field (video-editor prioritizes this)
+                                            // Video-editor resolution priority: importedPath > localPath > url
+                                            candidate.importedPath = importedPath;
+                                            // Also update localPath for backward compatibility
+                                            candidate.localPath = importedPath;
                                         }
                                     }
                                 }
@@ -237,25 +263,29 @@ async function selectAndImportResources(projectDir, options = {}) {
                         break;
                     }
 
-                    // Otherwise, pick first available with localPath
-                    if (!musicCandidate && result.localPath) {
+                    // Otherwise, pick first available with localPath OR downloadUrl
+                    if (!musicCandidate && (result.localPath || result.downloadUrl || result.downloadUrls)) {
                         musicCandidate = result;
                     }
                 }
                 if (musicCandidate && selectedMusicId) break;
             }
 
-            if (musicCandidate && musicCandidate.localPath) {
-                // Import music
+            // Import music if we have a candidate (supports both local and URL download)
+            if (musicCandidate && (musicCandidate.localPath || musicCandidate.downloadUrl || musicCandidate.downloadUrls)) {
+                // Import music (ImportManager now handles both local copy and URL download)
                 const musicImportResult = await importManager.importMusic(musicCandidate);
 
                 if (musicImportResult.success) {
                     importedMusic = musicImportResult.music;
 
                     if (verbose) {
-                        console.log(`  🎵 Music: ${musicImportResult.music.title || musicImportResult.music.id} imported`);
+                        const source = musicImportResult.music.downloadedFrom ? 'downloaded from URL' : 'copied from local';
+                        console.log(`  🎵 Music: ${musicImportResult.music.title || musicImportResult.music.id} (${source})`);
                     }
                 }
+            } else if (verbose && musicResources.length > 0) {
+                console.log(`  ⚠️ Music: No valid candidate found (need localPath or downloadUrl)`);
             }
         }
 
@@ -283,6 +313,11 @@ async function selectAndImportResources(projectDir, options = {}) {
             if (verbose && cleanupResult.cleaned) {
                 console.log(`  🧹 Cleanup: ${cleanupResult.freedFormatted} freed\n`);
             }
+        }
+
+        // Update production status
+        if (importResult.imported > 0 || importedMusic) {
+            updateProductionStatus(projectDir, importResult.imported);
         }
 
         return {

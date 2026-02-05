@@ -50,17 +50,13 @@ def search_web_images(query: str, max_results: int = 20, retry: int = 3, size: s
 
             with DDGS() as ddgs:
                 # Search images
-                search_params = {
-                    'keywords': query,
-                    'max_results': max_results,
-                    'safesearch': 'moderate'
-                }
-                if size:
-                    search_params['size'] = size
-                if type_image:
-                    search_params['type_image'] = type_image
-                
-                search_results = ddgs.images(**search_params)
+                search_results = ddgs.images(
+                    query,
+                    max_results=max_results,
+                    safesearch='moderate',
+                    size=size,
+                    type_image=type_image
+                )
 
                 for idx, result in enumerate(search_results, 1):
                     results.append({

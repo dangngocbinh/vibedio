@@ -33,8 +33,8 @@ class ResourceSelector {
             return [];
         }
 
-        // Filter resources with localPath (successfully downloaded)
-        const downloaded = resources.filter(r => r.localPath || r.downloadUrl);
+        // Filter resources with localPath (successfully downloaded) or download URLs (URL-only mode)
+        const downloaded = resources.filter(r => r.localPath || r.downloadUrl || r.downloadUrls);
 
         if (downloaded.length === 0) {
             console.warn(`[ResourceSelector] No downloaded resources for scene "${scene.sceneId || scene.id}"`);
