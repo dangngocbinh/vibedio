@@ -63,6 +63,41 @@ async function main() {
 
         const resourcesData = fs.readFileSync(resourcesPath, 'utf8');
         const resourcesJSON = JSON.parse(resourcesData);
+
+        // FIX: Pre-process resources.json to resolve relative "uploads/" paths
+        try {
+            const uploadDir = 'uploads';
+            const categories = ['videos', 'images', 'generatedImages', 'pinnedResources'];
+            let fixCount = 0;
+
+            categories.forEach(category => {
+                if (resourcesJSON.resources && resourcesJSON.resources[category]) {
+                    resourcesJSON.resources[category].forEach(group => {
+                        if (group.results) {
+                            group.results.forEach(result => {
+                                if (result.localPath && result.localPath.startsWith(`${uploadDir}/`)) {
+                                    // Convert "uploads/file.jpg" -> "/absolute/path/to/project/uploads/file.jpg"
+                                    const absolutePath = path.join(projectDir, result.localPath);
+                                    if (fs.existsSync(absolutePath)) {
+                                        // Use path.relative to make it relative to CWD if needed, 
+                                        // or just use absolute path which is safer
+                                        result.localPath = absolutePath;
+                                        fixCount++;
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (fixCount > 0) {
+                console.log(`  🔧 Fixed ${fixCount} relative upload paths in resources.json`);
+            }
+        } catch (err) {
+            console.warn(`  ⚠️ Warning: Failed to fix upload paths: ${err.message}`);
+        }
+
         console.log(`  ✓ Loaded resources.json\n`);
 
         // Step 2: Read script.json to get scene info

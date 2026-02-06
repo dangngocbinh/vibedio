@@ -97,6 +97,7 @@ class JSONBuilder:
 
         # Music config (unified - single default)
         music_section = {
+            'enabled': True,
             'mood': metadata_dict.get('musicMood', 'calm'),
             'query': metadata_dict.get('musicQuery', 'calm background music'),
             'volume': metadata_dict.get('musicVolume', 0.15),

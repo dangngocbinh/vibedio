@@ -180,6 +180,7 @@ class QueryBuilder {
         sceneText: vq.sceneText,
         query: vq.query, // Keep original prompt for AI generation
         style: vq.style,
+        referenceImages: vq.referenceImages || [],
         type: 'ai-generated'
       });
     }

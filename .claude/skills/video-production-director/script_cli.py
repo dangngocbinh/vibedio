@@ -410,10 +410,10 @@ def cmd_add_section(args):
 
         # Resolve timing using fuzzy matching (ONLY if voice available)
         synchronizer = ScriptSynchronizer()
-        resolved_text = _resolve_text(text=args.text, text_path=args.text_path, cwd=os.path.dirname(args.script))
+        resolved_text = _resolve_text(text=None, text_path=args.text_path, cwd=os.path.dirname(args.script))
 
         if not resolved_text:
-            raise ValueError("❌ No text content provided for section. Use --text or --text-path")
+            raise ValueError("❌ No text content provided for section. Use --text-path")
 
         timing = None
         if voice:
@@ -971,6 +971,24 @@ def cmd_confirm_text(args):
 
 
 # ============================================================================
+# COMMAND: confirm-plan
+# ============================================================================
+
+def cmd_confirm_plan(args):
+    """Mark visual plan as confirmed by user (Checkpoint 2)."""
+    try:
+        status_manager = StatusManager(args.project)
+        status_manager.complete_step("plan_confirmed", "User confirmed visual plan (scenes & descriptions)")
+        print(f"✅ Visual plan confirmed!")
+        print(f"📊 Status: {status_manager.get_current_step_name()}")
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return 1
+
+
+# ============================================================================
 # COMMAND: rollback
 # ============================================================================
 
@@ -1022,7 +1040,22 @@ def cmd_update_voice(args):
         if args.speed:
             script['voice']['speed'] = float(args.speed)
         if args.audio_path:
-            script['voice']['audioPath'] = args.audio_path
+            # Normalize path: Make relative if possible to avoid absolute path issues in web
+            raw_path = args.audio_path
+            try:
+                # Resolve script dir
+                script_dir = Path(args.script).parent.resolve()
+                params_path = Path(raw_path).resolve()
+                
+                # If file is inside script dir, use relative filename
+                if str(params_path).startswith(str(script_dir)):
+                    rel_path = params_path.relative_to(script_dir)
+                    script['voice']['audioPath'] = str(rel_path)
+                else:
+                    script['voice']['audioPath'] = raw_path
+            except Exception:
+                # Fallback to original if path resolution fails
+                script['voice']['audioPath'] = raw_path
 
         # Save
         with open(args.script, 'w', encoding='utf-8') as f:
@@ -1144,8 +1177,7 @@ def main():
     add_section_parser.add_argument('--voice', required=False, help='Path to voice.json (optional, for timing resolution)')
     add_section_parser.add_argument('--id', required=True, help='Section ID')
     add_section_parser.add_argument('--name', required=True, help='Section name')
-    add_section_parser.add_argument('--text', help='Section text (short strings)')
-    add_section_parser.add_argument('--text-path', help='Path to section text file (recommended)')
+    add_section_parser.add_argument('--text-path', required=True, help='Path to section text file (mandatory)')
     add_section_parser.add_argument('--pace', default='medium', help='Pace (slow, medium, fast)')
 
     # ========== add-scenes ==========
@@ -1208,11 +1240,19 @@ def main():
     confirm_text_parser = subparsers.add_parser('confirm-text', help='Mark text as confirmed (Checkpoint 1)')
     confirm_text_parser.add_argument('--project', required=True, help='Project directory')
 
+    # ========== confirm-plan ==========
+    confirm_plan_parser = subparsers.add_parser('confirm-plan', help='Mark visual plan as confirmed (Checkpoint 2)')
+    confirm_plan_parser.add_argument('--project', required=True, help='Project directory')
+
     # ========== rollback ==========
     rollback_parser = subparsers.add_parser('rollback', help='Rollback to a previous step')
     rollback_parser.add_argument('--project', required=True, help='Project directory')
     rollback_parser.add_argument('--step', required=True, help='Step to rollback to')
     rollback_parser.add_argument('--force', action='store_true', help='Force rollback even with OTIO edits')
+
+    # ========== translate-visuals ==========
+    translate_parser = subparsers.add_parser('translate-visuals', help='Translate visual descriptions to English')
+    translate_parser.add_argument('--script', required=True, help='Path to script.json')
 
     # Parse args
     args = parser.parse_args()
@@ -1235,7 +1275,9 @@ def main():
         'update-music': cmd_update_music,
         'status': cmd_status,
         'confirm-text': cmd_confirm_text,
-        'rollback': cmd_rollback
+        'confirm-plan': cmd_confirm_plan,
+        'rollback': cmd_rollback,
+        'translate-visuals': cmd_translate_visuals
     }
 
     handler = commands.get(args.command)
@@ -1243,6 +1285,147 @@ def main():
         return handler(args)
     else:
         print(f"❌ Unknown command: {args.command}")
+        return 1
+
+
+# ============================================================================
+# COMMAND: translate-visuals
+# ============================================================================
+
+# ============================================================================
+# COMMAND: translate-visuals
+# ============================================================================
+
+def cmd_translate_visuals(args):
+    """Translate visual descriptions to English using Gemini or OpenAI."""
+    print(f"🌐 Translating visual descriptions for: {args.script}")
+
+    gemini_key = os.getenv('GEMINI_API_KEY')
+    openai_key = os.getenv('OPENAI_API_KEY')
+    
+    provider = None
+    if gemini_key:
+        provider = 'gemini'
+        print("   ✓ Using Gemini for translation")
+    elif openai_key:
+        provider = 'openai'
+        print("   ✓ Using OpenAI for translation")
+    else:
+        print("❌ No API key found (GEMINI_API_KEY or OPENAI_API_KEY).")
+        print("Please add one to your .env file.")
+        return 1
+
+    try:
+        # Load script
+        with open(args.script, 'r', encoding='utf-8') as f:
+            script = json.load(f)
+
+        changes_count = 0
+        
+        # Helper to translate text
+        def translate_text(text, provider):
+            if not text or not isinstance(text, str):
+                return text
+                
+            import requests
+            
+            prompt = f"Translate the following visual description for a video scene from Vietnamese to English. Output ONLY the English translation, no other text. Keep it concise, descriptive, and suitable for stock footage search queries.\n\nText: {text}"
+            
+            if provider == 'gemini':
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}]
+                }
+                try:
+                    response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
+                    if response.status_code == 200:
+                        result = response.json()
+                        return result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '').strip()
+                    else:
+                        print(f"   ⚠️  Gemini API Error: {response.status_code} - {response.text}")
+                        return None
+                except Exception as e:
+                    print(f"   ⚠️  Gemini Translation failed: {e}")
+                    return None
+
+            elif provider == 'openai':
+                url = "https://api.openai.com/v1/chat/completions"
+                payload = {
+                    "model": "gpt-4o-mini",
+                    "messages": [
+                        {"role": "system", "content": "You are a helpful translator."},
+                        {"role": "user", "content": prompt}
+                    ]
+                }
+                try:
+                    response = requests.post(url, json=payload, headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {openai_key}'
+                    })
+                    if response.status_code == 200:
+                        return response.json()['choices'][0]['message']['content'].strip()
+                    else:
+                        print(f"   ⚠️  OpenAI API Error: {response.status_code} - {response.text}")
+                        return None
+                except Exception as e:
+                    print(f"   ⚠️  OpenAI Translation failed: {e}")
+                    return None
+            
+            return None
+
+        # Iterate all sections and scenes
+        print("   Processing scenes...")
+        for section in script.get('sections', []):
+            for scene in section.get('scenes', []):
+                original_desc = scene.get('visualDescription', '')
+
+                # 1. Provide visualSuggestion structure if missing
+                if 'visualSuggestion' not in scene:
+                    scene['visualSuggestion'] = {
+                        "type": "stock",
+                        "query": original_desc
+                    }
+                
+                # 2. Check if we need translation
+                current_query = scene['visualSuggestion'].get('query', '')
+                
+                # Logic: Treat visualDescription as Source of Truth.
+                # If visualDescription exists, we ensure Query is its English translation.
+                
+                source_text = original_desc if original_desc else current_query
+                
+                if source_text:
+                    # Skip if we think it's already English (basic check)
+                    # But checking if source matches target roughly helps avoid redundant calls
+                    # For now, let's just translate if we successfully get a result
+                    
+                    # Optimization: Don't re-translate if query seems to match source (and source is valid)
+                    # Use cache or just rely on API speed? OpenAI/Gemini are fast enough for batch.
+                    
+                    print(f"   Analyzing scene [{scene['id']}]...")
+                    translated = translate_text(source_text, provider)
+                    
+                    if translated and translated.lower() != current_query.lower():
+                        scene['visualSuggestion']['query'] = translated
+                        changes_count += 1
+                        print(f"     ✅ Query updated: '{current_query[:20]}...' -> '{translated[:20]}...'")
+                    else:
+                        print(f"     (No change needed)")
+
+        if changes_count > 0:
+            # Save script
+            with open(args.script, 'w', encoding='utf-8') as f:
+                json.dump(script, f, indent=2, ensure_ascii=False)
+            print(f"\n✅ Updated {changes_count} search queries to English.")
+        else:
+            print("\n✨ All queries look good.")
+
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
 
 

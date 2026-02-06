@@ -439,6 +439,9 @@ class VisualTrackBuilder:
             metadata=metadata
         )
 
+        if resource_url.startswith('http'):
+             print(f"⚠️ Scene {scene_id}: Using remote URL (no local file): {resource_url[:80]}...")
+
         if clip:
             clips.append(clip)
 
@@ -500,15 +503,17 @@ class VisualTrackBuilder:
 
                     width = result.get('width', 1920)
                     height = result.get('height', 1080)
+                    is_local = bool(result.get('importedPath') or result.get('localPath'))
 
                     video_entries.append({
                         'path': relative_path,
                         'width': width,
                         'height': height,
-                        'aspect_ratio': width / height if height > 0 else 1.0
+                        'aspect_ratio': width / height if height > 0 else 1.0,
+                        'is_local': is_local
                     })
 
-        return self._sort_by_aspect_ratio(video_entries)
+        return self._sort_resources(video_entries)
 
     def _get_scene_images(self, scene_id: str, resources: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get all LOCAL image paths for a scene, sorted by aspect ratio match."""
@@ -536,26 +541,38 @@ class VisualTrackBuilder:
                     width = result.get('width', 1920)
                     height = result.get('height', 1080)
 
+                    is_local = bool(result.get('importedPath') or result.get('localPath'))
+                    
                     image_entries.append({
                         'path': relative_path,
                         'width': width,
                         'height': height,
-                        'aspect_ratio': width / height if height > 0 else 1.0
+                        'aspect_ratio': width / height if height > 0 else 1.0,
+                        'is_local': is_local
                     })
 
-        return self._sort_by_aspect_ratio(image_entries)
+        return self._sort_resources(image_entries)
 
-    def _sort_by_aspect_ratio(self, entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Sort entries by aspect ratio match with project target."""
+    def _sort_resources(self, entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Sort resources:
+        1. Prioritize Local/Imported files
+        2. Then by Aspect Ratio match
+        """
         if not entries:
             return []
 
-        def aspect_ratio_score(entry):
+        def score_resource(entry):
+            # 1. Local Priority (0 for local, 1 for remote)
+            is_remote_score = 0 if entry.get('is_local') else 1
+            
+            # 2. Aspect Ratio Distance
             video_ratio = entry['aspect_ratio']
-            distance = abs(video_ratio - self.target_aspect_ratio)
-            return distance
+            ratio_score = abs(video_ratio - self.target_aspect_ratio)
+            
+            return (is_remote_score, ratio_score)
 
-        sorted_entries = sorted(entries, key=aspect_ratio_score)
+        sorted_entries = sorted(entries, key=score_resource)
         return sorted_entries
 
     def _create_clip_from_url(

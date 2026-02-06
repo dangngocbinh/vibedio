@@ -34,7 +34,9 @@ class PexelsClient {
         downloadUrls: {
           hd: video.video_files.find(f => f.quality === 'hd')?.link || null,
           sd: video.video_files.find(f => f.quality === 'sd')?.link || null,
-          '4k': video.video_files.find(f => f.quality === 'uhd')?.link || null
+          '4k': video.video_files.find(f => f.quality === 'uhd')?.link || null,
+          // Đảm bảo luôn có link direct để tránh ImportManager rơi vào resource.url (link trang web)
+          original: video.video_files[0]?.link || null
         },
         width: video.width,
         height: video.height,

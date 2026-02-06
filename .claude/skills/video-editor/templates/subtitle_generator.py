@@ -166,12 +166,15 @@ class SubtitleGenerator:
             source_range=source_range
         )
 
+        # Determine theme from style or theme field (style is used by script-planner)
+        theme = subtitle_style.get('theme') or subtitle_style.get('style') or 'gold-bold'
+
         # Add Remotion component metadata
         clip.metadata['remotion_component'] = 'TikTokCaption'
         clip.metadata['props'] = {
             'text': phrase['text'],
             'words': phrase['words'],
-            'theme': subtitle_style.get('theme', 'gold-bold'),  # Default theme
+            'theme': theme,
             'position': subtitle_style.get('position', 'bottom'),  # Default to bottom for TikTok style
             'font': subtitle_style.get('font'),  # Let theme handle default
             'highlightColor': subtitle_style.get('highlightColor'),  # Let theme handle default

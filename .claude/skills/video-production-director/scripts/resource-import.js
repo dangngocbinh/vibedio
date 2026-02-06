@@ -38,7 +38,7 @@ function updateProductionStatus(projectDir, importedCount) {
  * @param {Object} importedMusic - Imported music object (optional)
  * @param {boolean} verbose - Log output
  */
-async function updateScriptJSON(scriptPath, importedResources, importedMusic = null, verbose = false) {
+async function updateScriptJSON(scriptPath, importedResources, importedMusic = null, musicResources = [], verbose = false) {
     try {
         const scriptData = fs.readFileSync(scriptPath, 'utf8');
         const script = JSON.parse(scriptData);
@@ -124,8 +124,34 @@ async function updateScriptJSON(scriptPath, importedResources, importedMusic = n
             script.music.selectedMusicId = importedMusic.id;
             script.music.importedMusicPath = importedMusic.relativePath || importedMusic.importedPath;
 
+            // ⭐ NEW: Add candidates array from resources.json for planner
+            // This allows planner to display music player with all available options
+            if (musicResources.length > 0) {
+                const candidates = [];
+                for (const musicGroup of musicResources) {
+                    for (const result of musicGroup.results || []) {
+                        candidates.push({
+                            id: result.id,
+                            title: result.title,
+                            duration: result.duration,
+                            genre: result.genre,
+                            tags: result.tags,
+                            // Use relative path for imported music, null for others
+                            localPath: result.id === importedMusic.id
+                                ? (importedMusic.relativePath || importedMusic.importedPath)
+                                : null,
+                            downloadUrl: result.downloadUrl
+                        });
+                    }
+                }
+                script.music.candidates = candidates;
+            }
+
             if (verbose) {
                 console.log(`  🎵 Updated music: ${importedMusic.title || importedMusic.id}`);
+                if (script.music.candidates) {
+                    console.log(`  🎵 Added ${script.music.candidates.length} music candidates to script.json`);
+                }
             }
         }
 
@@ -299,10 +325,10 @@ async function selectAndImportResources(projectDir, options = {}) {
             await importManager.updateResourcesJSON(resourcesPath, selectionsWithImports);
 
             // Update script.json with imported paths (including music)
-            await updateScriptJSON(scriptPath, importResult.resources, importedMusic, verbose);
+            await updateScriptJSON(scriptPath, importResult.resources, importedMusic, musicResources, verbose);
         } else if (importedMusic) {
             // Only music was imported
-            await updateScriptJSON(scriptPath, [], importedMusic, verbose);
+            await updateScriptJSON(scriptPath, [], importedMusic, musicResources, verbose);
         }
 
         // Cleanup downloads/ if enabled

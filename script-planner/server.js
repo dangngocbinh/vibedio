@@ -3,6 +3,8 @@ import multer from 'multer';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import https from 'https';
+import http from 'http';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,7 +25,9 @@ console.log(`📁 Static serving enabled for: ${projectsDir}`);
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const projectSlug = req.body.projectSlug || 'default';
+        // Get projectSlug from query parameter instead of body
+        // This is because multer needs it before req.body is populated
+        const projectSlug = req.query.project || 'default';
         const uploadDir = path.join(__dirname, '../public/projects', projectSlug, 'uploads');
 
         // Create directory if it doesn't exist
@@ -81,13 +85,14 @@ const upload = multer({
 app.post('/api/upload', upload.single('file'), (req, res) => {
     try {
         console.log('📂 Upload request received');
+        console.log('📂 Query params:', req.query);
 
         if (!req.file) {
             console.error('❌ No file in request');
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        const projectSlug = req.body.projectSlug || 'default';
+        const projectSlug = req.query.project || 'default';
         console.log(`📂 Project slug: ${projectSlug}`);
         console.log(`📂 Original filename: ${req.file.originalname}`);
 
@@ -280,6 +285,73 @@ app.post('/api/clear-music-downloads', (req, res) => {
         });
     } catch (error) {
         console.error('Clear music downloads error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * GET /api/music-proxy
+ * Proxy and cache music from external URLs (e.g., Pixabay CDN)
+ * This solves CORS issues when streaming music directly from external sources
+ */
+app.get('/api/music-proxy', async (req, res) => {
+    try {
+        const { url, projectSlug, musicId } = req.query;
+
+        if (!url) {
+            return res.status(400).json({ error: 'Missing url parameter' });
+        }
+
+        console.log(`🎵 Music proxy request: ${url}`);
+
+        // Create cache directory
+        const cacheDir = path.join(__dirname, '../public/projects', projectSlug || 'default', 'downloads', 'music');
+        if (!fs.existsSync(cacheDir)) {
+            fs.mkdirSync(cacheDir, { recursive: true });
+        }
+
+        // Generate cache filename from musicId or URL
+        const filename = musicId ? `${musicId}.mp3` : `cached_${Date.now()}.mp3`;
+        const cachePath = path.join(cacheDir, filename);
+
+        // Check if already cached
+        if (fs.existsSync(cachePath)) {
+            console.log(`✅ Serving from cache: ${filename}`);
+            return res.sendFile(cachePath);
+        }
+
+        // Download and cache
+        console.log(`📥 Downloading music from: ${url}`);
+        const protocol = url.startsWith('https') ? https : http;
+
+        protocol.get(url, (downloadRes) => {
+            if (downloadRes.statusCode !== 200) {
+                return res.status(downloadRes.statusCode).json({
+                    error: `Failed to download music: ${downloadRes.statusCode}`
+                });
+            }
+
+            // Stream to file and response simultaneously
+            const fileStream = fs.createWriteStream(cachePath);
+
+            downloadRes.pipe(fileStream);
+            downloadRes.pipe(res);
+
+            fileStream.on('finish', () => {
+                console.log(`✅ Cached music: ${filename}`);
+            });
+
+            fileStream.on('error', (err) => {
+                console.error(`❌ Cache error: ${err.message}`);
+                fs.unlinkSync(cachePath).catch(() => { });
+            });
+        }).on('error', (err) => {
+            console.error(`❌ Download error: ${err.message}`);
+            res.status(500).json({ error: err.message });
+        });
+
+    } catch (error) {
+        console.error('Music proxy error:', error);
         res.status(500).json({ error: error.message });
     }
 });

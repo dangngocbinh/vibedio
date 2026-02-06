@@ -45,6 +45,30 @@ export const CaptionSettings = ({ scriptData, onUpdate }: CaptionSettingsProps) 
             {subtitleConfig.enabled && (
                 <div className="p-6">
                     <div className="mb-4">
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-3 text-center">Position</label>
+                        <div className="flex justify-center gap-4">
+                            {[
+                                { id: 'top', name: 'Top', icon: 'vertical_align_top' },
+                                { id: 'center', name: 'Center', icon: 'vertical_align_center' },
+                                { id: 'bottom', name: 'Bottom', icon: 'vertical_align_bottom' },
+                                { id: 'bottom-high', name: 'Bottom High', icon: 'expand_less' }
+                            ].map((pos) => (
+                                <button
+                                    key={pos.id}
+                                    onClick={() => updateSubtitle({ position: pos.id })}
+                                    className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg border-2 transition-all ${subtitleConfig.position === pos.id
+                                        ? 'border-pink-500 bg-pink-50 text-pink-600'
+                                        : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined">{pos.icon}</span>
+                                    <span className="text-[10px] font-bold uppercase">{pos.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
                         <label className="block text-xs font-bold text-gray-600 uppercase mb-3">Caption Style</label>
                         <div className="grid grid-cols-2 gap-3">
                             {[
@@ -64,8 +88,8 @@ export const CaptionSettings = ({ scriptData, onUpdate }: CaptionSettingsProps) 
                                         name="caption-style"
                                         value={style.id}
                                         className="sr-only peer"
-                                        checked={subtitleConfig.style === style.id}
-                                        onChange={() => updateSubtitle({ style: style.id })}
+                                        checked={(subtitleConfig.theme || subtitleConfig.style) === style.id}
+                                        onChange={() => updateSubtitle({ style: style.id, theme: style.id })}
                                     />
                                     <div className="border-2 border-gray-200 rounded-lg p-4 peer-checked:border-pink-500 peer-checked:bg-pink-50/20 hover:border-gray-300 transition-all h-full">
                                         <div className="flex items-center justify-between mb-2">

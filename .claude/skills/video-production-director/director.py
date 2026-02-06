@@ -431,16 +431,63 @@ def open_remotion_studio(project_name: str = None):
 
     # 2. Display URL (always base URL)
     base_url = "http://localhost:3000"
+    
+    # NEW: Detect ratio to suggest specific preview URL
+    preview_path = ""
+    ratio_label = ""
+    
+    if project_name:
+        try:
+            # Try to read script.json to get ratio
+            proj_dir = PROJECTS_DIR / project_name
+            script_path = proj_dir / "script.json"
+            
+            if script_path.exists():
+                with open(script_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    
+                ratio = data.get("metadata", {}).get("ratio", "")
+                if not ratio:
+                    # Fallback to config in production_status
+                    status_path = proj_dir / "production_status.json"
+                    if status_path.exists():
+                        with open(status_path, 'r', encoding='utf-8') as f:
+                            sdata = json.load(f)
+                            ratio = sdata.get("config", {}).get("ratio", "")
+                
+                # Determine preview path
+                if ratio == "16:9":
+                    preview_path = "/Preview-Landscape"
+                    ratio_label = "(Landscape 16:9)"
+                elif ratio == "9:16":
+                    preview_path = "/Preview-Portrait"
+                    ratio_label = "(Portrait 9:16)"
+                elif ratio == "1:1":
+                    preview_path = "/Preview-Square"
+                    ratio_label = "(Square 1:1)"
+                elif ratio == "4:5":
+                    preview_path = "/Preview-Portrait4x5"
+                    ratio_label = "(Portrait 4:5)"
+                    
+        except Exception as e:
+            # Ignore errors, just show base URL
+            pass
 
     log_info("")
     if project_name:
-        log_info(f"🎥 VIDEO '{project_name}' ĐÃ SẴN SÀNG!")
+        log_info(f"🎥 VIDEO '{project_name}' ĐÃ SẴN SÀNG! {ratio_label}")
     else:
         log_info("🎥 REMOTION STUDIO ĐÃ SẴN SÀNG!")
 
     log_info("👉 Mở link để xem và render:")
     log_info("")
-    print(f"   🔗 {base_url}")
+    
+    if preview_path:
+        print(f"   🔗 {base_url}{preview_path}")
+        print(f"   (Hoặc: {base_url})")
+    else:
+        print(f"   🔗 {base_url}")
+        
     print("")
     print("=" * 60)
 

@@ -38,7 +38,7 @@ class GeminiClient {
       if (referenceImage && fs.existsSync(referenceImage)) {
         console.log(`[GeminiClient] 👁️ Analyzing reference image: ${referenceImage}`);
         try {
-          const characterDescription = await this.analyzeReferenceImage(referenceImage, "Describe the character in this image in extreme detail, focusing on facial features, hairstyle, clothing, and body type. Do not describe the background or style, only the physical appearance of the person.");
+          const characterDescription = await this.analyzeReferenceImage(referenceImage, "Analyze this image and describe the character's visual style, strokes, and especially the LINE THICKNESS in extreme detail. Focus on the exact weight of the lines (bold/thick vs thin). The goal is to recreate this character with the EXACT SAME BOLD STROKE STYLE. Do not make the lines thinner.");
           if (characterDescription) {
             console.log(`[GeminiClient] 👤 Character analysis complete. Integrating into prompt...`);
             // Construct a new prompt that explicitly instructs the model to use these features
@@ -94,6 +94,8 @@ class GeminiClient {
         savedPath = await this.saveImage(imageData, outputDir, filename);
       }
 
+      console.log(`[GeminiClient] 📝 Final Prompt Used: "${finalPrompt}"`);
+
       return {
         success: true,
         prompt: finalPrompt, // Return the actual prompt used
@@ -120,7 +122,7 @@ class GeminiClient {
    */
   async analyzeReferenceImage(imagePath, promptText) {
     try {
-      const model = 'gemini-1.5-flash'; // Use 1.5 Flash for vision
+      const model = 'gemini-1.5-flash-001'; // Specific stable version for v1beta
       const imageBase64 = fs.readFileSync(imagePath).toString('base64');
 
       const response = await fetch(
@@ -142,6 +144,8 @@ class GeminiClient {
       const data = await response.json();
       if (data.candidates && data.candidates[0].content) {
         return data.candidates[0].content.parts[0].text;
+      } else {
+        console.warn(`[GeminiClient] ⚠️ Logic Error in analyzeReferenceImage. API Response: ${JSON.stringify(data).substring(0, 200)}...`);
       }
       return null;
     } catch (error) {

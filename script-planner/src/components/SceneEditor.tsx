@@ -166,12 +166,11 @@ export const SceneEditor = ({
 
             // Create FormData for upload
             const formData = new FormData()
-            // IMPORTANT: projectSlug must be appended BEFORE file for Multer to access it in storage destination
-            formData.append('projectSlug', projectSlug)
             formData.append('file', file)
 
-            // Upload file to server
-            const response = await fetch('/api/upload', {
+            // Upload file to server with projectSlug as query parameter
+            // This is required because Multer needs it before parsing the file
+            const response = await fetch(`/api/upload?project=${encodeURIComponent(projectSlug)}`, {
                 method: 'POST',
                 body: formData
             })
@@ -675,21 +674,21 @@ export const SceneEditor = ({
 
                                                                                 {/* Media Content - Show 3D fan stack if multiple selected */}
                                                                                 {(() => {
-                                                                                    const selectedIds = scene.selectedResourceIds || 
+                                                                                    const selectedIds = scene.selectedResourceIds ||
                                                                                         (scene.selectedResourceId ? [scene.selectedResourceId] : [])
-                                                                                    
+
                                                                                     // If multiple layers selected, show them in card stack (like playing cards)
                                                                                     if (selectedIds.length > 1) {
                                                                                         const selectedResources = selectedIds
                                                                                             .map(id => resources.find(r => r.id === id))
                                                                                             .filter(Boolean) as ResourceCandidate[]
-                                                                                        
+
                                                                                         return (
                                                                                             <div className="w-full h-full relative flex items-center justify-center">
                                                                                                 {selectedResources.map((res, idx) => {
                                                                                                     const isImg = res.type === 'image'
                                                                                                     let rawPath = res.localPath || res.downloadUrl
-                                                                                                    
+
                                                                                                     if (!rawPath && res.downloadUrls) {
                                                                                                         rawPath = res.downloadUrls['4k'] ||
                                                                                                             res.downloadUrls.hd ||
@@ -698,11 +697,11 @@ export const SceneEditor = ({
                                                                                                             res.downloadUrls.original ||
                                                                                                             res.downloadUrls.sd
                                                                                                     }
-                                                                                                    
+
                                                                                                     if (!rawPath && res.url) {
                                                                                                         rawPath = res.url
                                                                                                     }
-                                                                                                    
+
                                                                                                     let resPath: string
                                                                                                     if (!rawPath) {
                                                                                                         resPath = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3C/svg%3E'
@@ -719,12 +718,12 @@ export const SceneEditor = ({
                                                                                                     } else {
                                                                                                         resPath = `/projects/${projectSlug}/${rawPath}`
                                                                                                     }
-                                                                                                    
+
                                                                                                     // Calculate card stack offset (like playing cards)
                                                                                                     const totalVisible = selectedResources.length
                                                                                                     const offsetX = idx * 25 // Horizontal offset (stagger right)
                                                                                                     const offsetY = idx * 25 // Vertical offset (stagger down)
-                                                                                                    
+
                                                                                                     return (
                                                                                                         <div
                                                                                                             key={res.id}
@@ -758,7 +757,7 @@ export const SceneEditor = ({
                                                                                             </div>
                                                                                         )
                                                                                     }
-                                                                                    
+
                                                                                     // Single media - show normally
                                                                                     return isImage ? (
                                                                                         <img
@@ -845,12 +844,12 @@ export const SceneEditor = ({
             {mediaModalOpen && (() => {
                 console.log('[SceneEditor] Opening modal for scene:', mediaModalOpen)
                 const projectSlug = new URLSearchParams(window.location.search).get('project')
-                
+
                 // Find the scene
                 let targetScene: any = null
                 let targetSectionIdx = -1
                 let targetSceneIdx = -1
-                
+
                 scriptData?.sections?.forEach((section, sectionIdx) => {
                     section.scenes?.forEach((scene, sceneIdx) => {
                         if (scene.id === mediaModalOpen) {
@@ -866,7 +865,7 @@ export const SceneEditor = ({
                 const fetchedResources = getSceneResources(targetScene.id)
                 const manualResources = targetScene.resourceCandidates || []
                 const resources = manualResources.length > 0 ? manualResources : fetchedResources
-                const selectedIds = targetScene.selectedResourceIds || 
+                const selectedIds = targetScene.selectedResourceIds ||
                     (targetScene.selectedResourceId ? [targetScene.selectedResourceId] : [])
 
                 return (

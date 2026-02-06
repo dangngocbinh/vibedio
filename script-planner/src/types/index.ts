@@ -103,6 +103,7 @@ export interface TitleOverlay {
 export interface SubtitleConfig {
     enabled: boolean
     style?: string
+    theme?: string
     position?: string
     font?: string
     fontSize?: number

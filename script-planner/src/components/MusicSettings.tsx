@@ -12,7 +12,15 @@ export const MusicSettings = ({ scriptData, projectSlug, onUpdate }: MusicSettin
     const [musicProgress, setMusicProgress] = useState(0)
     const [musicDuration, setMusicDuration] = useState(0)
     const [currentCandidateIndex, setCurrentCandidateIndex] = useState(0)
+    const [hasInitializedIndex, setHasInitializedIndex] = useState(false)
     const musicAudioRef = useRef<HTMLAudioElement>(null)
+
+    const formatTime = (seconds: number) => {
+        if (isNaN(seconds) || seconds === Infinity) return '00:00'
+        const mins = Math.floor(seconds / 60)
+        const secs = Math.floor(seconds % 60)
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    }
 
     const musicCandidates = scriptData?.music?.candidates || []
     // const selectedMusicId = scriptData?.music?.selectedMusicId
@@ -26,13 +34,49 @@ export const MusicSettings = ({ scriptData, projectSlug, onUpdate }: MusicSettin
 
         if (musicCandidates.length > 0) {
             const candidate = musicCandidates[currentCandidateIndex]
+
+            // Priority 1: Use localPath if available (already downloaded)
             if (candidate?.localPath && projectSlug) {
                 return `/projects/${projectSlug}/${candidate.localPath}`
+            }
+
+            // Priority 2: Stream from downloadUrl if no localPath (not downloaded yet)
+            if (candidate?.downloadUrl) {
+                // Use proxy endpoint to avoid CORS issues and enable caching
+                const encodedUrl = encodeURIComponent(candidate.downloadUrl)
+                return `/api/music-proxy?url=${encodedUrl}&projectSlug=${projectSlug}&musicId=${candidate.id}`
             }
         }
 
         return null
     }, [importedMusicPath, projectSlug, musicCandidates, currentCandidateIndex])
+
+    // Sync currentCandidateIndex with selectedMusicId from scriptData on mount/load
+    useEffect(() => {
+        const selectedId = scriptData?.music?.selectedMusicId
+        if (selectedId && musicCandidates.length > 0 && !hasInitializedIndex) {
+            const index = musicCandidates.findIndex(c => c.id === selectedId)
+            if (index !== -1) {
+                setCurrentCandidateIndex(index)
+                setHasInitializedIndex(true)
+            }
+        }
+    }, [scriptData?.music?.selectedMusicId, musicCandidates, hasInitializedIndex])
+
+    // Reset initialization flag if candidates change significantly
+    useEffect(() => {
+        setHasInitializedIndex(false)
+    }, [musicCandidates.length])
+
+    // Debug: Log music source changes
+    useEffect(() => {
+        console.log('[MusicSettings] Music source changed:', {
+            currentMusicSource,
+            currentCandidateIndex,
+            candidate: musicCandidates[currentCandidateIndex],
+            importedMusicPath
+        })
+    }, [currentMusicSource, currentCandidateIndex, musicCandidates, importedMusicPath])
 
     // Auto-play when changing track
     useEffect(() => {
@@ -66,6 +110,10 @@ export const MusicSettings = ({ scriptData, projectSlug, onUpdate }: MusicSettin
         const newScript = { ...scriptData }
         if (!newScript.music) {
             newScript.music = { enabled: true, volume: 0.2, fadeIn: 2, fadeOut: 2 }
+        }
+        // Ensure enabled is present if not already there
+        if (newScript.music.enabled === undefined) {
+            newScript.music.enabled = true
         }
         newScript.music = { ...newScript.music, ...updates }
         onUpdate(newScript)
@@ -285,8 +333,8 @@ export const MusicSettings = ({ scriptData, projectSlug, onUpdate }: MusicSettin
 
                                             {/* Time Display */}
                                             <div className="flex justify-between text-[10px] text-gray-500 font-mono">
-                                                <span>{new Date(musicProgress * 1000).toISOString().substr(14, 5)}</span>
-                                                <span>{new Date((musicDuration || 0) * 1000).toISOString().substr(14, 5)}</span>
+                                                <span>{formatTime(musicProgress)}</span>
+                                                <span>{formatTime(musicDuration)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -322,15 +370,44 @@ export const MusicSettings = ({ scriptData, projectSlug, onUpdate }: MusicSettin
                     </div>
                 )}
 
-                {/* AI Description Prompt */}
+                {/* AI Description & Search Tags */}
+                <div className="grid grid-cols-2 gap-6">
+                    <div>
+                        <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
+                            <span className="material-symbols-outlined text-[18px] text-purple-500">auto_awesome</span>
+                            Music Mood
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none text-sm"
+                            placeholder="e.g., Sad, Epic, Happy..."
+                            value={scriptData?.music?.mood || ''}
+                            onChange={(e) => updateMusic({ mood: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
+                            <span className="material-symbols-outlined text-[18px] text-blue-500">search</span>
+                            Search Query
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none text-sm"
+                            placeholder="e.g., emotional piano, cinematic strings..."
+                            value={scriptData?.music?.query || ''}
+                            onChange={(e) => updateMusic({ query: e.target.value })}
+                        />
+                    </div>
+                </div>
+
                 <div>
                     <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
-                        <span className="material-symbols-outlined text-[18px] text-purple-500">auto_awesome</span>
+                        <span className="material-symbols-outlined text-[18px] text-purple-500">description</span>
                         AI Music Description
                     </label>
                     <textarea
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none text-sm min-h-[80px]"
-                        placeholder="Describe the mood, instruments, or style you want for the music (e.g., 'Relaxing piano solution with gentle strings, emotional and cinematic')"
+                        placeholder="Describe the mood, instruments, or style you want for the music..."
                         value={scriptData?.music?.description || ''}
                         onChange={(e) => updateMusic({ description: e.target.value })}
                     />

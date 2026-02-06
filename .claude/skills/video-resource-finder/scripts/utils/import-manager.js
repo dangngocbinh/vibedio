@@ -64,41 +64,121 @@ class ImportManager {
     async importSingleResource(selection) {
         const { sceneId, resource } = selection;
 
-        if (!resource.localPath) {
-            throw new Error(`Resource has no localPath to import`);
-        }
-
-        // Check if file exists
-        try {
-            await fsp.access(resource.localPath);
-        } catch (err) {
-            throw new Error(`Source file not found: ${resource.localPath}`);
-        }
-
         // Determine resource type and target directory
         const type = this.detectResourceType(resource);
         const targetDir = path.join(this.importsDir, type);
-
         await fsp.mkdir(targetDir, { recursive: true });
 
         // Generate import filename
-        const ext = path.extname(resource.localPath);
+        const ext = this.getResourceExtension(resource);
         const filename = this.generateImportFilename(sceneId, resource, ext);
         const targetPath = path.join(targetDir, filename);
 
-        // Copy file to imports/
-        await fsp.copyFile(resource.localPath, targetPath);
+        // Check if file exists locally
+        let sourcePath = resource.localPath;
+        let fileExists = false;
 
-        console.log(`  ✓ ${sceneId}: ${filename}`);
+        if (sourcePath) {
+            try {
+                await fsp.access(sourcePath);
+                fileExists = true;
+            } catch (err) {
+                fileExists = false;
+            }
+        }
+
+        // If local file missing but URL exists, download it
+        if (!fileExists) {
+            if (resource.url || (resource.downloadUrls && (resource.downloadUrls.hd || resource.downloadUrls.sd || resource.downloadUrls.original || resource.downloadUrls.large))) {
+                console.log(`  ⬇️  Downloading from URL for "${sceneId}"...`);
+
+                // Determine best download URL
+                let downloadUrl = resource.url;
+                if (resource.downloadUrls) {
+                    downloadUrl = resource.downloadUrls.hd || resource.downloadUrls.original || resource.downloadUrls.large || resource.downloadUrls.sd || resource.url;
+                }
+
+                if (!downloadUrl) {
+                    throw new Error(`No download URL found for resource ${resource.id}`);
+                }
+
+                try {
+                    await this.downloadFile(downloadUrl, targetPath);
+                    console.log(`  ✓ Downloaded: ${filename}`);
+                } catch (err) {
+                    throw new Error(`Failed to download resource: ${err.message}`);
+                }
+            } else {
+                throw new Error(`Source file not found and no URL available: ${sourcePath}`);
+            }
+        } else {
+            // Copy file to imports/ if local file exists
+            await fsp.copyFile(sourcePath, targetPath);
+            console.log(`  ✓ Copied: ${filename}`);
+        }
 
         // Return updated resource
         return {
             ...resource,
             importedPath: targetPath,
             relativePath: path.relative(this.projectDir, targetPath),
-            originalDownloadPath: resource.localPath,
+            originalDownloadPath: sourcePath || 'url-download',
             importedAt: new Date().toISOString()
         };
+    }
+
+    /**
+     * Download file from URL
+     */
+    async downloadFile(url, destPath) {
+        const https = require('https');
+        const file = fs.createWriteStream(destPath);
+
+        return new Promise((resolve, reject) => {
+            const request = https.get(url, (response) => {
+                // Handle redirects
+                if (response.statusCode === 301 || response.statusCode === 302) {
+                    this.downloadFile(response.headers.location, destPath).then(resolve).catch(reject);
+                    return;
+                }
+
+                if (response.statusCode !== 200) {
+                    reject(new Error(`Failed to download: ${response.statusCode}`));
+                    return;
+                }
+
+                response.pipe(file);
+
+                file.on('finish', () => {
+                    file.close();
+                    resolve();
+                });
+            });
+
+            request.on('error', (err) => {
+                fs.unlink(destPath, () => { }); // Delete failed file
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * Get extension from resource
+     */
+    getResourceExtension(resource) {
+        if (resource.localPath) {
+            return path.extname(resource.localPath);
+        }
+        // Guess from URL or type
+        if (resource.url) {
+            const ext = path.extname(new URL(resource.url).pathname);
+            if (ext) return ext;
+        }
+        // Fallback defaults
+        if (resource.type === 'video') return '.mp4';
+        if (resource.type === 'image') return '.jpg';
+        if (resource.type === 'music') return '.mp3';
+        return '.dat';
     }
 
     /**
@@ -269,7 +349,9 @@ class ImportManager {
 
                 // Find and update the selected resource
                 const selectedResource = group.results?.find(r =>
-                    r.id === imported.id || r.localPath === imported.originalDownloadPath
+                    r.id === imported.id ||
+                    r.localPath === imported.originalDownloadPath ||
+                    (r.url && r.url === imported.url)
                 );
 
                 if (selectedResource) {

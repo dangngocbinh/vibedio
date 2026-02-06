@@ -9,10 +9,11 @@ Steps (user-friendly Vietnamese names):
 3. voice_generated   → "Tạo giọng đọc"
 4. structure_created → "Tạo cấu trúc"
 5. timing_synced     → "Đồng bộ timing"
-6. resources_found   → "Tìm tài nguyên"
-7. resources_imported → "Tải tài nguyên"
-8. video_built       → "Dựng video"
-9. video_edited      → "Chỉnh sửa video"
+6. plan_confirmed    → "Xác nhận visual"
+7. resources_found   → "Tìm tài nguyên"
+8. resources_imported → "Tải tài nguyên"
+9. video_built       → "Dựng video"
+10. video_edited     → "Chỉnh sửa video"
 """
 
 import json
@@ -24,14 +25,15 @@ from typing import Dict, Optional, List, Any
 # Step definitions with order and Vietnamese names
 STEPS = {
     "script_created": {"order": 1, "name": "Tạo kịch bản", "description": "Khởi tạo project với script.json"},
-    "text_confirmed": {"order": 2, "name": "Xác nhận nội dung", "description": "User đã xác nhận nội dung kịch bản"},
+    "text_confirmed": {"order": 2, "name": "Xác nhận nội dung", "description": "User đã xác nhận nội dung kịch bản (Checkpoint 1)"},
     "voice_generated": {"order": 3, "name": "Tạo giọng đọc", "description": "Đã tạo voice.mp3 và voice.json"},
     "structure_created": {"order": 4, "name": "Tạo cấu trúc", "description": "Đã tạo sections và scenes"},
     "timing_synced": {"order": 5, "name": "Đồng bộ timing", "description": "Đã sync timing với voice"},
-    "resources_found": {"order": 6, "name": "Tìm tài nguyên", "description": "Đã tìm video/image từ APIs"},
-    "resources_imported": {"order": 7, "name": "Tải tài nguyên", "description": "Đã download resources về local"},
-    "video_built": {"order": 8, "name": "Dựng video", "description": "Đã build project.otio"},
-    "video_edited": {"order": 9, "name": "Chỉnh sửa video", "description": "Đã edit trên project.otio"}
+    "plan_confirmed": {"order": 6, "name": "Xác nhận visual", "description": "User đã xác nhận visual descriptions (Checkpoint 2)"},
+    "resources_found": {"order": 7, "name": "Tìm tài nguyên", "description": "Đã tìm video/image từ APIs (Checkpoint 3)"},
+    "resources_imported": {"order": 8, "name": "Tải tài nguyên", "description": "Đã download resources về local"},
+    "video_built": {"order": 9, "name": "Dựng video", "description": "Đã build project.otio"},
+    "video_edited": {"order": 10, "name": "Chỉnh sửa video", "description": "Đã edit trên project.otio"}
 }
 
 # Steps that trigger "dangerous rebuild" warning (when going back before these)

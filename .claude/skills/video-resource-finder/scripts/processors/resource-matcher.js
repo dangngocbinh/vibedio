@@ -605,6 +605,11 @@ class ResourceMatcher {
 
     try {
       console.log(`[ResourceMatcher] Generating AI image for scene "${sceneId}": "${query}"`);
+      if (referenceImages && referenceImages.length > 0) {
+        console.log(`[ResourceMatcher] Found ${referenceImages.length} reference images. First: ${referenceImages[0]}`);
+      } else {
+        console.log(`[ResourceMatcher] No reference images found in query object.`);
+      }
 
       // Build enhanced prompt
       const enhancedPrompt = this.buildAIPrompt(query, sceneText, style);
@@ -613,7 +618,7 @@ class ResourceMatcher {
         aspectRatio: '16:9',
         outputDir: this.projectDir,
         filename: `${sceneId}_ai.png`,
-        referenceImages: this._resolveReferenceImages(referenceImages)
+        referenceImage: this._resolveReferenceImages(referenceImages)[0] // Take first image, GeminiClient expects singular 'referenceImage'
       });
 
       if (!result.success) {
@@ -644,7 +649,8 @@ class ResourceMatcher {
           source: 'gemini-nano-banana',
           generated: true,
           license: 'AI Generated (usage follows Gemini Terms of Service)',
-          rank: 1
+          rank: 1,
+          referenceImage: this._resolveReferenceImages(referenceImages)[0] || null
         }]
       };
 

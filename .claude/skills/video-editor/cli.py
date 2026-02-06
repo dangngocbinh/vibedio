@@ -126,7 +126,23 @@ def cmd_build(args):
 
         # Success message
         print("\nTimeline generation complete!")
-        print(f"   Next: Load '{Path(saved_path).name}' in Remotion Studio")
+        
+        # Auto-launch Remotion Studio
+        print(f"   🚀 Launching Remotion Studio for 'project.otio'...")
+        try:
+            import subprocess
+            # Use director.py studio command
+            director_script = Path(__file__).parent.parent / "video-production-director" / "director.py"
+            # Extract project name from path
+            project_name = Path(args.project_dir).name
+            
+            subprocess.Popen(
+                ["python3", str(director_script), "studio", "--project", project_name],
+                start_new_session=True # Detach
+            )
+        except Exception as e:
+             print(f"   ⚠️ Could not auto-launch Studio: {e}")
+             print(f"   PLEASE RUN: python3 .claude/skills/video-production-director/director.py studio --project {project_name}")
 
         return 0
 

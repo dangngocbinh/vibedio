@@ -20,7 +20,15 @@ class ScriptReader {
 
       console.log(`[ScriptReader] Loaded script from: ${scriptPath}`);
       console.log(`[ScriptReader] Project: ${script.metadata?.projectName || 'Unknown'}`);
-      console.log(`[ScriptReader] Scenes: ${script.scenes?.length || 0}`);
+
+      // Calculate total scenes including those in sections
+      let totalScenes = script.scenes?.length || 0;
+      if (script.sections) {
+        script.sections.forEach(section => {
+          if (section.scenes) totalScenes += section.scenes.length;
+        });
+      }
+      console.log(`[ScriptReader] Scenes: ${totalScenes}`);
 
       return script;
     } catch (error) {
@@ -62,6 +70,15 @@ class ScriptReader {
 
       if (scene.visualSuggestion) {
         visualItems.push(scene.visualSuggestion);
+      }
+
+      // Support visualDescription string (common in Vietnamese workflow)
+      if (scene.visualDescription && typeof scene.visualDescription === 'string') {
+        visualItems.push({
+          type: 'stock',
+          query: scene.visualDescription,
+          resourceType: scene.type || 'auto'
+        });
       }
 
       if (scene.visuals && Array.isArray(scene.visuals)) {

@@ -53,11 +53,14 @@ export const useProject = () => {
     }
 
     // Load project by slug
-    const loadProject = (projectSlug: string) => {
+    const loadProject = (projectSlug: string, updateUrl: boolean = true) => {
         setProjectTitle(`Project: ${projectSlug}`)
         setShowProjectList(false)
 
-        localStorage.setItem('lastOpenedProject', projectSlug)
+        // Only update localStorage if we're loading from user action, not from URL param
+        if (updateUrl) {
+            localStorage.setItem('lastOpenedProject', projectSlug)
+        }
 
         // Fetch script.json
         fetch(`/projects/${projectSlug}/script.json`)
@@ -73,13 +76,18 @@ export const useProject = () => {
                     setProjectTitle(data.metadata.projectName)
                 }
 
-                window.history.pushState({}, '', `?project=${projectSlug}`)
+                // Only update URL if needed
+                if (updateUrl) {
+                    window.history.pushState({}, '', `?project=${projectSlug}`)
+                }
             })
             .catch(err => {
                 console.error('Failed to load script.json:', err)
                 alert(`Failed to load project "${projectSlug}". Please check if the project exists.`)
                 setShowProjectList(true)
-                localStorage.removeItem('lastOpenedProject')
+                if (updateUrl) {
+                    localStorage.removeItem('lastOpenedProject')
+                }
             })
 
         // Fetch resources.json
@@ -137,13 +145,17 @@ export const useProject = () => {
         const project = params.get('project')
 
         if (project) {
-            loadProject(project)
+            // Load from URL param - don't update localStorage or URL
+            console.log('Loading project from URL param:', project)
+            loadProject(project, false)
         } else {
+            // No URL param - try localStorage
             const lastProject = localStorage.getItem('lastOpenedProject')
             if (lastProject) {
-                console.log('Loading last opened project:', lastProject)
-                loadProject(lastProject)
+                console.log('Loading last opened project from localStorage:', lastProject)
+                loadProject(lastProject, true)
             } else {
+                // No URL param and no localStorage - show project list
                 setShowProjectList(true)
                 fetchProjects()
             }
