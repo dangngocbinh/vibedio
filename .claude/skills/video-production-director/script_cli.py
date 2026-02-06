@@ -26,6 +26,7 @@ from utils.project_initializer import ProjectInitializer
 from utils.json_builder import JSONBuilder
 from utils.synchronizer import ScriptSynchronizer
 from utils.status_manager import StatusManager
+from scripts.auto_mapper import auto_map as run_auto_map
 import os
 
 def _get_default_voice_id(provider: str) -> str:
@@ -1254,6 +1255,13 @@ def main():
     translate_parser = subparsers.add_parser('translate-visuals', help='Translate visual descriptions to English')
     translate_parser.add_argument('--script', required=True, help='Path to script.json')
 
+    # ========== auto-map ==========
+    auto_map_parser = subparsers.add_parser('auto-map', help='Auto map local assets to scenes')
+    auto_map_parser.add_argument('--project', required=True, help='Project directory')
+    auto_map_parser.add_argument('--assets', required=True, help='Path to assets directory')
+    auto_map_parser.add_argument('--threshold', type=int, default=60, help='Matching threshold (0-100)')
+    auto_map_parser.add_argument('--dry-run', action='store_true', help='Preview only')
+
     # Parse args
     args = parser.parse_args()
 
@@ -1277,7 +1285,8 @@ def main():
         'confirm-text': cmd_confirm_text,
         'confirm-plan': cmd_confirm_plan,
         'rollback': cmd_rollback,
-        'translate-visuals': cmd_translate_visuals
+        'translate-visuals': cmd_translate_visuals,
+        'auto-map': cmd_auto_map
     }
 
     handler = commands.get(args.command)
@@ -1429,5 +1438,22 @@ def cmd_translate_visuals(args):
         return 1
 
 
+# ============================================================================
+# COMMAND: auto-map
+# ============================================================================
+
+def cmd_auto_map(args):
+    """Auto map local assets to scenes."""
+    print(f"🧩 Auto-mapping assets from: {args.assets}")
+    try:
+        run_auto_map(args.project, args.assets, args.threshold, args.dry_run)
+        return 0
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
 if __name__ == '__main__':
     sys.exit(main())
+

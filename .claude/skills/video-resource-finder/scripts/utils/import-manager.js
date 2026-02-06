@@ -166,18 +166,29 @@ class ImportManager {
      * Get extension from resource
      */
     getResourceExtension(resource) {
+        // 1. Try to get extension from localPath or URL
+        let ext = '';
         if (resource.localPath) {
-            return path.extname(resource.localPath);
+            ext = path.extname(resource.localPath);
         }
-        // Guess from URL or type
-        if (resource.url) {
-            const ext = path.extname(new URL(resource.url).pathname);
-            if (ext) return ext;
+        if (!ext && resource.url) {
+            try {
+                const urlPath = new URL(resource.url).pathname;
+                ext = path.extname(urlPath);
+            } catch (e) { }
         }
-        // Fallback defaults
+
+        // 2. If valid extension found (3-4 chars), use it
+        if (ext && ext.length >= 3 && ext.length <= 5) {
+            return ext;
+        }
+
+        // 3. Force semantic defaults based on type (PREVENT .dat)
         if (resource.type === 'video') return '.mp4';
         if (resource.type === 'image') return '.jpg';
         if (resource.type === 'music') return '.mp3';
+
+        // 4. Last resort
         return '.dat';
     }
 

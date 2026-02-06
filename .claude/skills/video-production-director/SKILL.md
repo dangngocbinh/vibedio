@@ -107,11 +107,11 @@ Write(
 - Review nội dung text và phân đoạn section chính
 - DỪNG LẠI chờ user confirm "OK" trước khi tạo voice.
 
-**CHECKPOINT 2** - Confirm Visual Plan (SAU Bước 3.5):
+**CHECKPOINT 2** - Confirm Visual Plan (SAU Bước 4):
 - Mở Script Planner để review scenes & visual descriptions.
 - DỪNG LẠI chờ user confirm "OK" trước khi tìm tài nguyên.
 
-**CHECKPOINT 3** - Confirm Media (SAU Bước 4):
+**CHECKPOINT 3** - Confirm Media (SAU Bước 6):
 - Mở Script Planner để review tài nguyên (video/image) đã tìm được.
 - DỪNG LẠI chờ user confirm "OK" trước khi download/import.
 
@@ -186,7 +186,7 @@ python3 ... rollback --step "timing_synced" --force
    ├─ 3.1: Generate voice (skill voice-generation)
    └─ 3.2: Update voice info vào script.json
    ↓
-3.5. Tạo Structure - Sections + Scenes (BASED ON Voice Timing) ⭐ MỚI
+4. Tạo Structure - Sections + Scenes (BASED ON Voice Timing) ⭐ MỚI
    ├─ Phân tích voice timing để breakdown sections
    ├─ Tạo scenes cho từng section (với visual descriptions)
    ├─ Sync timing chính xác cho sections VÀ scenes
@@ -199,7 +199,12 @@ python3 ... rollback --step "timing_synced" --force
    ✓ User có thể sửa mô tả/timing scenes
    → User confirm "OK" → Tiếp tục
    ↓
-4. Tìm Tài Nguyên (Resources) - Dựa trên scenes đã có timing
+5. Auto-Map Local Assets (NẾU CÓ) ⭐ MỚI
+   ├─ Quét local folder của user
+   ├─ Map ảnh/video vào scenes theo tên
+   └─ Lưu vào pinnedResources
+   ↓
+6. Tìm Tài Nguyên (Resources) - Dựa trên scenes đã có timing
    ├─ Tìm videos/images từ APIs (Pexels, Pixabay, DDG)
    ├─ Generate AI images nếu cần
    └─ URLs only (CHƯA download)
@@ -211,14 +216,14 @@ python3 ... rollback --step "timing_synced" --force
    ✓ User select/change resources nếu cần
    → User confirm "OK" → Tiếp tục
    ↓
-5. Import Selected Resources
+7. Import Selected Resources
    ├─ Intelligent selection (best from options)
    ├─ Download từ URL → imports/ (chỉ file đã chọn)
    └─ Update resources.json với imported paths
    ↓
-6. Build Timeline (Video Editor)
+8. Build Timeline (Video Editor)
    ↓
-7. Mở Remotion Studio
+9. Mở Remotion Studio
 ```
 
 **🎯 2 Checkpoints tách biệt rõ ràng:**
@@ -442,14 +447,13 @@ Khi text đã OK, cho em biết để em:
 
 ---
 
-### Bước 3: Tạo Giọng Đọc và Sync Timing cho Sections
+### Bước 3: Tạo Giọng Đọc (Voice Generation)
 
-**⚠️ CHỈ CHẠY SAU KHI USER APPROVE TEXT + SECTIONS (CHECKPOINT 1)**
+**⚠️ CHỈ CHẠY SAU KHI USER APPROVE TEXT (CHECKPOINT 1)**
 
-**Bước này gồm 3 sub-steps BẮT BUỘC:**
+**Bước này gồm 2 sub-steps BẮT BUỘC:**
 1. Generate Voice (tạo audio + timestamps)
 2. Update Voice Info (link audio với script)
-3. Sync Timing cho Sections (chưa có scenes)
 
 ---
 
@@ -495,7 +499,7 @@ python3 .claude/skills/video-production-director/script_cli.py update-voice \
 
 ---
 
-### Bước 3.3: Tạo Structure - Sections + Scenes (BASED ON Voice Timing)
+### Bước 4: Tạo Structure - Sections + Scenes (BASED ON Voice Timing)
 
 **⚠️ BƯỚC TÍCH HỢP - Tạo sections VÀ scenes SAU KHI đã có voice**
 
@@ -508,7 +512,7 @@ python3 .claude/skills/video-production-director/script_cli.py update-voice \
 
 ---
 
-#### 3.3.1: Phân tích Voice và Breakdown Structure
+#### 4.1: Phân tích Voice và Breakdown Structure
 
 **Workflow tích hợp (Agent tự động thực hiện):**
 
@@ -557,7 +561,7 @@ python3 .claude/skills/video-production-director/script_cli.py add-section \
 
 ---
 
-#### 3.3.2: Add Sections + Scenes và Sync Timing (Tích hợp)
+#### 4.2: Add Sections + Scenes và Sync Timing (Tích hợp)
 
 **⭐ KHUYẾN NGHỊ: Dùng tool Write để tạo script tích hợp**
 
@@ -568,7 +572,7 @@ Agent nên tạo một script Python tạm để thực hiện toàn bộ workfl
 
 **Hoặc chạy thủ công từng bước:**
 
-**Bước A: Add scenes cho từng section:**
+**Bước 1: Add scenes cho từng section:**
 
 ```bash
 # ✅ ĐÚNG: Command là add-scenes (số nhiều)
@@ -591,7 +595,7 @@ node .claude/skills/video-production-director/scripts/add-scenes-batch.js \
   --section "outro" "public/projects/my-video/init/scenes_outro.json"
 ```
 
-**Sau đó NGAY LẬP TỨC sync timing cho scenes:**
+**Bước 2: Sau đó NGAY LẬP TỨC sync timing cho scenes:**
 
 ```bash
 python3 .claude/skills/video-production-director/script_cli.py sync \
@@ -606,7 +610,7 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 
 ---
 
-**Template giao tiếp sau Bước 3.3:**
+**Template giao tiếp sau Bước 4:**
 
 ```
 ✅ Đã tạo xong scenes dựa trên voice timing!
@@ -640,7 +644,7 @@ python3 .claude/skills/video-production-director/script_cli.py sync \
 
 ---
 
-### 📍 CHECKPOINT 2: Visual Plan Review (Script Planner) ⭐ MỚI
+### 📍 CHECKPOINT 2: Visual Plan Review (Script Planner) ⭐ (SAU BƯỚC 4)
 
 **⚠️ BẮT BUỘC DỪNG LẠI - Review visual descriptions TRƯỚC KHI tìm tài nguyên**
 
@@ -696,7 +700,30 @@ npm run plan
 
 ---
 
-### Bước 4: Tìm Tài Nguyên
+### Bước 5: Auto-Map Local Assets (CÓ LOCAL FILES)
+
+**Skill**: `auto-map` (script_cli.py)
+
+**Mục đích:** Tự động gán (map) các file ảnh/video có sẵn trên máy (local) vào các Scene tương ứng dựa trên tên file.
+
+**Khi nào dùng?**
+- Khi user nói: "Anh có sẵn folder ảnh ở ~/Downloads/...", "Dùng ảnh trong folder này nhé..."
+- Giúp tận dụng tài nguyên có sẵn, đỡ phải tìm kiếm lại.
+
+**Command:**
+```bash
+python3 .claude/skills/video-production-director/script_cli.py auto-map \
+  --project "public/projects/my-video" \
+  --assets "/path/to/local/folder"
+```
+
+**Output:**
+- Tự động import các file match > 60% vào `pinnedResources` của Scene.
+- Report số lượng scene match thành công.
+
+---
+
+### Bước 6: Tìm Tài Nguyên
 
 **Skill**: `video-resource-finder`
 
@@ -725,7 +752,7 @@ npm run plan
 
 ---
 
-### 📍 CHECKPOINT 3: Media Selection Review (Script Planner) ⭐
+### 📍 CHECKPOINT 3: Media Selection Review (Script Planner) ⭐ (SAU BƯỚC 6)
 
 **⚠️ BẮT BUỘC DỪNG LẠI - Review media TRƯỚC KHI download/import**
 
@@ -812,7 +839,7 @@ npm run plan
 
 ---
 
-### Bước 5: Import Selected Resources ⚡ (SAU KHI USER CONFIRM)
+### Bước 7: Import Selected Resources ⚡ (SAU KHI USER CONFIRM)
 
 **⚠️ BẮT BUỘC: Chạy NGAY sau khi user confirm OK**
 
@@ -863,7 +890,7 @@ node .claude/skills/video-production-director/scripts/resource-import.js \
 
 ---
 
-### Bước 6: Build Timeline (Video Editor)
+### Bước 8: Build Timeline (Video Editor)
 
 **Skill**: `video-editor`
 
@@ -902,7 +929,7 @@ python3 .claude/skills/video-editor/cli.py build "public/projects/my-video"
 
 ---
 
-### Bước 7: Mở Remotion Studio
+### Bước 9: Mở Remotion Studio
 
 **⭐ QUAN TRỌNG: Luôn chạy sau khi build xong**
 
@@ -1437,12 +1464,12 @@ Luôn load skill con (đọc SKILL.md) trước khi gọi:
 - Show nội dung kịch bản text và phân đoạn cho user.
 - DỪNG LẠI chờ user confirm "OK" trước khi tạo voice.
 
-**CHECKPOINT 2 - Visual Plan Confirmation** (sau Bước 3.5):
+**CHECKPOINT 2 - Visual Plan Confirmation** (sau Bước 4):
 - Mở Script Planner (`npm run plan`) để review cấu trúc scenes & mô tả hình ảnh.
 - DỪNG LẠI chờ user confirm "OK" trước khi tìm tài nguyên.
 - Giúp đảm bảo mô tả visual đúng ý đồ kịch bản.
 
-**CHECKPOINT 3 - Media Confirmation** (sau Bước 4):
+**CHECKPOINT 3 - Media Confirmation** (sau Bước 6):
 - Mở Script Planner (`npm run plan`) để review tài nguyên (video/image) đã tìm được.
 - DỪNG LẠI chờ user confirm media selection.
 - KHÔNG tự động build video.
