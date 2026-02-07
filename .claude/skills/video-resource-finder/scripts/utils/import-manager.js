@@ -77,8 +77,9 @@ class ImportManager {
         // Check if file exists locally
         let sourcePath = resource.localPath;
         let fileExists = false;
+        const localExt = sourcePath ? path.extname(sourcePath).toLowerCase() : '';
 
-        if (sourcePath) {
+        if (sourcePath && localExt !== '.dat') {
             try {
                 await fsp.access(sourcePath);
                 fileExists = true;
@@ -132,7 +133,7 @@ class ImportManager {
      */
     async downloadFile(url, destPath) {
         const https = require('https');
-        const file = fs.createWriteStream(destPath);
+        const tempPath = `${destPath}.tmp`;
 
         return new Promise((resolve, reject) => {
             const request = https.get(url, (response) => {
@@ -147,16 +148,26 @@ class ImportManager {
                     return;
                 }
 
+                const contentType = String(response.headers['content-type'] || '').toLowerCase();
+                if (contentType.includes('text/html')) {
+                    reject(new Error(`Invalid media response (HTML): ${url}`));
+                    return;
+                }
+
+                const file = fs.createWriteStream(tempPath);
                 response.pipe(file);
 
                 file.on('finish', () => {
                     file.close();
-                    resolve();
+                    fs.rename(tempPath, destPath, (err) => {
+                        if (err) return reject(err);
+                        resolve();
+                    });
                 });
             });
 
             request.on('error', (err) => {
-                fs.unlink(destPath, () => { }); // Delete failed file
+                fs.unlink(tempPath, () => { }); // Delete failed file
                 reject(err);
             });
         });
@@ -179,7 +190,7 @@ class ImportManager {
         }
 
         // 2. If valid extension found (3-4 chars), use it
-        if (ext && ext.length >= 3 && ext.length <= 5) {
+        if (ext && ext.length >= 3 && ext.length <= 5 && ext !== '.dat' && ext !== '.bin') {
             return ext;
         }
 
@@ -189,7 +200,7 @@ class ImportManager {
         if (resource.type === 'music') return '.mp3';
 
         // 4. Last resort
-        return '.dat';
+        return '.bin';
     }
 
     /**

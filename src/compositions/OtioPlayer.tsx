@@ -151,32 +151,33 @@ export const toFrames = (time: RationalTime, compositionFps: number) => {
 // Helper function sanitize URLs
 export const sanitizeUrl = (url?: string, projectId?: string) => {
     if (!url) return url;
+    const normalizedUrl = url.replace(/\\/g, '/');
 
     // Handle file:// protocol
-    if (url.startsWith('file://')) {
-        const publicIndex = url.indexOf('/public/');
+    if (normalizedUrl.startsWith('file://')) {
+        const publicIndex = normalizedUrl.indexOf('/public/');
         if (publicIndex !== -1) {
-            const relativePath = url.substring(publicIndex + 8);
+            const relativePath = normalizedUrl.substring(publicIndex + 8);
             return staticFile(relativePath);
         }
     }
 
     // Handle paths starting with /audio/ (Specific fix for SFX)
-    if (url.startsWith('/audio/')) {
-        return staticFile(url.substring(1));
+    if (normalizedUrl.startsWith('/audio/')) {
+        return staticFile(normalizedUrl.substring(1));
     }
 
     // Handle relative paths (not http/https/data)
-    if (!url.match(/^(https?:|data:|file:|\/)/)) {
+    if (!normalizedUrl.match(/^(https?:|data:|file:|\/)/)) {
         if (projectId) {
             // Check if it's already properly prefixed to avoid double-prefixing if logic changes
-            if (!url.startsWith(`projects/${projectId}`)) {
-                return staticFile(`projects/${projectId}/${url}`);
+            if (!normalizedUrl.startsWith(`projects/${projectId}`)) {
+                return staticFile(`projects/${projectId}/${normalizedUrl}`);
             }
         }
     }
 
-    return url;
+    return normalizedUrl;
 };
 
 export const OtioClip: React.FC<{

@@ -33,7 +33,25 @@ export const loadProject = async (project: ProjectItem, ignoreCache: boolean = f
     if (project.hasOtio && project.otioFile) {
         const res = await fetch(`${projectBase}/${project.otioFile}${cacheBuster}`);
         const otio = await res.json();
-        return fixOtioPaths(otio, projectBase);
+
+        // Also load script/resources if available so we can force local media URLs
+        // for smoother preview/render and avoid invalid page URLs in OTIO.
+        let script: any = null;
+        let resources: any = null;
+        try {
+            const scriptRes = await fetch(`${projectBase}/script.json${cacheBuster}`);
+            if (scriptRes.ok) script = await scriptRes.json();
+        } catch {
+            // best-effort only
+        }
+        try {
+            const resourcesRes = await fetch(`${projectBase}/resources.json${cacheBuster}`);
+            if (resourcesRes.ok) resources = await resourcesRes.json();
+        } catch {
+            // best-effort only
+        }
+
+        return fixOtioPaths(otio, projectBase, script, resources);
     }
 
     if (project.hasScript) {
@@ -51,7 +69,157 @@ export const loadProject = async (project: ProjectItem, ignoreCache: boolean = f
     throw new Error('No valid project file found');
 };
 
-const fixOtioPaths = (item: any, basePath: string): any => {
+const isExternalUrl = (value?: string) => !!value && /^(https?:|data:|blob:|file:)/i.test(value);
+
+const normalizeRelativePath = (value: string) => value.replace(/\\/g, '/').replace(/^\/+/, '');
+
+const toProjectMediaUrl = (basePath: string, maybePath?: string): string | null => {
+    if (!maybePath) return null;
+    const normalized = maybePath.replace(/\\/g, '/');
+
+    if (isExternalUrl(normalized)) {
+        return normalized;
+    }
+
+    // absolute local path containing /public/projects/...
+    const fromPublic = normalized.match(/public\/projects\/(.+)/i);
+    if (fromPublic) {
+        return staticFile(`projects/${normalizeRelativePath(fromPublic[1])}`);
+    }
+
+    // already project-relative path
+    return `${basePath}/${normalizeRelativePath(normalized)}`;
+};
+
+const flattenScenes = (script: any): any[] => {
+    if (!script) return [];
+    if (Array.isArray(script.scenes)) return script.scenes;
+    if (Array.isArray(script.sections)) {
+        return script.sections.flatMap((section: any) => section?.scenes || []);
+    }
+    return [];
+};
+
+const pickLocalPathFromResource = (resource: any): string | null => {
+    if (!resource) return null;
+    if (typeof resource.localPath === 'string' && resource.localPath.trim()) {
+        const local = resource.localPath.trim();
+        // Ignore obviously invalid downloaded extension
+        if (!/\.dat($|\?)/i.test(local)) return local;
+    }
+    return null;
+};
+
+const pickRemoteMediaUrlFromResource = (resource: any): string | null => {
+    if (!resource) return null;
+
+    const candidates = [
+        resource.downloadUrl,
+        resource.downloadUrls?.['4k'],
+        resource.downloadUrls?.hd,
+        resource.downloadUrls?.large,
+        resource.downloadUrls?.medium,
+        resource.downloadUrls?.original,
+        resource.downloadUrls?.sd,
+        resource.url
+    ].filter(Boolean) as string[];
+
+    const mediaLike = candidates.find((u) => /\.(mp4|webm|mov|m4v|jpg|jpeg|png|gif|webp|svg)($|\?)/i.test(u));
+    if (mediaLike) return mediaLike;
+
+    // Last resort: keep only real file links, avoid HTML page links (pexels.com/video/...).
+    const notPageUrl = candidates.find((u) => !/pexels\.com\/(video|photo)\//i.test(u));
+    return notPageUrl || null;
+};
+
+const buildLocalResourcesByScene = (resources: any): Record<string, any[]> => {
+    const byScene: Record<string, any[]> = {};
+    if (!resources?.resources) return byScene;
+    const categories = ['videos', 'images', 'generatedImages', 'pinnedResources'];
+    categories.forEach((cat) => {
+        const entries = resources.resources?.[cat] || [];
+        entries.forEach((entry: any) => {
+            if (!entry?.sceneId || !Array.isArray(entry.results)) return;
+            if (!byScene[entry.sceneId]) byScene[entry.sceneId] = [];
+            byScene[entry.sceneId].push(...entry.results);
+        });
+    });
+    return byScene;
+};
+
+const buildScenePreferredMediaUrls = (script: any, resources: any, basePath: string): string[] => {
+    const scenes = flattenScenes(script);
+    const localByScene = buildLocalResourcesByScene(resources);
+
+    return scenes.map((scene: any) => {
+        const selectedIds = Array.isArray(scene?.selectedResourceIds) && scene.selectedResourceIds.length > 0
+            ? scene.selectedResourceIds
+            : (scene?.selectedResourceId ? [scene.selectedResourceId] : []);
+
+        const sceneCandidates = Array.isArray(scene?.resourceCandidates) ? scene.resourceCandidates : [];
+        const mergedCandidates = [...sceneCandidates, ...(localByScene[scene?.id] || [])];
+
+        const selectedCandidate = selectedIds.length > 0
+            ? mergedCandidates.find((r: any) => selectedIds.includes(r?.id))
+            : null;
+
+        const selectedLocal = pickLocalPathFromResource(selectedCandidate);
+        if (selectedLocal) return toProjectMediaUrl(basePath, selectedLocal);
+
+        const firstLocal = mergedCandidates
+            .map((r: any) => pickLocalPathFromResource(r))
+            .find((p: string | null) => !!p);
+        if (firstLocal) return toProjectMediaUrl(basePath, firstLocal);
+
+        const selectedRemote = pickRemoteMediaUrlFromResource(selectedCandidate);
+        if (selectedRemote) return selectedRemote;
+
+        const firstRemote = mergedCandidates
+            .map((r: any) => pickRemoteMediaUrlFromResource(r))
+            .find((p: string | null) => !!p);
+        if (firstRemote) return firstRemote;
+
+        return null;
+    }).filter(Boolean) as string[];
+};
+
+const forceLocalMediaOnMainVideoTrack = (otio: any, basePath: string, script: any, resources: any) => {
+    const preferredUrls = buildScenePreferredMediaUrls(script, resources, basePath);
+    if (preferredUrls.length === 0) return;
+
+    const tracks = otio?.tracks?.children || [];
+    for (const track of tracks) {
+        if (track?.kind !== 'Video') continue;
+        const clips = (track.children || []).filter((item: any) => item?.OTIO_SCHEMA?.startsWith('Clip'));
+        if (clips.length === 0) continue;
+
+        const isOverlayTrack = clips.every((clip: any) => !!clip?.metadata?.remotion_component);
+        if (isOverlayTrack) continue;
+
+        let clipIndex = 0;
+        for (const item of (track.children || [])) {
+            if (!item?.OTIO_SCHEMA?.startsWith('Clip')) continue;
+            const preferredLocal = preferredUrls[clipIndex];
+            clipIndex += 1;
+            if (!preferredLocal) continue;
+
+            const mediaRefKey = item.active_media_reference_key || 'DEFAULT_MEDIA';
+            if (!item.media_references) item.media_references = {};
+            if (!item.media_references[mediaRefKey]) {
+                item.media_references[mediaRefKey] = {
+                    OTIO_SCHEMA: 'ExternalReference.1',
+                    target_url: preferredLocal
+                };
+            } else {
+                item.media_references[mediaRefKey].target_url = preferredLocal;
+            }
+        }
+        // Only force on the first primary video track
+        break;
+    }
+};
+
+const fixOtioPaths = (item: any, basePath: string, script?: any, resources?: any): any => {
     if (!item) return item;
 
     // Fix media references in current item
@@ -59,10 +227,12 @@ const fixOtioPaths = (item: any, basePath: string): any => {
         Object.keys(item.media_references).forEach(key => {
             const ref = item.media_references[key];
             if (ref && ref.target_url) {
-                // Check if url is relative (not http/s, not file://, not starting with /)
-                const url = ref.target_url;
-                if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('/')) {
-                    ref.target_url = `${basePath}/${url}`;
+                const rawUrl = String(ref.target_url);
+                const normalized = rawUrl.replace(/\\/g, '/');
+                if (!isExternalUrl(normalized)) {
+                    ref.target_url = `${basePath}/${normalizeRelativePath(normalized)}`;
+                } else {
+                    ref.target_url = normalized;
                 }
             }
         });
@@ -83,31 +253,24 @@ const fixOtioPaths = (item: any, basePath: string): any => {
         fixOtioPaths(item.tracks, basePath);
     }
 
+    // Apply local-media override once at timeline root.
+    if (item.OTIO_SCHEMA?.startsWith('Timeline')) {
+        forceLocalMediaOnMainVideoTrack(item, basePath, script, resources);
+    }
+
     return item;
 };
 
 const convertScriptToOtio = (script: any, resources: any, projectBase: string) => {
     const fps = 30;
-    const scenes = script.scenes || [];
+    const scenes = flattenScenes(script);
 
     // Read aspect ratio from script metadata
     const ratio = script.metadata?.ratio || DEFAULT_ASPECT_RATIO;
     const aspectConfig = getAspectRatio(ratio);
 
     // Map resources by sceneId
-    const videoResources: Record<string, string> = {};
-    if (resources && resources.resources && resources.resources.videos) {
-        resources.resources.videos.forEach((v: any) => {
-            // Pick the first result's HD url or available url
-            if (v.results && v.results.length > 0) {
-                // Use downloadUrls if available, else url
-                const downloadUrl = v.results[0].downloadUrls?.hd || v.results[0].url;
-                if (downloadUrl) {
-                    videoResources[v.sceneId] = downloadUrl;
-                }
-            }
-        });
-    }
+    const localByScene = buildLocalResourcesByScene(resources);
 
     // Determine total duration
     // Script has metadata.duration or sum of scenes
@@ -122,8 +285,34 @@ const convertScriptToOtio = (script: any, resources: any, projectBase: string) =
         const durationFrames = Math.round(scene.duration * fps);
         const startFrames = Math.round(scene.startTime * fps);
 
-        // Find media - use aspect-ratio-aware placeholder
-        const mediaUrl = videoResources[scene.id] || `https://placehold.co/${aspectConfig.width}x${aspectConfig.height}?text=${encodeURIComponent(scene.id)}`;
+        // Prefer local media from selected/manual resources, fallback to fetched remote URL, then placeholder.
+        const selectedIds = Array.isArray(scene?.selectedResourceIds) && scene.selectedResourceIds.length > 0
+            ? scene.selectedResourceIds
+            : (scene?.selectedResourceId ? [scene.selectedResourceId] : []);
+        const sceneCandidates = Array.isArray(scene?.resourceCandidates) ? scene.resourceCandidates : [];
+        const mergedCandidates = [...sceneCandidates, ...(localByScene[scene?.id] || [])];
+
+        const selectedCandidate = selectedIds.length > 0
+            ? mergedCandidates.find((r: any) => selectedIds.includes(r?.id))
+            : null;
+
+        const selectedLocal = pickLocalPathFromResource(selectedCandidate);
+        const firstLocal = mergedCandidates
+            .map((r: any) => pickLocalPathFromResource(r))
+            .find((p: string | null) => !!p);
+
+        let mediaUrl = selectedLocal
+            ? toProjectMediaUrl(projectBase, selectedLocal)
+            : (firstLocal ? toProjectMediaUrl(projectBase, firstLocal) : null);
+
+        if (!mediaUrl) {
+            const fallbackRemote = selectedCandidate?.downloadUrl ||
+                selectedCandidate?.downloadUrls?.hd ||
+                selectedCandidate?.downloadUrls?.large ||
+                selectedCandidate?.downloadUrls?.medium ||
+                selectedCandidate?.url;
+            mediaUrl = fallbackRemote || `https://placehold.co/${aspectConfig.width}x${aspectConfig.height}?text=${encodeURIComponent(scene.id)}`;
+        }
 
         return {
             "OTIO_SCHEMA": "Clip.1", // Standardize schema name

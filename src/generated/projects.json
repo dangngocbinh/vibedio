@@ -1,5 +1,16 @@
 [
   {
+    "id": "sinh-vien-2026-tiet-kiem",
+    "name": "sinh-vien-2026-tiet-kiem",
+    "path": "projects/sinh-vien-2026-tiet-kiem",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "ratio": "16:9",
+    "modifiedAt": "2026-02-07T09:04:32.026Z",
+    "timestamp": 1770455072026
+  },
+  {
     "id": "kiem-tien-online-2026",
     "name": "kiem-tien-online-2026",
     "path": "projects/kiem-tien-online-2026",
@@ -9,17 +20,6 @@
     "ratio": "9:16",
     "modifiedAt": "2026-02-06T02:56:40.954Z",
     "timestamp": 1770346600954
-  },
-  {
-    "id": "sinh-vien-2026-tiet-kiem",
-    "name": "sinh-vien-2026-tiet-kiem",
-    "path": "projects/sinh-vien-2026-tiet-kiem",
-    "hasScript": true,
-    "hasOtio": true,
-    "otioFile": "project.otio",
-    "ratio": "16:9",
-    "modifiedAt": "2026-02-05T08:51:14.019Z",
-    "timestamp": 1770281474019
   },
   {
     "id": "tai-chinh-tuoi-22",

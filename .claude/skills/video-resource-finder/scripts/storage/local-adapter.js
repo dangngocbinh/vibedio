@@ -39,7 +39,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
    * @returns {Promise<StorageResult>}
    */
   async store(data, metadata) {
-    const { filename, resourceType, sceneId } = metadata;
+    const { filename, resourceType, sceneId, mimeType } = metadata;
 
     // Determine target directory based on structure
     let targetDir;
@@ -53,7 +53,19 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     await fs.ensureDir(targetDir);
 
-    const filePath = path.join(targetDir, filename);
+    const safeFilename = this.normalizeFilename(filename, resourceType, mimeType);
+    const filePath = path.join(targetDir, safeFilename);
+
+    if (!this.isMimeCompatible(mimeType, resourceType)) {
+      return {
+        success: false,
+        localPath: null,
+        publicUrl: null,
+        identifier: null,
+        size: 0,
+        error: `MIME mismatch for ${resourceType}: ${mimeType || 'unknown'}`
+      };
+    }
 
     try {
       await fs.writeFile(filePath, data);
@@ -165,6 +177,49 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       '.m4a': 'audio/mp4'
     };
     return mimeTypes[ext] || 'application/octet-stream';
+  }
+
+  normalizeFilename(filename, resourceType, mimeType) {
+    const ext = path.extname(filename || '').toLowerCase();
+    const needsFix = !ext || ext === '.dat' || ext === '.bin';
+    if (!needsFix) return filename;
+
+    const base = path.basename(filename || `resource_${Date.now()}`, ext || undefined);
+    const inferredExt = this.inferExtensionFromMime(mimeType, resourceType);
+    return `${base}${inferredExt}`;
+  }
+
+  inferExtensionFromMime(mimeType, resourceType) {
+    const lower = String(mimeType || '').toLowerCase();
+    if (lower.includes('video/mp4')) return '.mp4';
+    if (lower.includes('video/webm')) return '.webm';
+    if (lower.includes('video/quicktime')) return '.mov';
+    if (lower.includes('image/jpeg')) return '.jpg';
+    if (lower.includes('image/png')) return '.png';
+    if (lower.includes('image/webp')) return '.webp';
+    if (lower.includes('image/gif')) return '.gif';
+    if (lower.includes('audio/mpeg')) return '.mp3';
+    if (lower.includes('audio/wav')) return '.wav';
+    if (lower.includes('audio/ogg')) return '.ogg';
+    if (lower.includes('audio/mp4')) return '.m4a';
+
+    const byType = {
+      video: '.mp4',
+      image: '.jpg',
+      music: '.mp3',
+      sfx: '.mp3'
+    };
+    return byType[resourceType] || '.bin';
+  }
+
+  isMimeCompatible(mimeType, resourceType) {
+    if (!mimeType) return true;
+    const lower = String(mimeType).toLowerCase();
+    if (lower.includes('text/html')) return false;
+    if (resourceType === 'video') return lower.startsWith('video/');
+    if (resourceType === 'image') return lower.startsWith('image/');
+    if (resourceType === 'music' || resourceType === 'sfx') return lower.startsWith('audio/');
+    return true;
   }
 
   /**

@@ -54,17 +54,22 @@ class ResourceDownloader {
     for (const videoGroup of (resources.videos || [])) {
       const resultsToDownload = videoGroup.results.slice(0, this.downloadCount);
       for (const result of resultsToDownload) {
-        const url = this.selectQuality(result.downloadUrls, 'video');
+        const fallbackUrls = this.getQualityUrls(result.downloadUrls, 'video');
+        const url = fallbackUrls[0] || null;
         if (url) {
           tasks.push({
             id: result.id,
             url: url,
+            options: {
+              expectedType: 'video'
+            },
             metadata: {
               resourceType: 'video',
               sceneId: videoGroup.sceneId,
               originalId: result.id,
               title: result.title,
-              selectedQuality: this.getSelectedQualityName(result.downloadUrls, url)
+              selectedQuality: this.getSelectedQualityName(result.downloadUrls, url),
+              fallbackUrls: fallbackUrls.slice(1)
             }
           });
         }
@@ -75,17 +80,22 @@ class ResourceDownloader {
     for (const imageGroup of (resources.images || [])) {
       const resultsToDownload = imageGroup.results.slice(0, this.downloadCount);
       for (const result of resultsToDownload) {
-        const url = this.selectQuality(result.downloadUrls, 'image');
+        const fallbackUrls = this.getQualityUrls(result.downloadUrls, 'image');
+        const url = fallbackUrls[0] || null;
         if (url) {
           tasks.push({
             id: result.id,
             url: url,
+            options: {
+              expectedType: 'image'
+            },
             metadata: {
               resourceType: 'image',
               sceneId: imageGroup.sceneId,
               originalId: result.id,
               title: result.title,
-              selectedQuality: this.getSelectedQualityName(result.downloadUrls, url)
+              selectedQuality: this.getSelectedQualityName(result.downloadUrls, url),
+              fallbackUrls: fallbackUrls.slice(1)
             }
           });
         }
@@ -100,6 +110,9 @@ class ResourceDownloader {
           tasks.push({
             id: result.id,
             url: result.downloadUrl,
+            options: {
+              expectedType: 'music'
+            },
             metadata: {
               resourceType: 'music',
               sceneId: musicGroup.mood,
@@ -120,6 +133,9 @@ class ResourceDownloader {
           tasks.push({
             id: result.id,
             url: result.downloadUrl,
+            options: {
+              expectedType: 'sfx'
+            },
             metadata: {
               resourceType: 'sfx',
               sceneId: sfxGroup.type,
@@ -142,7 +158,12 @@ class ResourceDownloader {
    * @returns {string|null} Selected URL
    */
   selectQuality(downloadUrls, mediaType) {
-    if (!downloadUrls) return null;
+    const urls = this.getQualityUrls(downloadUrls, mediaType);
+    return urls[0] || null;
+  }
+
+  getQualityUrls(downloadUrls, mediaType) {
+    if (!downloadUrls) return [];
 
     if (mediaType === 'video') {
       // Priority based on quality preference
@@ -155,9 +176,16 @@ class ResourceDownloader {
       };
 
       const order = priorities[this.qualityPreference] || priorities['best'];
+      const seen = new Set();
+      const urls = [];
       for (const quality of order) {
-        if (downloadUrls[quality]) return downloadUrls[quality];
+        const candidate = downloadUrls[quality];
+        if (candidate && !seen.has(candidate)) {
+          urls.push(candidate);
+          seen.add(candidate);
+        }
       }
+      if (urls.length > 0) return urls;
     } else {
       // Images
       const priorities = {
@@ -168,13 +196,28 @@ class ResourceDownloader {
       };
 
       const order = priorities[this.qualityPreference] || priorities['best'];
+      const seen = new Set();
+      const urls = [];
       for (const quality of order) {
-        if (downloadUrls[quality]) return downloadUrls[quality];
+        const candidate = downloadUrls[quality];
+        if (candidate && !seen.has(candidate)) {
+          urls.push(candidate);
+          seen.add(candidate);
+        }
       }
+      if (urls.length > 0) return urls;
     }
 
     // Fallback: return first available URL
-    return Object.values(downloadUrls).find(url => url) || null;
+    const unique = [];
+    const seen = new Set();
+    for (const url of Object.values(downloadUrls)) {
+      if (url && !seen.has(url)) {
+        unique.push(url);
+        seen.add(url);
+      }
+    }
+    return unique;
   }
 
   /**
@@ -200,6 +243,25 @@ class ResourceDownloader {
     const stored = [];
 
     for (const result of downloadResults) {
+      const fallbackUrls = result?.metadata?.fallbackUrls || [];
+
+      // Retry with fallback quality URLs if primary failed.
+      if ((!result.success || !result.data) && fallbackUrls.length > 0) {
+        for (const fallbackUrl of fallbackUrls) {
+          const retry = await this.fileDownloader.download(fallbackUrl, {
+            expectedType: result?.metadata?.resourceType
+          });
+          if (retry.success && retry.data) {
+            result.success = true;
+            result.data = retry.data;
+            result.size = retry.size;
+            result.mimeType = retry.mimeType;
+            result.url = fallbackUrl;
+            break;
+          }
+        }
+      }
+
       if (!result.success || !result.data) {
         stored.push({
           ...result,

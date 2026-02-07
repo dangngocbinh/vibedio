@@ -84,27 +84,33 @@ class ImportManager {
                 sourcePath = path.resolve(this.projectDir, sourcePath);
             }
 
-            try {
-                await fsp.access(sourcePath);
-                // File exists locally - copy it
-                const ext = path.extname(sourcePath);
-                const filename = this.generateImportFilename(sceneId, resource, ext);
-                const targetPath = path.join(targetDir, filename);
+            // Reject invalid local extension early and fallback to URL download
+            const localExt = path.extname(sourcePath).toLowerCase();
+            if (localExt === '.dat') {
+                console.log(`  ℹ️ ${sceneId}: localPath is .dat, skipping local and trying URL...`);
+            } else {
+                try {
+                    await fsp.access(sourcePath);
+                    // File exists locally - copy it
+                    const ext = path.extname(sourcePath);
+                    const filename = this.generateImportFilename(sceneId, resource, ext);
+                    const targetPath = path.join(targetDir, filename);
 
-                await fsp.copyFile(sourcePath, targetPath);
-                console.log(`  ✓ ${sceneId}: ${filename} (copied from local)`);
+                    await fsp.copyFile(sourcePath, targetPath);
+                    console.log(`  ✓ ${sceneId}: ${filename} (copied from local)`);
 
-                return {
-                    ...resource,
-                    sceneId, // Ensure sceneId is included for mapping
-                    importedPath: targetPath,
-                    relativePath: path.relative(this.projectDir, targetPath),
-                    originalDownloadPath: resource.localPath,
-                    importedAt: new Date().toISOString()
-                };
-            } catch (err) {
-                // Local file doesn't exist, try URL download
-                console.log(`  ℹ️ ${sceneId}: Local file not found, trying URL download...`);
+                    return {
+                        ...resource,
+                        sceneId, // Ensure sceneId is included for mapping
+                        importedPath: targetPath,
+                        relativePath: path.relative(this.projectDir, targetPath),
+                        originalDownloadPath: resource.localPath,
+                        importedAt: new Date().toISOString()
+                    };
+                } catch (err) {
+                    // Local file doesn't exist, try URL download
+                    console.log(`  ℹ️ ${sceneId}: Local file not found, trying URL download...`);
+                }
             }
         }
 
@@ -120,15 +126,18 @@ class ImportManager {
         const targetPath = path.join(targetDir, filename);
 
         // Download file
-        await this.downloadFromUrl(downloadUrl, targetPath);
-        console.log(`  ✓ ${sceneId}: ${filename} (downloaded from URL)`);
+        const downloadResult = await this.downloadFromUrl(downloadUrl, targetPath, type);
+        const finalPath = downloadResult.finalPath || targetPath;
+        const finalFilename = path.basename(finalPath);
+        console.log(`  ✓ ${sceneId}: ${finalFilename} (downloaded from URL)`);
 
         return {
             ...resource,
             sceneId, // Ensure sceneId is included for mapping
-            importedPath: targetPath,
-            relativePath: path.relative(this.projectDir, targetPath),
+            importedPath: finalPath,
+            relativePath: path.relative(this.projectDir, finalPath),
             downloadedFrom: downloadUrl,
+            mimeType: downloadResult.mimeType || resource.mimeType,
             importedAt: new Date().toISOString()
         };
     }
@@ -190,8 +199,8 @@ class ImportManager {
     getExtensionFromUrl(url, type) {
         // Try to extract from URL
         const urlPath = new URL(url).pathname;
-        const ext = path.extname(urlPath);
-        if (ext && ext.length <= 5) {
+        const ext = path.extname(urlPath).toLowerCase();
+        if (ext && ext.length <= 5 && ext !== '.dat' && ext !== '.bin') {
             return ext;
         }
 
@@ -211,16 +220,16 @@ class ImportManager {
      * @param {string} url - URL to download from
      * @param {string} destPath - Destination file path
      */
-    async downloadFromUrl(url, destPath) {
+    async downloadFromUrl(url, destPath, expectedType = null) {
         return new Promise((resolve, reject) => {
-            const protocol = url.startsWith('https') ? https : http;
             const tempPath = destPath + '.tmp';
-
-            const file = fs.createWriteStream(tempPath);
             let redirectCount = 0;
             const maxRedirects = 5;
 
             const makeRequest = (requestUrl) => {
+                const protocol = requestUrl.startsWith('https') ? https : http;
+                const file = fs.createWriteStream(tempPath);
+
                 const request = protocol.get(requestUrl, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
@@ -252,13 +261,33 @@ class ImportManager {
                         return;
                     }
 
+                    const contentType = String(response.headers['content-type'] || '').toLowerCase();
+                    if (contentType.includes('text/html')) {
+                        file.close();
+                        try { fs.unlinkSync(tempPath); } catch (e) { }
+                        reject(new Error(`Invalid media response (HTML): ${requestUrl}`));
+                        return;
+                    }
+                    if (!this.isMimeCompatible(contentType, expectedType)) {
+                        file.close();
+                        try { fs.unlinkSync(tempPath); } catch (e) { }
+                        reject(new Error(`MIME mismatch for ${expectedType}: ${contentType || 'unknown'}`));
+                        return;
+                    }
+
                     response.pipe(file);
 
                     file.on('finish', () => {
                         file.close();
+                        const expectedExt = this.inferExtensionFromMime(contentType, expectedType);
+                        const currentExt = path.extname(destPath).toLowerCase();
+                        let finalPath = destPath;
+                        if (expectedExt && currentExt !== expectedExt) {
+                            finalPath = destPath.slice(0, destPath.length - currentExt.length) + expectedExt;
+                        }
                         // Rename temp file to final
-                        fs.renameSync(tempPath, destPath);
-                        resolve();
+                        fs.renameSync(tempPath, finalPath);
+                        resolve({ finalPath, mimeType: contentType });
                     });
                 });
 
@@ -278,6 +307,36 @@ class ImportManager {
 
             makeRequest(url);
         });
+    }
+
+    inferExtensionFromMime(mimeType, expectedType) {
+        const lower = String(mimeType || '').toLowerCase();
+        if (lower.includes('video/mp4')) return '.mp4';
+        if (lower.includes('video/webm')) return '.webm';
+        if (lower.includes('video/quicktime')) return '.mov';
+        if (lower.includes('image/jpeg')) return '.jpg';
+        if (lower.includes('image/png')) return '.png';
+        if (lower.includes('image/webp')) return '.webp';
+        if (lower.includes('image/gif')) return '.gif';
+        if (lower.includes('audio/mpeg')) return '.mp3';
+        if (lower.includes('audio/wav')) return '.wav';
+        if (lower.includes('audio/ogg')) return '.ogg';
+        if (lower.includes('audio/mp4')) return '.m4a';
+
+        if (expectedType === 'videos') return '.mp4';
+        if (expectedType === 'images') return '.jpg';
+        if (expectedType === 'music' || expectedType === 'sfx') return '.mp3';
+        return '';
+    }
+
+    isMimeCompatible(mimeType, expectedType) {
+        if (!mimeType) return true;
+        const lower = String(mimeType).toLowerCase();
+        if (lower.includes('text/html')) return false;
+        if (expectedType === 'videos') return lower.startsWith('video/');
+        if (expectedType === 'images') return lower.startsWith('image/');
+        if (expectedType === 'music' || expectedType === 'sfx') return lower.startsWith('audio/');
+        return true;
     }
 
     /**

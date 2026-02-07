@@ -67,6 +67,9 @@ class AssetResolver:
         # 1. Check local paths FIRST - với validation
         for key in ["importedPath", "relativePath", "localPath"]:
             if resource.get(key):
+                if self._has_invalid_local_extension(resource[key]):
+                    print(f"⚠️ Skip invalid local extension for {key}: {resource[key]}")
+                    continue
                 full_path = self._resolve_full_path(resource[key])
                 if full_path.exists():
                     return self.sanitize_for_otio(resource[key])
@@ -96,6 +99,10 @@ class AssetResolver:
         if path_str.startswith('..'):
             return (self.project_dir / path_str).resolve()
         return self.project_dir / path_str
+
+    def _has_invalid_local_extension(self, path_str: str) -> bool:
+        ext = Path(path_str).suffix.lower()
+        return ext in {'.dat', '.tmp', '.part'}
 
     def _is_direct_media_url(self, url: str) -> bool:
         """Check if URL is direct media (not a page view)."""
@@ -244,11 +251,14 @@ class AssetResolver:
 
         # Format 3: Check localPath on music entry
         if first_music.get("localPath"):
-            full_path = self._resolve_full_path(first_music["localPath"])
-            if full_path.exists():
-                return self.sanitize_for_otio(first_music["localPath"])
+            if self._has_invalid_local_extension(first_music["localPath"]):
+                print(f"⚠️ Skip invalid music localPath extension: {first_music['localPath']}")
             else:
-                print(f"⚠️ Music localPath not found: {first_music['localPath']}")
+                full_path = self._resolve_full_path(first_music["localPath"])
+                if full_path.exists():
+                    return self.sanitize_for_otio(first_music["localPath"])
+                else:
+                    print(f"⚠️ Music localPath not found: {first_music['localPath']}")
 
         # Format 4: Direct downloadUrl on music entry (from add-music script)
         if "downloadUrl" in first_music and first_music["downloadUrl"]:
@@ -333,7 +343,7 @@ class AssetResolver:
 
                 # SECOND PASS: Look for any result with a localPath (downloaded)
                 for result in results:
-                    if result.get("localPath"):
+                    if result.get("localPath") and not self._has_invalid_local_extension(result["localPath"]):
                         return self.sanitize_for_otio(result["localPath"])
                 
                 # SECOND PASS: Look for any result with a playable downloadUrl
@@ -385,7 +395,7 @@ class AssetResolver:
 
                 # SECOND PASS: Look for local file
                 for result in results:
-                    if result.get("localPath"):
+                    if result.get("localPath") and not self._has_invalid_local_extension(result["localPath"]):
                         return self.sanitize_for_otio(result["localPath"])
                 
                 # SECOND PASS: Look for playable URL

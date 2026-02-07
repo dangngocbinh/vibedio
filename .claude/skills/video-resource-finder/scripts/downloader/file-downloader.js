@@ -18,7 +18,7 @@ class FileDownloader {
    * @returns {Promise<DownloadResult>}
    */
   async download(url, options = {}) {
-    const { headers = {}, retries = this.maxRetries } = options;
+    const { headers = {}, retries = this.maxRetries, expectedType = null } = options;
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
@@ -38,6 +38,17 @@ class FileDownloader {
 
         const contentType = response.headers['content-type'] || '';
         const contentLength = parseInt(response.headers['content-length'] || '0');
+        const normalizedType = String(contentType).toLowerCase();
+
+        // Reject HTML/error pages immediately (common cause of invalid media)
+        if (normalizedType.includes('text/html')) {
+          throw new Error(`Invalid media response (HTML) from ${url}`);
+        }
+
+        // Validate media type if caller provided expectation
+        if (expectedType && !this.isCompatibleMimeType(normalizedType, expectedType)) {
+          throw new Error(`MIME mismatch: expected ${expectedType}, got ${contentType || 'unknown'}`);
+        }
 
         return {
           success: true,
@@ -127,6 +138,19 @@ class FileDownloader {
   truncateUrl(url) {
     if (url.length <= 80) return url;
     return url.substring(0, 40) + '...' + url.substring(url.length - 30);
+  }
+
+  isCompatibleMimeType(mimeType, expectedType) {
+    if (!expectedType) return true;
+    if (!mimeType) return true; // allow unknown, downstream can validate extension/signature
+
+    const cleanType = String(expectedType).toLowerCase();
+    if (cleanType === 'video') return mimeType.startsWith('video/');
+    if (cleanType === 'image') return mimeType.startsWith('image/');
+    if (cleanType === 'music' || cleanType === 'sfx' || cleanType === 'audio') {
+      return mimeType.startsWith('audio/');
+    }
+    return true;
   }
 }
 
