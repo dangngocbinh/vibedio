@@ -31,6 +31,10 @@ export const MediaLayerModal = ({
 
     if (!isOpen) return null
 
+    const isFileDragEvent = (e: React.DragEvent): boolean => {
+        return Array.from(e.dataTransfer?.types || []).includes('Files')
+    }
+
     // Get selected resources in order
     const selectedResources = selectedResourceIds
         .map(id => resources.find(r => r.id === id))
@@ -67,6 +71,7 @@ export const MediaLayerModal = ({
     }
 
     const handleFileDrop = async (e: React.DragEvent) => {
+        if (!isFileDragEvent(e)) return
         e.preventDefault()
         setIsDraggingFile(false)
         
@@ -84,11 +89,13 @@ export const MediaLayerModal = ({
     }
 
     const handleDragOver = (e: React.DragEvent) => {
+        if (!isFileDragEvent(e)) return
         e.preventDefault()
         setIsDraggingFile(true)
     }
 
     const handleDragLeave = (e: React.DragEvent) => {
+        if (!isFileDragEvent(e)) return
         e.preventDefault()
         setIsDraggingFile(false)
     }
