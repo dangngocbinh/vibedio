@@ -31,6 +31,65 @@ export const SceneEditor = ({
     const hasInitializedIndexes = useRef(false)
     const [mediaModalOpen, setMediaModalOpen] = useState<string | null>(null) // sceneId of open modal
 
+    const getSelectedIds = (scene: any): string[] =>
+        scene.selectedResourceIds && scene.selectedResourceIds.length > 0
+            ? scene.selectedResourceIds
+            : (scene.selectedResourceId ? [scene.selectedResourceId] : [])
+
+    const getResourcePath = (resource: ResourceCandidate | undefined, projectSlug: string | null): string => {
+        if (!resource) {
+            return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo media%3C/text%3E%3C/svg%3E'
+        }
+
+        let rawPath = resource.localPath || resource.downloadUrl
+
+        if (!rawPath && resource.downloadUrls) {
+            rawPath = resource.downloadUrls['4k'] ||
+                resource.downloadUrls.hd ||
+                resource.downloadUrls.large ||
+                resource.downloadUrls.medium ||
+                resource.downloadUrls.original ||
+                resource.downloadUrls.sd
+        }
+
+        if (!rawPath && resource.url) {
+            rawPath = resource.url
+        }
+
+        if (!rawPath) {
+            return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo media%3C/text%3E%3C/svg%3E'
+        }
+
+        const normalizedPath = rawPath.replace(/\\/g, '/')
+
+        if (
+            normalizedPath.startsWith('http') ||
+            normalizedPath.startsWith('blob:') ||
+            normalizedPath.startsWith('data:')
+        ) {
+            return normalizedPath
+        }
+
+        const absolutePathMatch = normalizedPath.match(/public\/projects\/(.+)/i)
+        if (absolutePathMatch) {
+            return `/projects/${absolutePathMatch[1]}`
+        }
+
+        const isAbsoluteFsPath = normalizedPath.startsWith('/') || /^[A-Za-z]:\//.test(normalizedPath)
+        if (isAbsoluteFsPath) {
+            const filename = normalizedPath.split('/').pop()
+            if (projectSlug && filename) {
+                return `/projects/${projectSlug}/uploads/${filename}`
+            }
+            return filename ? `/uploads/${filename}` : normalizedPath
+        }
+
+        if (projectSlug) {
+            return `/projects/${projectSlug}/${normalizedPath}`
+        }
+        return normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
+    }
+
     // Initialize sceneResourceIndex based on selectedResourceId from script.json
     // Only run once when project first loads
     useEffect(() => {
@@ -280,6 +339,12 @@ export const SceneEditor = ({
                                     const resources = manualResources.length > 0 ? manualResources : fetchedResources
                                     const currentIndex = sceneResourceIndex[scene.id] || 0
                                     const currentResource = resources[currentIndex]
+                                    const selectedIds = getSelectedIds(scene)
+                                    const selectedResources = selectedIds
+                                        .map((id: string) => resources.find(r => r.id === id))
+                                        .filter(Boolean) as ResourceCandidate[]
+                                    const displayResource = selectedResources[0] || currentResource || resources[0]
+                                    const displayIndex = displayResource ? resources.findIndex(r => r.id === displayResource.id) : -1
                                     const selectedId = scene.selectedResourceId
                                     const projectSlug = new URLSearchParams(window.location.search).get('project')
 
@@ -331,7 +396,7 @@ export const SceneEditor = ({
                                         updateScene(sectionIdx, sceneIdx, updates)
                                     }
 
-                                    const selectionOrder = scene.selectedResourceIds?.indexOf(currentResource?.id || '') ?? -1
+                                    const selectionOrder = selectedIds.indexOf(displayResource?.id || '')
                                     const isSelected = selectionOrder !== -1
 
                                     return (
@@ -554,9 +619,9 @@ export const SceneEditor = ({
                                                                 </button>
 
                                                                 {/* Select Toggle Button */}
-                                                                {resources.length > 0 && currentResource && (
+                                                                {resources.length > 0 && displayResource && (
                                                                     <button
-                                                                        onClick={(e) => toggleSelection(e, currentResource.id)}
+                                                                        onClick={(e) => toggleSelection(e, displayResource.id)}
                                                                         className={`rounded-full size-7 flex items-center justify-center shadow-lg transform hover:scale-105 transition-all ${isSelected
                                                                             ? 'bg-green-500 hover:bg-green-600 text-white'
                                                                             : 'bg-white hover:bg-gray-100 text-gray-400'
@@ -586,9 +651,6 @@ export const SceneEditor = ({
                                                             {resources.length > 0 ? (
                                                                 <>
                                                                     {(() => {
-                                                                        // Use currentResource or fallback to first resource
-                                                                        const displayResource = currentResource || resources[0]
-
                                                                         console.log(`[Scene ${scene.id}] Preview render:`, {
                                                                             hasDisplayResource: !!displayResource,
                                                                             displayResourceId: displayResource?.id,
@@ -604,52 +666,12 @@ export const SceneEditor = ({
                                                                             return null
                                                                         }
 
-                                                                        // Handle both localPath and remote URLs
-                                                                        let rawPath = displayResource.localPath || displayResource.downloadUrl
-
-                                                                        // Fallback to downloadUrls object (for fetched resources)
-                                                                        if (!rawPath && displayResource.downloadUrls) {
-                                                                            rawPath = displayResource.downloadUrls['4k'] ||
-                                                                                displayResource.downloadUrls.hd ||
-                                                                                displayResource.downloadUrls.large ||
-                                                                                displayResource.downloadUrls.medium ||
-                                                                                displayResource.downloadUrls.original ||
-                                                                                displayResource.downloadUrls.sd
-                                                                        }
-
-                                                                        // Last resort: use Pexels page URL (not ideal but better than nothing)
-                                                                        if (!rawPath && displayResource.url) {
-                                                                            rawPath = displayResource.url
-                                                                        }
-
                                                                         // Use resource.type instead of file extension
                                                                         const isImage = displayResource.type === 'image'
 
-                                                                        // Build resource path
-                                                                        let resourcePath: string
-                                                                        if (!rawPath) {
-                                                                            // No path available - show placeholder
-                                                                            resourcePath = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo media%3C/text%3E%3C/svg%3E'
-                                                                        } else if (rawPath.startsWith('http') || rawPath.startsWith('blob:')) {
-                                                                            // Already a full URL
-                                                                            resourcePath = rawPath
-                                                                        } else if (rawPath.startsWith('/Users/') || rawPath.startsWith('/home/')) {
-                                                                            // Absolute path - extract relative portion after 'public/projects/'
-                                                                            const match = rawPath.match(/public\/projects\/(.+)/)
-                                                                            if (match) {
-                                                                                resourcePath = `/projects/${match[1]}`
-                                                                            } else {
-                                                                                // Fallback: try to extract filename
-                                                                                const filename = rawPath.split('/').pop()
-                                                                                resourcePath = `/projects/${projectSlug}/uploads/${filename}`
-                                                                            }
-                                                                        } else {
-                                                                            // Relative path
-                                                                            resourcePath = `/projects/${projectSlug}/${rawPath}`
-                                                                        }
+                                                                        const resourcePath = getResourcePath(displayResource, projectSlug)
 
                                                                         console.log(`[Scene ${scene.id}] Preview path:`, {
-                                                                            rawPath,
                                                                             resourcePath,
                                                                             isImage
                                                                         })
@@ -674,50 +696,13 @@ export const SceneEditor = ({
 
                                                                                 {/* Media Content - Show 3D fan stack if multiple selected */}
                                                                                 {(() => {
-                                                                                    const selectedIds = scene.selectedResourceIds ||
-                                                                                        (scene.selectedResourceId ? [scene.selectedResourceId] : [])
-
                                                                                     // If multiple layers selected, show them in card stack (like playing cards)
                                                                                     if (selectedIds.length > 1) {
-                                                                                        const selectedResources = selectedIds
-                                                                                            .map(id => resources.find(r => r.id === id))
-                                                                                            .filter(Boolean) as ResourceCandidate[]
-
                                                                                         return (
                                                                                             <div className="w-full h-full relative flex items-center justify-center">
                                                                                                 {selectedResources.map((res, idx) => {
                                                                                                     const isImg = res.type === 'image'
-                                                                                                    let rawPath = res.localPath || res.downloadUrl
-
-                                                                                                    if (!rawPath && res.downloadUrls) {
-                                                                                                        rawPath = res.downloadUrls['4k'] ||
-                                                                                                            res.downloadUrls.hd ||
-                                                                                                            res.downloadUrls.large ||
-                                                                                                            res.downloadUrls.medium ||
-                                                                                                            res.downloadUrls.original ||
-                                                                                                            res.downloadUrls.sd
-                                                                                                    }
-
-                                                                                                    if (!rawPath && res.url) {
-                                                                                                        rawPath = res.url
-                                                                                                    }
-
-                                                                                                    let resPath: string
-                                                                                                    if (!rawPath) {
-                                                                                                        resPath = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3C/svg%3E'
-                                                                                                    } else if (rawPath.startsWith('http') || rawPath.startsWith('blob:')) {
-                                                                                                        resPath = rawPath
-                                                                                                    } else if (rawPath.startsWith('/Users/') || rawPath.startsWith('/home/')) {
-                                                                                                        const match = rawPath.match(/public\/projects\/(.+)/)
-                                                                                                        if (match) {
-                                                                                                            resPath = `/projects/${match[1]}`
-                                                                                                        } else {
-                                                                                                            const filename = rawPath.split('/').pop()
-                                                                                                            resPath = `/projects/${projectSlug}/uploads/${filename}`
-                                                                                                        }
-                                                                                                    } else {
-                                                                                                        resPath = `/projects/${projectSlug}/${rawPath}`
-                                                                                                    }
+                                                                                                    const resPath = getResourcePath(res, projectSlug)
 
                                                                                                     // Calculate card stack offset (like playing cards)
                                                                                                     const totalVisible = selectedResources.length
@@ -785,7 +770,7 @@ export const SceneEditor = ({
                                                                                     <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between gap-1 z-10">
                                                                                         {resources.length > 1 && (
                                                                                             <div className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-mono backdrop-blur-sm">
-                                                                                                {currentIndex + 1}/{resources.length}
+                                                                                                {(displayIndex >= 0 ? displayIndex + 1 : 1)}/{resources.length}
                                                                                             </div>
                                                                                         )}
                                                                                         <div className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-medium backdrop-blur-sm flex items-center gap-0.5 ml-auto">

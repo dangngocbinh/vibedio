@@ -1,5 +1,16 @@
 [
   {
+    "id": "kiem-tien-online-2026",
+    "name": "kiem-tien-online-2026",
+    "path": "projects/kiem-tien-online-2026",
+    "hasScript": true,
+    "hasOtio": true,
+    "otioFile": "project.otio",
+    "ratio": "9:16",
+    "modifiedAt": "2026-02-06T02:56:40.954Z",
+    "timestamp": 1770346600954
+  },
+  {
     "id": "sinh-vien-2026-tiet-kiem",
     "name": "sinh-vien-2026-tiet-kiem",
     "path": "projects/sinh-vien-2026-tiet-kiem",

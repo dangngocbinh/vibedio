@@ -113,20 +113,34 @@ export const MediaLayerModal = ({
             return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo media%3C/text%3E%3C/svg%3E'
         }
 
-        if (rawPath.startsWith('http') || rawPath.startsWith('blob:')) {
-            return rawPath
+        const normalizedPath = rawPath.replace(/\\/g, '/')
+
+        if (
+            normalizedPath.startsWith('http') ||
+            normalizedPath.startsWith('blob:') ||
+            normalizedPath.startsWith('data:')
+        ) {
+            return normalizedPath
         }
 
-        if (rawPath.startsWith('/Users/') || rawPath.startsWith('/home/')) {
-            const match = rawPath.match(/public\/projects\/(.+)/)
-            if (match) {
-                return `/projects/${match[1]}`
+        const absolutePathMatch = normalizedPath.match(/public\/projects\/(.+)/i)
+        if (absolutePathMatch) {
+            return `/projects/${absolutePathMatch[1]}`
+        }
+
+        const isAbsoluteFsPath = normalizedPath.startsWith('/') || /^[A-Za-z]:\//.test(normalizedPath)
+        if (isAbsoluteFsPath) {
+            const filename = normalizedPath.split('/').pop()
+            if (projectSlug && filename) {
+                return `/projects/${projectSlug}/uploads/${filename}`
             }
-            const filename = rawPath.split('/').pop()
-            return `/projects/${projectSlug}/uploads/${filename}`
+            return filename ? `/uploads/${filename}` : normalizedPath
         }
 
-        return `/projects/${projectSlug}/${rawPath}`
+        if (projectSlug) {
+            return `/projects/${projectSlug}/${normalizedPath}`
+        }
+        return normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
     }
 
     const handleClose = () => {
