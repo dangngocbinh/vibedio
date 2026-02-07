@@ -32,7 +32,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
     style,
     startOffset = 0,
     theme: themeName,
-    position: directPosition,
+    position,
     font: directFont,
     highlightColor: directHighlightColor,
     fontSize: directFontSize,
@@ -74,10 +74,10 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                 containerBg: selectedTheme.style.containerBg,
                 containerPadding: selectedTheme.style.containerPadding || '8px 16px',
                 containerBorderRadius: selectedTheme.style.containerBorderRadius || 0,
-                position: directPosition || rawStyle.position || 'bottom',
+                position: position || rawStyle.position || 'bottom',
             }
         };
-    }, [themeName, style, directFont, directFontSize, directLetterSpacing, directHighlightColor, directPosition, scaleFontSize]);
+    }, [themeName, style, directFont, directFontSize, directLetterSpacing, directHighlightColor, position, scaleFontSize]);
 
     // Memoize position style (never changes during render)
     const positionStyle = useMemo((): React.CSSProperties => {
@@ -209,6 +209,7 @@ export const TikTokCaption: React.FC<TikTokCaptionProps> = ({
                 flexDirection: 'column',
                 alignItems: 'center',
                 ...positionStyle,
+                height: 'auto',
                 pointerEvents: 'none',
             }}
         >
