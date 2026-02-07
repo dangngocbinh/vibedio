@@ -274,6 +274,12 @@ export const MediaLayerModal = ({
                                                             src={resourcePath}
                                                             className="w-full h-full object-cover"
                                                             muted
+                                                            playsInline
+                                                            onMouseEnter={(e) => e.currentTarget.play()}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.pause()
+                                                                e.currentTarget.currentTime = 0
+                                                            }}
                                                         />
                                                     )}
                                                     <div className="absolute top-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">
@@ -372,6 +378,12 @@ export const MediaLayerModal = ({
                                                             src={resourcePath}
                                                             className="w-full h-full object-cover"
                                                             muted
+                                                            playsInline
+                                                            onMouseEnter={(e) => e.currentTarget.play()}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.pause()
+                                                                e.currentTarget.currentTime = 0
+                                                            }}
                                                         />
                                                     )}
                                                     {/* Selection Badge */}

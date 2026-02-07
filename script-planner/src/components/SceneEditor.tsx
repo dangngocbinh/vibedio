@@ -571,9 +571,9 @@ export const SceneEditor = ({
                                                     <div className="shrink-0 w-36 flex flex-col gap-2">
                                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide h-[18px] flex items-end">Preview</span>
                                                         <div
-                                                            className={`w-full aspect-square rounded-lg bg-gray-100 border-2 overflow-hidden relative group/media shadow-sm transition-all ${dragOverScene === scene.id
-                                                                ? 'border-primary border-dashed bg-primary/10'
-                                                                : 'border-gray-200'
+                                                            className={`w-full aspect-square overflow-hidden relative group/media transition-all ${dragOverScene === scene.id
+                                                                ? 'ring-2 ring-primary/70 bg-primary/10'
+                                                                : ''
                                                                 }`}
                                                             onDragOver={(e) => {
                                                                 e.preventDefault()
@@ -712,14 +712,13 @@ export const SceneEditor = ({
                                                                                                     return (
                                                                                                         <div
                                                                                                             key={res.id}
-                                                                                                            className="absolute rounded-lg overflow-hidden shadow-xl border-2 border-white transition-all duration-300 ease-out"
+                                                                                                            className="absolute overflow-hidden transition-all duration-300 ease-out"
                                                                                                             style={{
                                                                                                                 width: '75%',
                                                                                                                 height: '75%',
                                                                                                                 left: `${offsetX}px`,
                                                                                                                 top: `${offsetY}px`,
-                                                                                                                zIndex: totalVisible - idx,
-                                                                                                                boxShadow: `${idx * 3}px ${idx * 3}px ${10 + idx * 5}px rgba(0,0,0,${0.2 + idx * 0.05})`
+                                                                                                                zIndex: totalVisible - idx
                                                                                                             }}
                                                                                                         >
                                                                                                             {isImg ? (
