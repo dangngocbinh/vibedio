@@ -102,11 +102,17 @@ const flattenScenes = (script: any): any[] => {
 
 const pickLocalPathFromResource = (resource: any): string | null => {
     if (!resource) return null;
-    if (typeof resource.localPath === 'string' && resource.localPath.trim()) {
-        const local = resource.localPath.trim();
-        // Ignore obviously invalid downloaded extension
-        if (!/\.dat($|\?)/i.test(local)) return local;
+
+    // Priority for local paths
+    const localPathKeys = ['importedPath', 'relativePath', 'localPath'];
+    for (const key of localPathKeys) {
+        if (typeof resource[key] === 'string' && resource[key].trim()) {
+            const local = resource[key].trim();
+            // Ignore obviously invalid downloaded extension
+            if (!/\.(dat|tmp|part)($|\?)/i.test(local)) return local;
+        }
     }
+
     return null;
 };
 
@@ -157,7 +163,9 @@ const buildScenePreferredMediaUrls = (script: any, resources: any, basePath: str
             : (scene?.selectedResourceId ? [scene.selectedResourceId] : []);
 
         const sceneCandidates = Array.isArray(scene?.resourceCandidates) ? scene.resourceCandidates : [];
-        const mergedCandidates = [...sceneCandidates, ...(localByScene[scene?.id] || [])];
+        // resources.json candidates come first — canonical selected resources with localPath from download
+        // script.json resourceCandidates come after as fallback only
+        const mergedCandidates = [...(localByScene[scene?.id] || []), ...sceneCandidates];
 
         const selectedCandidate = selectedIds.length > 0
             ? mergedCandidates.find((r: any) => selectedIds.includes(r?.id))

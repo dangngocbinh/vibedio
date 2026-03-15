@@ -275,12 +275,19 @@ class VisualTrackBuilder:
         duration: float
     ) -> List[otio.schema.Clip]:
         """
-        Create clips for a scene using selectedResourceIds array or fallback to resources.
+        Create clips for a scene using selectedResourceId (primary) or fallback to resources.
+        Uses only 1 resource per scene to ensure full duration display.
         """
         clips = []
 
-        # Check for selectedResourceIds (plural, array)
-        selected_ids = scene.get('selectedResourceIds', [])
+        # Priority 1: Use selectedResourceId (single primary selection) for full duration
+        primary_id = scene.get('selectedResourceId')
+        if primary_id:
+            selected_ids = [primary_id]
+        else:
+            # Fallback: take only first of selectedResourceIds (avoid splitting duration)
+            raw_ids = scene.get('selectedResourceIds', [])
+            selected_ids = [raw_ids[0]] if raw_ids else []
 
         if selected_ids and isinstance(selected_ids, list) and len(selected_ids) > 0:
             # Use selected resources

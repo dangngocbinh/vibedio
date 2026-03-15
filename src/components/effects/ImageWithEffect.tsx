@@ -1,5 +1,5 @@
 import React from 'react';
-import { Img, useCurrentFrame, interpolate, random, useVideoConfig } from 'remotion';
+import { Img, useCurrentFrame, interpolate, random, useVideoConfig, getRemotionEnvironment } from 'remotion';
 
 // [Vue: TypeScript Interface] -> Giống như định nghĩa Props trong Vue
 // Trong Vue bạn có thể dùng `defineProps<ImageWithEffectProps>()`
@@ -94,26 +94,37 @@ export const ImageWithEffect: React.FC<ImageWithEffectProps> = ({
     // RENDER LOGIC PRIORITY 1: BLUR BG (For Vertical Mode)
     // This block is prioritized for ALL images in vertical mode, regardless of effect setting
     if (shouldUseBlurBg) {
+        const isRendering = getRemotionEnvironment().isRendering;
         return (
             <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-                {/* Background Layer (Blurred) */}
-                <div style={{
-                    position: 'absolute',
-                    top: -20, left: -20, right: -20, bottom: -20,
-                    zIndex: 0
-                }}>
-                    <Img
-                        src={src}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            filter: 'blur(30px) brightness(0.6)',
-                            transform: 'scale(1.2)',
-                        }}
-                        onError={onError}
-                    />
-                </div>
+                {/* Background Layer (Blurred) - skip during rendering to reduce delayRender pressure */}
+                {!isRendering && (
+                    <div style={{
+                        position: 'absolute',
+                        top: -20, left: -20, right: -20, bottom: -20,
+                        zIndex: 0
+                    }}>
+                        <Img
+                            src={src}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                filter: 'blur(30px) brightness(0.6)',
+                                transform: 'scale(1.2)',
+                            }}
+                            onError={onError}
+                        />
+                    </div>
+                )}
+                {isRendering && (
+                    <div style={{
+                        position: 'absolute',
+                        top: -20, left: -20, right: -20, bottom: -20,
+                        zIndex: 0,
+                        backgroundColor: '#000',
+                    }} />
+                )}
 
                 {/* Foreground Layer (Active Image) */}
                 <div style={{

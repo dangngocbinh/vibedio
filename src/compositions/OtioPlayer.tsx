@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { AbsoluteFill, Audio, Img, Sequence, Video, useVideoConfig, staticFile, useCurrentFrame, interpolate, random, delayRender, continueRender, Series } from 'remotion';
+import { AbsoluteFill, Audio, Img, Sequence, Video, useVideoConfig, staticFile, useCurrentFrame, interpolate, random, delayRender, continueRender, Series, getRemotionEnvironment } from 'remotion';
+import { preloadVideo, preloadAudio, preloadImage } from '@remotion/preload';
 import { SubtitleTrack } from '../components/captions/SubtitleTrack';
 import { TransitionSeries, linearTiming } from '@remotion/transitions';
 import { slide } from "@remotion/transitions/slide";
@@ -196,10 +197,6 @@ export const OtioClip: React.FC<{
     const frame = useCurrentFrame();
     const isVertical = height > width;
 
-    // Debug log for first clip only to reduce noise
-    if (clipIndex === 0 && frame < 5) {
-        console.log(`[OtioPlayer Debug] Clip 0 Mode: Width=${width}, Height=${height}, isVertical=${isVertical}`);
-    }
 
     // Handle Gap (Silence)
     if (clip.OTIO_SCHEMA?.startsWith('Gap')) {
@@ -228,9 +225,6 @@ export const OtioClip: React.FC<{
     const rawSrc = mediaRef?.target_url;
     const src = sanitizeUrl(rawSrc, projectId);
 
-    if (trackKind === 'Audio') {
-        console.log(`[OtioClip Debug] Clip: ${clip.name}, RawSrc: ${rawSrc}, FinalSrc: ${src}, StartFrom: ${startFromFrames}, Duration: ${durationFrames}`);
-    }
 
     // if (!src) return null; // Logic gốc là return null, nhưng ta muốn debug xem clip nào lỗi hoặc missing
     // Với text clip hoặc generated clip, có thể ko có src.
@@ -363,22 +357,26 @@ export const OtioClip: React.FC<{
                         // - If video is 9:16, 'contain' will make it fill the screen (hiding the blur bg) -> correct.
                         // - If video is 16:9, 'contain' will show full content with blur bars -> correct.
                         <AbsoluteFill>
-                            {/* Background Layer (Blurred & Zoomed) */}
-                            <AbsoluteFill style={{ overflow: 'hidden', zIndex: 0 }}>
-                                <Video
-                                    src={src!}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        objectFit: 'cover', // Always cover for background
-                                        filter: 'blur(30px) brightness(0.6)', // Darker & more blurred
-                                        transform: 'scale(1.2)', // Zoom in more to hide edges
-                                    }}
-                                    volume={0}
-                                    startFrom={startFromFrames}
-                                    onError={(e) => { console.error(`Video BG error: ${src} `, e); }}
-                                />
-                            </AbsoluteFill>
+                            {/* Background Layer (Blurred & Zoomed) - skip during rendering to reduce memory/load pressure */}
+                            {getRemotionEnvironment().isRendering ? (
+                                <AbsoluteFill style={{ backgroundColor: '#000', zIndex: 0 }} />
+                            ) : (
+                                <AbsoluteFill style={{ overflow: 'hidden', zIndex: 0 }}>
+                                    <Video
+                                        src={src!}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover', // Always cover for background
+                                            filter: 'blur(30px) brightness(0.6)', // Darker & more blurred
+                                            transform: 'scale(1.2)', // Zoom in more to hide edges
+                                        }}
+                                        volume={0}
+                                        startFrom={startFromFrames}
+                                        onError={(e) => { console.error(`Video BG error: ${src} `, e); }}
+                                    />
+                                </AbsoluteFill>
+                            )}
 
                             {/* Foreground Layer (Active Video) */}
                             <AbsoluteFill style={{
@@ -924,11 +922,40 @@ const TrackRenderer: React.FC<{ track: Item, fps: number, projectId?: string, tr
     );
 }
 
+// Collect all media URLs from timeline for preloading
+const collectMediaUrls = (timeline: Item, projectId?: string): { videos: string[], audios: string[], images: string[] } => {
+    const videos: string[] = [];
+    const audios: string[] = [];
+    const images: string[] = [];
+    const tracks = timeline.tracks?.children || [];
+    tracks.forEach((track: Item) => {
+        const kind = track.kind;
+        (track.children || []).forEach((item: Item) => {
+            if (item.OTIO_SCHEMA?.startsWith('Gap') || item.OTIO_SCHEMA?.startsWith('Transition')) return;
+            const mediaRefKey = item.active_media_reference_key || 'DEFAULT_MEDIA';
+            const rawUrl = item.media_references?.[mediaRefKey]?.target_url;
+            if (!rawUrl) return;
+            const url = sanitizeUrl(rawUrl, projectId);
+            if (!url) return;
+            if (kind === 'Audio') {
+                audios.push(url);
+            } else if (/\.(jpg|jpeg|png|gif|webp|svg)($|\?)/i.test(url)) {
+                images.push(url);
+            } else if (/\.(mp4|webm|mov|m4v)($|\?)/i.test(url)) {
+                videos.push(url);
+            }
+        });
+    });
+    return { videos, audios, images };
+};
+
 export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimeline, projectId }) => {
     const { fps } = useVideoConfig(); // Lấy fps từ config của project
 
+    const isRendering = getRemotionEnvironment().isRendering;
+
     // State for dynamic loading
-    const [handle] = useState(() => delayRender());
+    const [handle] = useState(() => delayRender('Loading project', { timeoutInMilliseconds: 60000 }));
     const [activeTimeline, setActiveTimeline] = useState<Item | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -939,6 +966,18 @@ export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimelin
     useEffect(() => {
         activeTimelineRef.current = activeTimeline;
     }, [activeTimeline]);
+
+    // Preload all media when timeline is available (Studio only - skip during rendering to avoid request conflicts)
+    useEffect(() => {
+        if (!activeTimeline) return;
+        if (isRendering) return; // Preloading interferes with delayRender during headless rendering
+        const { videos, audios, images } = collectMediaUrls(activeTimeline, projectId);
+        const freeCallbacks: (() => void)[] = [];
+        videos.forEach(url => { try { freeCallbacks.push(preloadVideo(url)); } catch {} });
+        audios.forEach(url => { try { freeCallbacks.push(preloadAudio(url)); } catch {} });
+        images.forEach(url => { try { freeCallbacks.push(preloadImage(url)); } catch {} });
+        return () => { freeCallbacks.forEach(fn => fn()); };
+    }, [activeTimeline, projectId, isRendering]);
 
     // [Vue: useEffect] -> Similar to `onMounted` combined with `watch`.
     // It runs when the component mounts and whenever the dependencies in the array [projectId, defaultTimeline] change.
@@ -1002,14 +1041,17 @@ export const OtioPlayer: React.FC<OtioPlayerProps> = ({ timeline: defaultTimelin
         // Initial load
         load(false);
 
-        // Polling interval
-        const intervalId = setInterval(() => {
-            load(true);
-        }, POLLING_INTERVAL);
+        // Polling interval - disabled during rendering to save resources
+        let intervalId: ReturnType<typeof setInterval> | null = null;
+        if (!isRendering) {
+            intervalId = setInterval(() => {
+                load(true);
+            }, POLLING_INTERVAL);
+        }
 
         return () => {
             isMounted = false;
-            clearInterval(intervalId);
+            if (intervalId) clearInterval(intervalId);
         };
     }, [projectId, defaultTimeline, handle]); // Removed activeTimeline from dependencies
 
